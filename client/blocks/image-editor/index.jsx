@@ -35,7 +35,7 @@ const ImageEditor = React.createClass( {
 
 	propTypes: {
 		// Component props
-		media: PropTypes.object,
+		media: PropTypes.object.isRequired,
 		siteId: PropTypes.number,
 		onDone: PropTypes.func,
 		onCancel: PropTypes.func,
