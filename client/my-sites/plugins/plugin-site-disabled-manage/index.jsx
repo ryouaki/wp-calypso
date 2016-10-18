@@ -14,8 +14,8 @@ import DisconnectJetpackButton from 'my-sites/plugins/disconnect-jetpack/disconn
 const PluginSiteDisabledManage = ( { isNetwork, site, plugin, translate } ) => {
 	const url = site.getRemoteManagementURL() + '&section=plugins';
 	const message = isNetwork
-			? translate( 'Network management disabled' )
-			: translate( 'Management disabled' );
+		? translate( 'Network management disabled' )
+		: translate( 'Management disabled' );
 	const onClickEnableManageButton = () => {
 		analytics.ga.recordEvent( 'Jetpack Manage', 'Clicked Enable Jetpack Manage Link' );
 	};
