@@ -26,7 +26,8 @@ import {
 	getEditedPostValue,
 	getEditedPostSlug,
 	isEditedPostDirty,
-	getPostPreviewUrl
+	getPostPreviewUrl,
+	getSitePostsByTerm
 } from '../selectors';
 import PostQueryManager from 'lib/query-manager/post';
 
@@ -112,7 +113,11 @@ describe( 'selectors', () => {
 				author: {
 					name: 'Badman <img onerror= />'
 				},
-				featured_image: 'https://example.com/logo.png'
+				post_thumbnail: {
+					URL: 'https://example.com/logo.png',
+					width: 700,
+					height: 200,
+				}
 			};
 
 			const normalizedPost = getNormalizedPost( deepFreeze( {
@@ -136,8 +141,9 @@ describe( 'selectors', () => {
 					name: 'Badman '
 				},
 				canonical_image: {
-					type: 'image',
-					uri: 'https://example.com/logo.png'
+					uri: 'https://example.com/logo.png',
+					width: 700,
+					height: 200,
 				}
 			} );
 		} );
@@ -589,14 +595,22 @@ describe( 'selectors', () => {
 			const sitePosts = getSitePostsForQueryIgnoringPage( {
 				posts: {
 					items: {
-						'3d097cb7c5473c169bba0eb8e3c6cb64': { ID: 841, site_ID: 2916284, global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64', title: 'Hello World' },
-						'6c831c187ffef321eb43a67761a525a3': { ID: 413, site_ID: 2916284, global_ID: '6c831c187ffef321eb43a67761a525a3', title: 'Ribs &amp; Chicken' }
+						'3d097cb7c5473c169bba0eb8e3c6cb64': {
+							ID: 841, site_ID: 2916284, global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64', title: 'Hello World'
+						},
+						'6c831c187ffef321eb43a67761a525a3': {
+							ID: 413, site_ID: 2916284, global_ID: '6c831c187ffef321eb43a67761a525a3', title: 'Ribs &amp; Chicken'
+						}
 					},
 					queries: {
 						2916284: new PostQueryManager( {
 							items: {
-								841: { ID: 841, site_ID: 2916284, global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64', title: 'Hello World' },
-								413: { ID: 413, site_ID: 2916284, global_ID: '6c831c187ffef321eb43a67761a525a3', title: 'Ribs &amp; Chicken' }
+								841: {
+									ID: 841, site_ID: 2916284, global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64', title: 'Hello World'
+								},
+								413: {
+									ID: 413, site_ID: 2916284, global_ID: '6c831c187ffef321eb43a67761a525a3', title: 'Ribs &amp; Chicken'
+								}
 							},
 							queries: {
 								'[]': {
@@ -618,12 +632,16 @@ describe( 'selectors', () => {
 			const sitePosts = getSitePostsForQueryIgnoringPage( {
 				posts: {
 					items: {
-						'48b6010b559efe6a77a429773e0cbf12': { ID: 1204, site_ID: 2916284, global_ID: '48b6010b559efe6a77a429773e0cbf12', title: 'Sweet &amp; Savory' }
+						'48b6010b559efe6a77a429773e0cbf12': {
+							ID: 1204, site_ID: 2916284, global_ID: '48b6010b559efe6a77a429773e0cbf12', title: 'Sweet &amp; Savory'
+						}
 					},
 					queries: {
 						2916284: new PostQueryManager( {
 							items: {
-								1204: { ID: 1204, site_ID: 2916284, global_ID: '48b6010b559efe6a77a429773e0cbf12', title: 'Sweet &amp; Savory' }
+								1204: {
+									ID: 1204, site_ID: 2916284, global_ID: '48b6010b559efe6a77a429773e0cbf12', title: 'Sweet &amp; Savory'
+								}
 							},
 							queries: {
 								'[["search","Sweet"]]': {
@@ -679,6 +697,10 @@ describe( 'selectors', () => {
 	} );
 
 	describe( '#getEditedPost()', () => {
+		beforeEach( () => {
+			getEditedPost.memoizedSelector.cache.clear();
+		} );
+
 		it( 'should return the original post if no revisions exist on site', () => {
 			const postObject = {
 				ID: 841,
@@ -1356,6 +1378,40 @@ describe( 'selectors', () => {
 			expect( previewUrl ).to.equal( 'https://example.com/post-url' );
 		} );
 
+		it( 'should change http to https if mapped domain', () => {
+			const previewUrl = getPostPreviewUrl( {
+				posts: {
+					queries: {
+						2916284: new PostQueryManager( {
+							items: {
+								841: {
+									ID: 841,
+									site_ID: 2916284,
+									global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64',
+									status: 'publish',
+									URL: 'http://example.com/post-url'
+								}
+							}
+						} )
+					}
+				},
+				sites: {
+					items: {
+						2916284: {
+							ID: 2916284,
+							URL: 'http://example.com',
+							options: {
+								unmapped_url: 'https://example.wordpress.com',
+								is_mapped_domain: true
+							}
+						}
+					}
+				}
+			}, 2916284, 841 );
+
+			expect( previewUrl ).to.equal( 'https://example.wordpress.com/post-url' );
+		} );
+
 		it( 'should append preview query argument to non-published posts', () => {
 			const previewUrl = getPostPreviewUrl( {
 				posts: {
@@ -1540,6 +1596,30 @@ describe( 'selectors', () => {
 			expect( slug ).to.eql( 'chewbacca' );
 		} );
 
+		it( 'should return decoded non-latin post.slug if post is published', () => {
+			const slug = getEditedPostSlug( {
+				posts: {
+					queries: {
+						2916284: new PostQueryManager( {
+							items: {
+								841: {
+									ID: 841,
+									site_ID: 2916284,
+									global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64',
+									status: 'publish',
+									slug: '%D7%96%D7%94%D7%95%20%D7%A2%D7%99%D7%9F%20%D7%94%D7%A0%D7%9E%D7%A8'
+								}
+							}
+						} )
+					},
+					edits: {
+					}
+				}
+			}, 2916284, 841 );
+
+			expect( slug ).to.eql( 'זהו עין הנמר' );
+		} );
+
 		it( 'should return edited slug if post is not published', () => {
 			const slug = getEditedPostSlug( {
 				posts: {
@@ -1687,6 +1767,44 @@ describe( 'selectors', () => {
 			}, 2916284, 841 );
 
 			expect( slug ).to.eql( '' );
+		} );
+	} );
+
+	describe( 'getSitePostsByTerm()', () => {
+		it( 'should return an array of post objects for the site matching the termId', () => {
+			const postObjects = {
+				2916284: {
+					'3d097cb7c5473c169bba0eb8e3c6cb64': {
+						ID: 841,
+						site_ID: 2916284,
+						global_ID: '3d097cb7c5473c169bba0eb8e3c6cb64',
+						title: 'Hello World',
+						terms: {
+							category: [
+								{ ID: 10 }
+							]
+						}
+					},
+					'6c831c187ffef321eb43a67761a525a3': {
+						ID: 413,
+						site_ID: 2916284,
+						global_ID: '6c831c187ffef321eb43a67761a525a3',
+						title: 'Ribs &amp; Chicken'
+					}
+				}
+			};
+			const state = {
+				posts: {
+					queries: {
+						2916284: new PostQueryManager( {
+							items: postObjects[ 2916284 ]
+						} )
+					},
+				}
+			};
+
+			expect( getSitePostsByTerm( state, 2916284, 'category', 10 ) )
+				.to.have.members( [ postObjects[ 2916284 ][ '3d097cb7c5473c169bba0eb8e3c6cb64' ] ] );
 		} );
 	} );
 } );

@@ -3,7 +3,7 @@
  */
 import React, { Component, PropTypes } from 'react';
 import { localize } from 'i18n-calypso';
-import { filter } from 'lodash';
+import { filter, get } from 'lodash';
 
 /**
  * Internal dependencies
@@ -17,20 +17,19 @@ import {
 	PLAN_BUSINESS,
 	PLAN_JETPACK_PREMIUM,
 	PLAN_JETPACK_BUSINESS,
+	PLAN_JETPACK_PERSONAL,
 	PLAN_JETPACK_PREMIUM_MONTHLY,
-	PLAN_JETPACK_BUSINESS_MONTHLY
+	PLAN_JETPACK_BUSINESS_MONTHLY,
+	PLAN_JETPACK_PERSONAL_MONTHLY,
 } from 'lib/plans/constants';
+import QueryPlans from 'components/data/query-plans';
+import QuerySitePlans from 'components/data/query-site-plans';
 import FAQ from 'components/faq';
 import FAQItem from 'components/faq/faq-item';
 import { isEnabled } from 'config';
 import purchasesPaths from 'me/purchases/paths';
 
 class PlansFeaturesMain extends Component {
-
-	isJetpackSite( site ) {
-		return site.jetpack;
-	}
-
 	getPlanFeatures() {
 		const {
 			site,
@@ -38,25 +37,32 @@ class PlansFeaturesMain extends Component {
 			onUpgradeClick,
 			hideFreePlan,
 			isInSignup,
-			isInJetpackConnect,
-			selectedFeature
+			isLandingPage,
+			basePlansPath,
+			selectedFeature,
+			displayJetpackPlans
 		} = this.props;
 
 		const isPersonalPlanEnabled = isEnabled( 'plans/personal-plan' );
-
-		if ( this.isJetpackSite( site ) && intervalType === 'monthly' ) {
-			const jetpackPlans = [ PLAN_JETPACK_FREE, PLAN_JETPACK_PREMIUM_MONTHLY, PLAN_JETPACK_BUSINESS_MONTHLY ];
+		if ( displayJetpackPlans && intervalType === 'monthly' ) {
+			const jetpackPlans = [
+				PLAN_JETPACK_FREE,
+				PLAN_JETPACK_PERSONAL_MONTHLY,
+				PLAN_JETPACK_PREMIUM_MONTHLY,
+				PLAN_JETPACK_BUSINESS_MONTHLY
+			];
 			if ( hideFreePlan ) {
 				jetpackPlans.shift();
 			}
 			return (
-				<div className="plans-features-main__group">
+				<div className="plans-features-main__group" data-e2e-plans="jetpack">
 					<PlanFeatures
 						plans={ jetpackPlans }
 						selectedFeature={ selectedFeature }
 						onUpgradeClick={ onUpgradeClick }
 						isInSignup={ isInSignup }
-						isInJetpackConnect={ isInJetpackConnect }
+						isLandingPage={ isLandingPage }
+						basePlansPath={ basePlansPath }
 						intervalType={ intervalType }
 						site={ site }
 					/>
@@ -64,19 +70,20 @@ class PlansFeaturesMain extends Component {
 			);
 		}
 
-		if ( this.isJetpackSite( site ) ) {
-			const jetpackPlans = [ PLAN_JETPACK_FREE, PLAN_JETPACK_PREMIUM, PLAN_JETPACK_BUSINESS ];
+		if ( displayJetpackPlans ) {
+			const jetpackPlans = [ PLAN_JETPACK_FREE, PLAN_JETPACK_PERSONAL, PLAN_JETPACK_PREMIUM, PLAN_JETPACK_BUSINESS ];
 			if ( hideFreePlan ) {
 				jetpackPlans.shift();
 			}
 			return (
-				<div className="plans-features-main__group">
+				<div className="plans-features-main__group" data-e2e-plans="jetpack">
 					<PlanFeatures
 						plans={ jetpackPlans }
 						selectedFeature={ selectedFeature }
 						onUpgradeClick={ onUpgradeClick }
 						isInSignup={ isInSignup }
-						isInJetpackConnect={ isInJetpackConnect }
+						isLandingPage={ isLandingPage }
+						basePlansPath={ basePlansPath }
 						intervalType={ intervalType }
 						site={ site }
 					/>
@@ -95,12 +102,13 @@ class PlansFeaturesMain extends Component {
 		);
 
 		return (
-			<div className="plans-features-main__group">
+			<div className="plans-features-main__group" data-e2e-plans="wpcom">
 				<PlanFeatures
 					plans={ plans }
 					onUpgradeClick={ onUpgradeClick }
 					isInSignup={ isInSignup }
-					isInJetpackConnect={ isInJetpackConnect }
+					isLandingPage={ isLandingPage }
+					basePlansPath={ basePlansPath }
 					selectedFeature={ selectedFeature }
 					intervalType={ intervalType }
 					site={ site }
@@ -118,8 +126,7 @@ class PlansFeaturesMain extends Component {
 					question={ translate( 'I signed up and paid. What’s next?' ) }
 					answer={ translate(
 						'Our premium features are powered by a few of our other plugins. After purchasing you will' +
-						' need to install the Akismet and VaultPress plugins. If you purchase a Professional' +
-						' subscription, you will also need to install the Polldaddy plugin. Just follow the guide' +
+						' need to install the Akismet and VaultPress plugins. Just follow the guide' +
 						' after you complete your purchase.'
 					) }
 				/>
@@ -225,7 +232,7 @@ class PlansFeaturesMain extends Component {
 						' by our team and represent the highest quality. The business plan even supports' +
 						' unlimited premium theme access.',
 						{
-							components: { a: <a href={ `/design/${ site.slug }` } /> }
+							components: { a: <a href={ `/themes/${ site.slug }` } /> }
 						}
 					) }
 				/>
@@ -311,14 +318,21 @@ class PlansFeaturesMain extends Component {
 	}
 
 	render() {
-		const { site, showFAQ } = this.props;
+		const {
+			site,
+			showFAQ,
+			displayJetpackPlans
+		} = this.props;
+
 		const renderFAQ = () =>
-			this.isJetpackSite( site )
+			displayJetpackPlans
 				? this.getJetpackFAQ()
 				: this.getFAQ( site );
 
 		return (
 			<div className="plans-features-main">
+				<QueryPlans />
+				<QuerySitePlans siteId={ get( site, 'ID' ) } />
 				{ this.getPlanFeatures() }
 
 				{
@@ -331,19 +345,21 @@ class PlansFeaturesMain extends Component {
 	}
 }
 
-PlansFeaturesMain.PropTypes = {
+PlansFeaturesMain.propTypes = {
 	site: PropTypes.object,
 	isInSignup: PropTypes.bool,
-	isInJetpackConnect: PropTypes.bool,
+	isLandingPage: PropTypes.bool,
+	basePlansPath: PropTypes.string,
 	intervalType: PropTypes.string,
 	onUpgradeClick: PropTypes.func,
 	hideFreePlan: PropTypes.bool,
 	showFAQ: PropTypes.bool,
-	selectedFeature: PropTypes.string
+	selectedFeature: PropTypes.string,
+	displayJetpackPlans: PropTypes.bool.isRequired
 };
 
 PlansFeaturesMain.defaultProps = {
-	isInJetpackConnect: false,
+	basePlansPath: null,
 	intervalType: 'yearly',
 	hideFreePlan: false,
 	site: {},

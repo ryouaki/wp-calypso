@@ -7,21 +7,25 @@ import {
 	flow,
 	forEach,
 	map,
-	pick,
 	pull,
-	uniq
+	take,
 } from 'lodash';
 
 /**
  * Internal Dependencies
  */
-import { thumbIsLikelyImage } from './utils';
+import { deduceImageWidthAndHeight, thumbIsLikelyImage } from './utils';
 import debugFactory from 'debug';
 
 const debug = debugFactory( 'calypso:post-normalizer:wait-for-images-to-load' );
 
 function convertImageToObject( image ) {
-	return pick( image, [ 'src', 'naturalWidth', 'naturalHeight' ] );
+	return {
+		src: image.src,
+		// use natural height and width
+		width: image.naturalWidth,
+		height: image.naturalHeight
+	};
 }
 
 function imageForURL( imageUrl ) {
@@ -58,10 +62,19 @@ export default function waitForImagesToLoad( post ) {
 				return find( post.images, { src: image.src } );
 			} ), Boolean );
 
+			// this adds adds height/width to images
+			post.content_media = map( post.content_media, ( media ) => {
+				if ( media.mediaType === 'image' ) {
+					const img = find( post.images, { src: media.src } );
+					return { ...media, ...img };
+				}
+				return media;
+			} );
+
 			resolve( post );
 		}
 
-		let imagesToCheck = [];
+		const imagesToCheck = [];
 
 		if ( thumbIsLikelyImage( post.post_thumbnail ) ) {
 			imagesToCheck.push( post.post_thumbnail.URL );
@@ -69,7 +82,17 @@ export default function waitForImagesToLoad( post ) {
 			imagesToCheck.push( post.featured_image );
 		}
 
+		const knownImages = {};
+
 		forEach( post.content_images, function( image ) {
+			const knownDimensions = deduceImageWidthAndHeight( image );
+			if ( knownDimensions ) {
+				knownImages[ image.src ] = {
+					src: image.src,
+					naturalWidth: knownDimensions.width,
+					naturalHeight: knownDimensions.height
+				};
+			}
 			imagesToCheck.push( image.src );
 		} );
 
@@ -78,13 +101,16 @@ export default function waitForImagesToLoad( post ) {
 			return;
 		}
 
-		// dedupe the set of images
-		imagesToCheck = uniq( imagesToCheck );
+		const imagesLoaded = {};
 
 		// convert to image objects to start the load process
-		let promises = map( imagesToCheck, promiseForURL );
-
-		const imagesLoaded = {};
+		// only check the first 5 images
+		let promises = map( take( imagesToCheck, 5 ), ( imageUrl ) => {
+			if ( imageUrl in knownImages ) {
+				return Promise.resolve( knownImages[ imageUrl ] );
+			}
+			return promiseForURL( imageUrl );
+		} );
 
 		forEach( promises, promise => {
 			promise.then( image => {

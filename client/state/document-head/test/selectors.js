@@ -16,6 +16,10 @@ import {
 } from '../selectors';
 
 describe( 'selectors', () => {
+	beforeEach( () => {
+		getDocumentHeadFormattedTitle.memoizedSelector.cache.clear();
+	} );
+
 	describe( '#getDocumentHeadTitle()', () => {
 		it( 'should return the currently set title', () => {
 			const title = getDocumentHeadTitle( {
@@ -142,7 +146,7 @@ describe( 'selectors', () => {
 						selectedSiteId: null,
 						section: {
 							name: 'themes',
-							paths: [ '/design' ],
+							paths: [ '/themes' ],
 							module: 'my-sites/themes',
 							group: 'sites',
 							secondary: true
@@ -167,7 +171,7 @@ describe( 'selectors', () => {
 						selectedSiteId: null,
 						section: {
 							name: 'themes',
-							paths: [ '/design' ],
+							paths: [ '/themes' ],
 							module: 'my-sites/themes',
 							group: 'sites',
 							secondary: true
@@ -191,7 +195,7 @@ describe( 'selectors', () => {
 						selectedSiteId: 2916284,
 						section: {
 							name: 'themes',
-							paths: [ '/design' ],
+							paths: [ '/themes' ],
 							module: 'my-sites/themes',
 							group: 'sites',
 							secondary: true
@@ -216,7 +220,7 @@ describe( 'selectors', () => {
 						selectedSiteId: 2916284,
 						section: {
 							name: 'themes',
-							paths: [ '/design' ],
+							paths: [ '/themes' ],
 							module: 'my-sites/themes',
 							group: 'sites',
 							secondary: true

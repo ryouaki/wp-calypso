@@ -1,52 +1,76 @@
 /**
  * External Dependencies
  */
-import forEach from 'lodash/forEach';
 import striptags from 'striptags';
-import trim from 'lodash/trim';
+import { trim, toArray, forEach } from 'lodash';
 
 /**
  * Internal Dependencies
  */
 import { domForHtml } from './utils';
 
+/**
+ *  removes an html element from the dom
+ */
+function removeElement( element ) {
+	element.parentNode && element.parentNode.removeChild( element );
+}
+
+/**
+ *  Trims any empty starting br tags.  Recurses into non-empty tags.
+ *  will remove all of the leading brs it can find.
+ */
+function stripLeadingBreaklines( dom ) {
+	if ( ! dom ) {
+		return;
+	}
+
+	// first element is breakline actually returns the node in case of success
+	while ( firstElementIsBreakline( dom ) ) {
+		removeElement( firstElementIsBreakline( dom ) );
+	}
+}
+
+/**
+ *  Returns the node if first element ( checking nested ) is a br
+ *  else returns falsy
+ */
+function firstElementIsBreakline( dom ) {
+	if ( dom.childNodes.length === 0 ) {
+		return dom.nodeName === 'BR' && dom;
+	}
+
+	return firstElementIsBreakline( dom.firstChild );
+}
+
+function buildStrippedDom( content ) {
+	// Spin up a new DOM for the linebreak markup
+	const dom = domForHtml( content );
+
+	// Ditch any photo captions, styles, scripts
+	const stripSelectors = '.wp-caption, style, script, blockquote[class^="instagram-"], figure, .tiled-gallery';
+	forEach( dom.querySelectorAll( stripSelectors ), removeElement );
+	return dom.innerHTML;
+}
+
 export function formatExcerpt( content ) {
 	if ( ! content ) {
 		return '';
 	}
 
-	function removeElement( element ) {
-		element.parentNode && element.parentNode.removeChild( element );
-	}
-
-	// Spin up a new DOM for the linebreak markup
-	const dom = domForHtml( content );
+	const dom = domForHtml( striptags( content, [ 'p', 'br', 'sup', 'sub' ] ) );
 	dom.id = '__better_excerpt__';
-	dom.innerHTML = content;
 
-	// Ditch any photo captions with the wp-caption-text class, styles, scripts
-	forEach( dom.querySelectorAll( '.wp-caption-text, style, script, blockquote[class^="instagram-"], figure' ), removeElement );
+	// strip any p's that are empty
+	toArray( dom.querySelectorAll( 'p' ) )
+		.filter( element => trim( element.textContent ).length === 0 )
+		.forEach( removeElement );
 
-	// limit to paras and brs
-	dom.innerHTML = striptags( dom.innerHTML, [ 'p', 'br' ] );
+	// remove styles for all p's that remain
+	toArray( dom.querySelectorAll( 'p' ) )
+		.forEach( element => element.removeAttribute( 'style' ) );
 
-	// Strip any empty p and br elements from the beginning of the content
-	forEach( dom.querySelectorAll( 'p,br' ), function( element ) {
-		// is this element non-empty? bail on our iteration.
-		if ( element.childNodes.length > 0 && trim( element.textContent ).length > 0 ) {
-			return false;
-		}
-		element.parentNode && element.parentNode.removeChild( element );
-	} );
-
-	// now strip any p's that are empty and remove styles
-	forEach( dom.querySelectorAll( 'p' ), function( element ) {
-		if ( trim( element.textContent ).length === 0 ) {
-			element.parentNode && element.parentNode.removeChild( element );
-		} else {
-			element.removeAttribute( 'style' );
-		}
-	} );
+	stripLeadingBreaklines( dom );
 
 	// now limit it to the first three elements
 	forEach( dom.querySelectorAll( '#__better_excerpt__ > p, #__better_excerpt__ > br' ), function( element, index ) {
@@ -66,12 +90,17 @@ export default function createBetterExcerpt( post ) {
 		return post;
 	}
 
-	post.better_excerpt = formatExcerpt( post.content );
+	const strippedDom = buildStrippedDom( post.content );
+
+	post.content_no_html = trim( striptags( strippedDom ) );
+
+	post.better_excerpt = formatExcerpt( strippedDom );
+	post.better_excerpt_no_html = trim( striptags( post.better_excerpt ) );
 
 	// also make a shorter excerpt...
-	if ( post.excerpt ) {
+	if ( post.better_excerpt_no_html ) {
 		// replace any trailing [...] with an actual ellipsis
-		let shorterExcerpt = post.excerpt.replace( /\[...\]\w*$/, '…' );
+		let shorterExcerpt = post.better_excerpt_no_html.replace( /\[...\]\w*$/, '…' );
 		// limit to 160 characters
 		if ( shorterExcerpt.length > 160 ) {
 			const lastSpace = shorterExcerpt.lastIndexOf( ' ', 160 );

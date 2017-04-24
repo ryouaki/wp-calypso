@@ -1,84 +1,52 @@
 /**
- * External dependencies
+ * External Dependencies
  */
-import page from 'page';
+import { connect } from 'react-redux';
 import React from 'react';
 
 /**
- * Internal dependencies
+ * Internal Dependencies
  */
-import DomainMainPlaceholder from 'my-sites/upgrades/domain-management/components/domain/main-placeholder';
+import { get } from 'lodash';
+import { getSelectedSiteId } from 'state/ui/selectors';
 import Header from 'my-sites/upgrades/domain-management/components/header';
+import { isDomainOnlySite, isSiteAutomatedTransfer } from 'state/selectors';
+import { localize } from 'i18n-calypso';
 import Main from 'components/main';
-import NonOwnerCard from 'my-sites/upgrades/domain-management/components/domain/non-owner-card';
 import paths from 'my-sites/upgrades/paths';
-import { getSelectedDomain } from 'lib/domains';
-import IcannVerification from 'my-sites/upgrades/domain-management/transfer/icann-verification';
-import Locked from 'my-sites/upgrades/domain-management/transfer/locked';
-import Unlocked from 'my-sites/upgrades/domain-management/transfer/unlocked';
-import TransferProhibited from 'my-sites/upgrades/domain-management/transfer/transfer-prohibited';
-import omit from 'lodash/omit';
+import VerticalNav from 'components/vertical-nav';
+import VerticalNavItem from 'components/vertical-nav/item';
 
-const Transfer = React.createClass( {
-	propTypes: {
-		domains: React.PropTypes.object.isRequired,
-		selectedDomainName: React.PropTypes.string.isRequired,
-		selectedSite: React.PropTypes.oneOfType( [
-			React.PropTypes.object,
-			React.PropTypes.bool
-		] ).isRequired,
-		wapiDomainInfo: React.PropTypes.object.isRequired
-	},
+function Transfer( props ) {
+	const { isAutomatedTransfer, isDomainOnly, selectedSite, selectedDomainName, translate } = props;
+	const slug = get( selectedSite, 'slug' );
 
-	renderSection() {
-		const { locked, transferProhibited } = this.props.wapiDomainInfo.data,
-			{ isPendingIcannVerification, currentUserCanManage } = getSelectedDomain( this.props );
-		let section = null;
+	return (
+		<Main className="domain-management-transfer">
+			<Header
+				selectedDomainName={ selectedDomainName }
+				backHref={ paths.domainManagementEdit( slug, selectedDomainName ) }>
+				{ translate( 'Transfer Domain' ) }
+			</Header>
+			<VerticalNav>
+				<VerticalNavItem path={
+					paths.domainManagementTransferOut( slug, selectedDomainName )
+				}>
+					{ translate( 'Transfer to another registrar' ) }
+				</VerticalNavItem>
+					{ ! isAutomatedTransfer && ! isDomainOnly &&
+						<VerticalNavItem path={ paths.domainManagementTransferToAnotherUser( slug, selectedDomainName ) }>
+							{ translate( 'Transfer to another user' ) }
+						</VerticalNavItem> }
+			</VerticalNav>
+		</Main>
+	);
+}
 
-		if ( ! currentUserCanManage ) {
-			section = NonOwnerCard;
-		} else if ( transferProhibited ) {
-			section = TransferProhibited;
-		} else if ( isPendingIcannVerification ) {
-			section = IcannVerification;
-		} else if ( locked ) {
-			section = Locked;
-		} else {
-			section = Unlocked;
-		}
-
-		return React.createElement( section, omit( this.props, [ 'children' ] ) );
-	},
-
-	render() {
-		if ( this.isDataLoading() ) {
-			return <DomainMainPlaceholder goBack={ this.goToEdit }/>;
-		}
-
-		return (
-			<Main className="domain-management-transfer">
-				<Header
-					onClick={ this.goToEdit }
-					selectedDomainName={ this.props.selectedDomainName }>
-					{ this.translate( 'Transfer Domain' ) }
-				</Header>
-				{ this.renderSection() }
-			</Main>
-		);
-	},
-
-	goToEdit() {
-		page( paths.domainManagementEdit(
-			this.props.selectedSite.slug,
-			this.props.selectedDomainName
-		) );
-	},
-
-	isDataLoading() {
-		return (
-			! this.props.wapiDomainInfo.hasLoadedFromServer || ! this.props.domains.hasLoadedFromServer
-		);
-	}
-} );
-
-export default Transfer;
+export default connect( ( state ) => {
+	const siteId = getSelectedSiteId( state );
+	return {
+		isAutomatedTransfer: isSiteAutomatedTransfer( state, siteId ),
+		isDomainOnly: isDomainOnlySite( state, siteId )
+	};
+} )( localize( Transfer ) );

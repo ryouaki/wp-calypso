@@ -1,9 +1,7 @@
 /**
  * External dependencies
  */
-import page from 'page';
 import moment from 'moment';
-import debugFactory from 'debug';
 import {
 	find,
 	get,
@@ -15,8 +13,6 @@ import {
  * Internal dependencies
  */
 import { isEnabled } from 'config';
-import { addItem } from 'lib/upgrades/actions';
-import { cartItems } from 'lib/cart-values';
 import {
 	isFreeJetpackPlan,
 	isJetpackPlan,
@@ -29,14 +25,10 @@ import {
 	PLAN_JETPACK_FREE,
 	PLAN_PERSONAL
 } from 'lib/plans/constants';
-import { createSitePlanObject } from 'state/sites/plans/assembler';
-import SitesList from 'lib/sites-list';
 
 /**
  * Module vars
  */
-const sitesList = SitesList();
-const debug = debugFactory( 'calypso:plans' );
 const isPersonalPlanEnabled = isEnabled( 'plans/personal-plan' );
 
 export function isFreePlan( plan ) {
@@ -63,23 +55,12 @@ export function getFeatureTitle( feature ) {
 	return invoke( FEATURES_LIST, [ feature, 'getTitle' ] );
 }
 
-export function getSitePlanSlug( siteID ) {
-	let site;
-	if ( siteID ) {
-		site = sitesList.getSite( siteID );
-	} else {
-		site = sitesList.getSelectedSite();
-	}
-	return get( site, 'plan.product_slug' );
-}
-
-export function canUpgradeToPlan( planKey, site = sitesList.getSelectedSite() ) {
+export function canUpgradeToPlan( planKey, site ) {
 	const plan = get( site, [ 'plan', 'expired' ], false ) ? PLAN_FREE : get( site, [ 'plan', 'product_slug' ], PLAN_FREE );
 	return get( getPlan( planKey ), 'availableFor', () => false )( plan );
 }
 
-export function getUpgradePlanSlugFromPath( path, siteID ) {
-	const site = siteID ? sitesList.getSite( siteID ) : sitesList.getSelectedSite();
+export function getUpgradePlanSlugFromPath( path, site ) {
 	return find( Object.keys( PLANS_LIST ), planKey => (
 		( planKey === path || getPlanPath( planKey ) === path ) &&
 		canUpgradeToPlan( planKey, site )
@@ -92,31 +73,6 @@ export function getPlanPath( plan ) {
 
 export function planHasFeature( plan, feature ) {
 	return includes( get( getPlan( plan ), 'getFeatures', () => [] )(), feature );
-}
-
-export function hasFeature( feature, siteID ) {
-	return planHasFeature( getSitePlanSlug( siteID ), feature );
-}
-
-export function addCurrentPlanToCartAndRedirect( sitePlans, selectedSite ) {
-	addItem( cartItems.planItem( getCurrentPlan( sitePlans.data ).productSlug ) );
-
-	page( `/checkout/${ selectedSite.slug }` );
-}
-
-export function getCurrentPlan( plans ) {
-	const currentPlan = find( plans, { currentPlan: true } );
-
-	if ( currentPlan ) {
-		debug( 'current plan: %o', currentPlan );
-		return currentPlan;
-	}
-
-	// get Site plan from the `site` data
-	const site = sitesList.getSelectedSite();
-	const plan = createSitePlanObject( site.plan );
-	debug( 'current plan: %o', plan );
-	return plan;
 }
 
 export function getCurrentTrialPeriodInDays( plan ) {
@@ -191,22 +147,21 @@ export const isPlanFeaturesEnabled = () => {
 	return isEnabled( 'manage/plan-features' );
 };
 
-
 export function plansLink( url, site, intervalType ) {
 	if ( 'monthly' === intervalType ) {
 		url += '/monthly';
 	}
 
-	if ( site ) {
+	if ( site && site.slug ) {
 		url += '/' + site.slug;
 	}
 
 	return url;
 }
 
-export function applyTestFiltersToPlansList( planName ) {
+export function applyTestFiltersToPlansList( planName, abtest ) {
 	const filteredPlanConstantObj = { ...getPlan( planName ) };
-	const filteredPlanFeaturesConstantList = getPlan( planName ).getFeatures();
+	const filteredPlanFeaturesConstantList = getPlan( planName ).getFeatures( abtest );
 
 	// these becomes no-ops when we removed some of the abtest overrides, but
 	// we're leaving the code in place for future tests

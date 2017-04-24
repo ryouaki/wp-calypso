@@ -11,13 +11,13 @@ import feedStreamFactory from 'lib/feed-stream-store';
 import { recordTrack } from 'reader/stats';
 import { ensureStoreLoading, trackPageLoad, trackUpdatesLoaded, trackScrollPage } from 'reader/controller-helper';
 import { renderWithReduxStore } from 'lib/react-helpers';
+import AsyncLoad from 'components/async-load';
 
 const analyticsPageTitle = 'Reader';
 
-export default {
+const exported = {
 	tagListing( context ) {
-		var TagStream = require( 'reader/tag-stream/main' ),
-			basePath = '/tag/:slug',
+		var basePath = '/tag/:slug',
 			fullAnalyticsPageTitle = analyticsPageTitle + ' > Tag > ' + context.params.tag,
 			tagSlug = trim( context.params.tag )
 				.toLowerCase()
@@ -35,22 +35,30 @@ export default {
 		} );
 
 		renderWithReduxStore(
-			React.createElement( TagStream, {
-				key: 'tag-' + encodedTag,
-				store: tagStore,
-				tag: encodedTag,
-				trackScrollPage: trackScrollPage.bind(
+			<AsyncLoad require="reader/tag-stream/main"
+				key={ 'tag-' + encodedTag }
+				postsStore={ tagStore }
+				tag={ encodedTag }
+				decodedTag={ tagSlug }
+				trackScrollPage={ trackScrollPage.bind(
 					null,
 					basePath,
 					fullAnalyticsPageTitle,
 					analyticsPageTitle,
 					mcKey
-				),
-				onUpdatesShown: trackUpdatesLoaded.bind( null, mcKey ),
-				showBack: !! context.lastRoute
-			} ),
+				) }
+				onUpdatesShown={ trackUpdatesLoaded.bind( null, mcKey ) }
+				showBack={ !! context.lastRoute }
+				showPrimaryFollowButtonOnCards={ true }
+			/>,
 			document.getElementById( 'primary' ),
 			context.store
 		);
 	}
 };
+
+export default exported;
+
+export const {
+    tagListing
+} = exported;

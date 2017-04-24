@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -21,18 +19,26 @@ var productsValues = require( 'lib/products-values' ),
 	isNoAds = productsValues.isNoAds,
 	isPlan = productsValues.isPlan,
 	isPremium = productsValues.isPremium,
-	isPrivateRegistration = productsValues.isPrivateRegistration,
+	isPrivacyProtection = productsValues.isPrivacyProtection,
 	isSiteRedirect = productsValues.isSiteRedirect,
 	isSpaceUpgrade = productsValues.isSpaceUpgrade,
 	isUnlimitedSpace = productsValues.isUnlimitedSpace,
 	isUnlimitedThemes = productsValues.isUnlimitedThemes,
 	isVideoPress = productsValues.isVideoPress,
 	isJetpackPlan = productsValues.isJetpackPlan,
-	isWordPressDomain = productsValues.isWordPressDomain,
+	isFreeWordPressComDomain = productsValues.isFreeWordPressComDomain,
 	sortProducts = require( 'lib/products-values/sort' ),
 	PLAN_PERSONAL = require( 'lib/plans/constants' ).PLAN_PERSONAL;
 
-import { PLAN_FREE } from 'lib/plans/constants';
+import {
+	PLAN_FREE,
+	PLAN_JETPACK_PREMIUM,
+	PLAN_JETPACK_BUSINESS,
+	PLAN_JETPACK_PERSONAL,
+	PLAN_JETPACK_PREMIUM_MONTHLY,
+	PLAN_JETPACK_BUSINESS_MONTHLY,
+	PLAN_JETPACK_PERSONAL_MONTHLY
+} from 'lib/plans/constants';
 
 /**
  * Adds the specified item to a shopping cart.
@@ -65,7 +71,7 @@ function add( newCartItem ) {
 /**
  * Determines if the given cart item should replace the cart.
  * This can happen if the given item:
- * - will result in mixed renewals/non-renewals or multiple renewals (excluding private registration).
+ * - will result in mixed renewals/non-renewals or multiple renewals (excluding privacy protection).
  * - is a free trial plan
  *
  * @param {Object} cartItem - `CartItemValue` object
@@ -73,8 +79,8 @@ function add( newCartItem ) {
  * @returns {Boolean} whether or not the item should replace the cart
  */
 function cartItemShouldReplaceCart( cartItem, cart ) {
-	if ( isRenewal( cartItem ) && ! isPrivateRegistration( cartItem ) && ! isDomainRedemption( cartItem ) ) {
-		// adding a renewal replaces the cart unless it is a private registration
+	if ( isRenewal( cartItem ) && ! isPrivacyProtection( cartItem ) && ! isDomainRedemption( cartItem ) ) {
+		// adding a renewal replaces the cart unless it is a privacy protection
 		return true;
 	}
 
@@ -440,7 +446,8 @@ function domainRedemption( properties ) {
 }
 
 function googleApps( properties ) {
-	var item = domainItem( 'gapps', properties.meta ? properties.meta : properties.domain );
+	const productSlug = properties.product_slug || 'gapps',
+		item = domainItem( productSlug, properties.meta ? properties.meta : properties.domain );
 
 	return assign( item, { extra: { google_apps_users: properties.users } } );
 }
@@ -449,6 +456,18 @@ function googleAppsExtraLicenses( properties ) {
 	var item = domainItem( 'gapps_extra_license', properties.domain, properties.source );
 
 	return assign( item, { extra: { google_apps_users: properties.users } } );
+}
+
+function fillGoogleAppsRegistrationData( cart, registrationData ) {
+	const googleAppsItems = filter( getAll( cart ), isGoogleApps );
+	return flow.apply( null, googleAppsItems.map( function( item ) {
+		item.extra = assign( item.extra, { google_apps_registration_data: registrationData } );
+		return add( item )
+	} ) );
+}
+
+function hasGoogleApps( cart ) {
+	return some( getAll( cart ), isGoogleApps );
 }
 
 function customDesignItem() {
@@ -507,13 +526,17 @@ function getItemForPlan( plan, properties ) {
 		case PLAN_PERSONAL:
 			return personalPlan( plan.product_slug, properties );
 		case 'value_bundle':
-		case 'jetpack_premium':
-		case 'jetpack_premium_monthly':
+		case PLAN_JETPACK_PREMIUM:
+		case PLAN_JETPACK_PREMIUM_MONTHLY:
+			return premiumPlan( plan.product_slug, properties );
+
+		case PLAN_JETPACK_PERSONAL:
+		case PLAN_JETPACK_PERSONAL_MONTHLY:
 			return premiumPlan( plan.product_slug, properties );
 
 		case 'business-bundle':
-		case 'jetpack_business':
-		case 'jetpack_business_monthly':
+		case PLAN_JETPACK_BUSINESS:
+		case PLAN_JETPACK_BUSINESS_MONTHLY:
 			return businessPlan( plan.product_slug, properties );
 
 		default:
@@ -549,18 +572,6 @@ function getDomainRegistrations( cart ) {
  */
 function getDomainMappings( cart ) {
 	return filter( getAll( cart ), { product_slug: 'domain_map' } );
-}
-
-/**
- * Retrieves all the Google Apps items in the specified shopping cart.
- *
- * @param {Object} cart - cart as `CartValue` object
- * @returns {Object[]} the list of the corresponding items in the shopping cart as `CartItemValue` objects
- */
-function getGoogleApps( cart ) {
-	return getAll( cart ).filter( function( cartItem ) {
-		return ( cartItem.product_slug === 'gapps' ) || ( cartItem.product_slug === 'gapps_extra_license' );
-	} );
 }
 
 /**
@@ -669,12 +680,12 @@ function getDomainRegistrationsWithoutPrivacy( cart ) {
 }
 
 /**
- * Changes presence of a private registration for the given domain cart items.
+ * Changes presence of a privacy protection for the given domain cart items.
  *
  * @param {Object} cart - cart as `CartValue` object
  * @param {Object[]} domainItems - the list of `CartItemValue` objects for domain registrations
- * @param {Function} changeFunction - the function that adds/removes the private registration to a shopping cart
- * @returns {Function} the function that adds/removes private registrations from the shopping cart
+ * @param {Function} changeFunction - the function that adds/removes the privacy protection to a shopping cart
+ * @returns {Function} the function that adds/removes privacy protections from the shopping cart
  */
 function changePrivacyForDomains( cart, domainItems, changeFunction ) {
 	return flow.apply( null, domainItems.map( function( item ) {
@@ -729,22 +740,11 @@ function shouldBundleDomainWithPlan( withPlansOnly, selectedSite, cart, suggesti
 		// not free or a cart item
 		( isDomainRegistration( suggestionOrCartItem ) ||
 			isDomainMapping( suggestionOrCartItem ) ||
-			( suggestionOrCartItem.domain_name && ! isWordPressDomain( suggestionOrCartItem ) ) ) &&
+			( suggestionOrCartItem.domain_name && ! isFreeWordPressComDomain( suggestionOrCartItem ) ) ) &&
 		( ! isDomainBeingUsedForPlan( cart, suggestionOrCartItem.domain_name ) ) && // a plan in cart
 		( ! isNextDomainFree( cart ) ) && // domain credit
 		( ! hasPlan( cart ) ) && // already a plan in cart
 		( ! selectedSite || ( selectedSite && selectedSite.plan.product_slug === 'free_plan' ) ); // site has a plan
-}
-
-function bundleItemWithPlan( cartItem, planSlug = 'value_bundle' ) {
-	return [ cartItem, planItem( planSlug, false ) ];
-}
-
-function bundleItemWithPlanIfNecessary( cartItem, withPlansOnly, selectedSite, cart, planSlug = 'value_bundle' ) {
-	if ( shouldBundleDomainWithPlan( withPlansOnly, selectedSite, cart, cartItem ) ) {
-		return bundleItemWithPlan( cartItem, planSlug );
-	}
-	return [ cartItem ];
 }
 
 function getDomainPriceRule( withPlansOnly, selectedSite, cart, suggestion ) {
@@ -770,14 +770,13 @@ function getDomainPriceRule( withPlansOnly, selectedSite, cart, suggestion ) {
 module.exports = {
 	add,
 	addPrivacyToAllDomains,
-	bundleItemWithPlan,
-	bundleItemWithPlanIfNecessary,
 	businessPlan,
 	customDesignItem,
 	domainMapping,
 	domainPrivacyProtection,
 	domainRedemption,
 	domainRegistration,
+	fillGoogleAppsRegistrationData,
 	findFreeTrial,
 	getAll,
 	getAllSorted,
@@ -786,7 +785,6 @@ module.exports = {
 	getDomainRegistrations,
 	getDomainRegistrationsWithoutPrivacy,
 	getDomainRegistrationTld,
-	getGoogleApps,
 	getIncludedDomain,
 	getItemForPlan,
 	getRenewalItemFromCartItem,
@@ -803,6 +801,7 @@ module.exports = {
 	hasDomainMapping,
 	hasDomainRegistration,
 	hasFreeTrial,
+	hasGoogleApps,
 	hasNlTld,
 	hasOnlyFreeTrial,
 	hasOnlyProductsOf,

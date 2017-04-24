@@ -3,6 +3,7 @@
  */
 var React = require( 'react' ),
 	isFunction = require( 'lodash/isFunction' );
+import debug from 'debug';
 
 /**
  * Internal dependencies
@@ -12,15 +13,25 @@ var DocService = require( './service' ),
 	Main = require( 'components/main' ),
 	SearchCard = require( 'components/search-card' );
 
+/**
+ * Constants
+ */
+
 var DEFAULT_FILES = [
-		'docs/guide/index.md',
-		'README.md',
-		'.github/CONTRIBUTING.md',
-		'docs/coding-guidelines.md',
-		'docs/coding-guidelines/javascript.md',
-		'docs/coding-guidelines/css.md',
-		'docs/coding-guidelines/html.md'
-	];
+	'docs/guide/index.md',
+	'README.md',
+	'.github/CONTRIBUTING.md',
+	'docs/coding-guidelines.md',
+	'docs/coding-guidelines/javascript.md',
+	'docs/coding-guidelines/css.md',
+	'docs/coding-guidelines/html.md'
+];
+
+/**
+ * Module variables
+ */
+
+const log = debug( 'calypso:devdocs' );
 
 module.exports = React.createClass( {
 	displayName: 'Devdocs',
@@ -93,7 +104,7 @@ module.exports = React.createClass( {
 		}
 		DocService.search( term, function( err, results ) {
 			if ( err ) {
-				console.log( err );
+				log( 'search error: %o', err );
 			}
 
 			this.setState( {
@@ -141,7 +152,7 @@ module.exports = React.createClass( {
 				{ parts.map( function( part, i ) {
 					var markMatch = part.match( /<mark>(.*?)<\/mark>/ );
 					if ( markMatch ) {
-						return <mark key={ 'mark' + i }>{markMatch[1]}</mark>;
+						return <mark key={ 'mark' + i }>{ markMatch[ 1 ] }</mark>;
 					} else {
 						return part;
 					}

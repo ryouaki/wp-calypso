@@ -3,6 +3,7 @@
  */
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { partial } from 'lodash';
 
 /**
  * Internal dependencies
@@ -14,9 +15,11 @@ import {
 	PLAN_BUSINESS,
 	PLAN_JETPACK_FREE,
 	PLAN_JETPACK_PREMIUM,
+	PLAN_JETPACK_PERSONAL,
 	PLAN_JETPACK_BUSINESS,
 	PLAN_JETPACK_PREMIUM_MONTHLY,
-	PLAN_JETPACK_BUSINESS_MONTHLY
+	PLAN_JETPACK_BUSINESS_MONTHLY,
+	PLAN_JETPACK_PERSONAL_MONTHLY
 } from 'lib/plans/constants';
 import FindNewTheme from './find-new-theme';
 import AdvertisingRemoved from './advertising-removed';
@@ -24,22 +27,33 @@ import GoogleVouchers from './google-vouchers';
 import CustomizeTheme from './customize-theme';
 import VideoAudioPosts from './video-audio-posts';
 import MonetizeSite from './monetize-site';
-import LiveCourses from './live-courses';
+import BusinessOnboarding from './business-onboarding';
 import CustomDomain from './custom-domain';
 import GoogleAnalyticsStats from './google-analytics-stats';
 import JetpackAntiSpam from './jetpack-anti-spam';
 import JetpackBackupSecurity from './jetpack-backup-security';
 import JetpackReturnToDashboard from './jetpack-return-to-dashboard';
-import JetpackSurveysPolls from './jetpack-surveys-polls';
 import JetpackWordPressCom from './jetpack-wordpress-com';
 import { isWordadsInstantActivationEligible } from 'lib/ads/utils';
 import { hasDomainCredit } from 'state/sites/plans/selectors';
 import { getSelectedSite, getSelectedSiteId } from 'state/ui/selectors';
+import { recordTracksEvent } from 'state/analytics/actions';
 
 class ProductPurchaseFeaturesList extends Component {
 	static propTypes = {
 		plan: PropTypes
-			.oneOf( [ PLAN_FREE, PLAN_PERSONAL, PLAN_PREMIUM, PLAN_BUSINESS ] )
+			.oneOf( [ PLAN_FREE,
+				PLAN_PERSONAL,
+				PLAN_PREMIUM,
+				PLAN_BUSINESS,
+				PLAN_JETPACK_FREE,
+				PLAN_JETPACK_BUSINESS,
+				PLAN_JETPACK_BUSINESS_MONTHLY,
+				PLAN_JETPACK_PREMIUM,
+				PLAN_JETPACK_PREMIUM_MONTHLY,
+				PLAN_JETPACK_PERSONAL,
+				PLAN_JETPACK_PERSONAL_MONTHLY,
+				] )
 			.isRequired,
 		isPlaceholder: PropTypes.bool
 	};
@@ -51,7 +65,7 @@ class ProductPurchaseFeaturesList extends Component {
 	getBusinessFeatures() {
 		const {
 			selectedSite,
-			planHasDomainCredit
+			planHasDomainCredit,
 		} = this.props;
 
 		return [
@@ -72,8 +86,9 @@ class ProductPurchaseFeaturesList extends Component {
 				selectedSite={ selectedSite }
 				key="customizeThemeFeature"
 			/>,
-			<LiveCourses
-				key="attendLiveCourses"
+			<BusinessOnboarding
+				key="businessOnboarding"
+				onClick={ this.props.recordBusinessOnboardingClick }
 			/>,
 			<VideoAudioPosts
 				selectedSite={ selectedSite }
@@ -188,7 +203,7 @@ class ProductPurchaseFeaturesList extends Component {
 		];
 	}
 
-	getJetpackBusinessFeatures() {
+	getJetpackPersonalFeatures() {
 		const {	selectedSite } = this.props;
 
 		return [
@@ -198,8 +213,26 @@ class ProductPurchaseFeaturesList extends Component {
 			<JetpackAntiSpam
 				key="jetpackAntiSpam"
 			/>,
-			<JetpackSurveysPolls
-				key="jetpackSurveysPolls"
+			<JetpackWordPressCom
+				selectedSite={ selectedSite }
+				key="jetpackWordPressCom"
+			/>,
+			<JetpackReturnToDashboard
+				selectedSite={ selectedSite }
+				key="jetpackReturnToDashboard"
+			/>
+		];
+	}
+
+	getJetpackBusinessFeatures() {
+		const {	selectedSite } = this.props;
+
+		return [
+			<JetpackBackupSecurity
+				key="jetpackBackupSecurity"
+			/>,
+			<JetpackAntiSpam
+				key="jetpackAntiSpam"
 			/>,
 			<JetpackWordPressCom
 				selectedSite={ selectedSite }
@@ -231,6 +264,9 @@ class ProductPurchaseFeaturesList extends Component {
 			case PLAN_JETPACK_PREMIUM:
 			case PLAN_JETPACK_PREMIUM_MONTHLY:
 				return this.getJetpackPremiumFeatures();
+			case PLAN_JETPACK_PERSONAL:
+			case PLAN_JETPACK_PERSONAL_MONTHLY:
+				return this.getJetpackPersonalFeatures();
 			case PLAN_JETPACK_BUSINESS:
 			case PLAN_JETPACK_BUSINESS_MONTHLY:
 				return this.getJetpackBusinessFeatures();
@@ -257,5 +293,8 @@ export default connect(
 			selectedSite,
 			planHasDomainCredit: hasDomainCredit( state, selectedSiteId )
 		};
+	},
+	{
+		recordBusinessOnboardingClick: partial( recordTracksEvent, 'calypso_plan_features_onboarding_click' )
 	}
 )( ProductPurchaseFeaturesList );

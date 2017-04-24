@@ -2,15 +2,17 @@
  * External dependencies
  */
 import inherits from 'inherits';
-import some from 'lodash/some';
-import includes from 'lodash/includes';
-import find from 'lodash/find';
+import {
+	some,
+	includes,
+	find
+} from 'lodash';
 
 /**
  * Internal dependencies
  */
 import wpcom from 'lib/wp';
-import { type as domainTypes } from './constants';
+import { type as domainTypes, domainAvailability } from './constants';
 
 const GOOGLE_APPS_INVALID_TLDS = [ 'in' ],
 	GOOGLE_APPS_BANNED_PHRASES = [ 'google' ];
@@ -23,7 +25,7 @@ function ValidationError( code ) {
 inherits( ValidationError, Error );
 
 function canAddGoogleApps( domainName ) {
-	var tld = domainName.split( '.' )[ 1 ],
+	const tld = domainName.split( '.' )[ 1 ],
 		includesBannedPhrase = some( GOOGLE_APPS_BANNED_PHRASES, function( phrase ) {
 			return includes( domainName, phrase );
 		} );
@@ -31,53 +33,19 @@ function canAddGoogleApps( domainName ) {
 	return ! ( includes( GOOGLE_APPS_INVALID_TLDS, tld ) || includesBannedPhrase );
 }
 
-function canRegister( domainName, onComplete ) {
+function checkDomainAvailability( domainName, onComplete ) {
 	if ( ! domainName ) {
-		onComplete( new ValidationError( 'empty_query' ) );
+		onComplete( null, { status: domainAvailability.EMPTY_QUERY } );
 		return;
 	}
 
-	wpcom.undocumented().isDomainAvailable( domainName, function( serverError, data ) {
-		var errorCode;
+	wpcom.undocumented().isDomainAvailable( domainName, function( serverError, result ) {
 		if ( serverError ) {
-			errorCode = serverError.error;
-		} else if ( ! data.is_available && data.is_mappable ) {
-			errorCode = 'not_available_but_mappable';
-		} else if ( ! data.is_mappable && data.unmappability_reason ) {
-			errorCode = `mappable_but_${data.unmappability_reason}`;
-		} else if ( ! data.is_registrable ) {
-			errorCode = 'not_registrable';
-		} else if ( ! data.is_available ) {
-			errorCode = 'not_available';
+			onComplete( serverError.error );
+			return;
 		}
 
-		if ( errorCode ) {
-			onComplete( new ValidationError( errorCode ) );
-		} else {
-			onComplete( null, data );
-		}
-	} );
-}
-
-function canMap( domainName, onComplete ) {
-	if ( ! domainName ) {
-		onComplete( new ValidationError( 'empty_query' ) );
-		return;
-	}
-
-	wpcom.undocumented().isDomainMappable( domainName, function( serverError, data ) {
-		var errorCode;
-		if ( serverError ) {
-			errorCode = serverError.error;
-		} else if ( ! data.is_mappable ) {
-			errorCode = 'not_mappable';
-		}
-
-		if ( errorCode ) {
-			onComplete( new ValidationError( errorCode ) );
-		} else {
-			onComplete( null );
-		}
+		onComplete( null, result );
 	} );
 }
 
@@ -120,7 +88,7 @@ function isSubdomain( domainName ) {
 }
 
 function isInitialized( state, siteId ) {
-	var siteState = state[ siteId ];
+	const siteState = state[ siteId ];
 	return siteState && ( siteState.hasLoadedFromServer || siteState.isFetching );
 }
 
@@ -134,7 +102,7 @@ function isMappedDomain( domain ) {
 
 function getGoogleAppsSupportedDomains( domains ) {
 	return domains.filter( function( domain ) {
-		return ( domain.type === domainTypes.REGISTERED && canAddGoogleApps( domain.name ) );
+		return ( includes( [ domainTypes.REGISTERED, domainTypes.MAPPED ], domain.type ) && canAddGoogleApps( domain.name ) );
 	} );
 }
 
@@ -168,17 +136,23 @@ function hasMappedDomain( domains ) {
 	return getMappedDomains( domains ).length > 0;
 }
 
+function getTld( domainName ) {
+	const lastIndexOfDot = domainName.lastIndexOf( '.' );
+
+	return lastIndexOfDot !== -1 && domainName.substring( lastIndexOfDot + 1 );
+}
+
 export {
 	canAddGoogleApps,
-	canMap,
 	canRedirect,
-	canRegister,
+	checkDomainAvailability,
 	getFixedDomainSearch,
 	getGoogleAppsSupportedDomains,
 	getPrimaryDomain,
 	getSelectedDomain,
 	getRegisteredDomains,
 	getMappedDomains,
+	getTld,
 	hasGoogleApps,
 	hasGoogleAppsSupportedDomain,
 	hasMappedDomain,

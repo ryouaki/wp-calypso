@@ -1,24 +1,38 @@
 /**
  * External Dependencies
  */
-var page = require( 'page' ),
-	qs = require( 'qs' ),
-	i18n = require( 'i18n-calypso' ),
-	ReactDom = require( 'react-dom' ),
-	React = require( 'react' );
+import page from 'page';
+import qs from 'qs';
+import i18n from 'i18n-calypso';
+import ReactDom from 'react-dom';
+import React from 'react';
+import { get, isEmpty } from 'lodash';
 
 /**
  * Internal Dependencies
  */
-var analytics = require( 'lib/analytics' ),
-	sites = require( 'lib/sites-list' )(),
-	route = require( 'lib/route' ),
-	Main = require( 'components/main' ),
-	upgradesActions = require( 'lib/upgrades/actions' ),
-	setTitle = require( 'state/document-head/actions' ).setDocumentHeadTitle,
-	setSection = require( 'state/ui/actions' ).setSection,
-	productsList = require( 'lib/products-list' )(),
-	renderWithReduxStore = require( 'lib/react-helpers' ).renderWithReduxStore;
+import analytics from 'lib/analytics';
+import sitesFactory from 'lib/sites-list';
+import route from 'lib/route';
+import Main from 'components/main';
+import upgradesActions from 'lib/upgrades/actions';
+import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
+import { setSection } from 'state/ui/actions';
+import productsFactory from 'lib/products-list';
+import { renderWithReduxStore } from 'lib/react-helpers';
+import { canCurrentUser } from 'state/selectors';
+import {
+	getSelectedSiteId,
+	getSelectedSite,
+	getSelectedSiteSlug
+} from 'state/ui/selectors';
+import { getCurrentUser } from 'state/current-user/selectors';
+
+/**
+ * Module variables
+ */
+const sites = sitesFactory();
+const productsList = productsFactory();
 
 module.exports = {
 
@@ -58,9 +72,7 @@ module.exports = {
 				<CartData>
 					<DomainSearch
 						basePath={ basePath }
-						context={ context }
-						sites={ sites }
-						productsList={ productsList } />
+						context={ context } />
 				</CartData>
 			),
 			document.getElementById( 'primary' ),
@@ -81,9 +93,7 @@ module.exports = {
 		renderWithReduxStore(
 			(
 				<CartData>
-					<SiteRedirect
-						productsList={ productsList }
-						sites={ sites } />
+					<SiteRedirect />
 				</CartData>
 			),
 			document.getElementById( 'primary' ),
@@ -128,17 +138,20 @@ module.exports = {
 			} )
 		) );
 
+		const state = context.store.getState();
+		const siteSlug = getSelectedSiteSlug( state ) || '';
+
 		const handleAddGoogleApps = function( googleAppsCartItem ) {
 			upgradesActions.addItem( googleAppsCartItem );
-			page( '/checkout/' + sites.getSelectedSite().slug );
+			page( '/checkout/' + siteSlug );
 		};
 
 		const handleGoBack = function() {
-			page( '/domains/add/' + sites.getSelectedSite().slug );
+			page( '/domains/add/' + siteSlug );
 		};
 
 		const handleClickSkip = function() {
-			page( '/checkout/' + sites.getSelectedSite().slug );
+			page( '/checkout/' + siteSlug );
 		};
 
 		analytics.pageView.record( '/domains/add/:site/google-apps', 'Domain Search > Domain Registration > Google Apps' );
@@ -170,6 +183,9 @@ module.exports = {
 			product = context.params.product,
 			selectedFeature = context.params.feature;
 
+		const state = context.store.getState();
+		const selectedSite = getSelectedSite( state );
+
 		if ( 'thank-you' === product ) {
 			return;
 		}
@@ -186,7 +202,7 @@ module.exports = {
 						product={ product }
 						productsList={ productsList }
 						selectedFeature={ selectedFeature }
-						sites={ sites } />
+					/>
 				</CheckoutData>
 			),
 			document.getElementById( 'primary' ),
@@ -196,7 +212,41 @@ module.exports = {
 		renderWithReduxStore(
 			(
 				<CartData>
-					<SecondaryCart selectedSite={ sites.getSelectedSite() } />
+					<SecondaryCart selectedSite={ selectedSite } />
+				</CartData>
+			),
+			document.getElementById( 'secondary' ),
+			context.store
+		);
+	},
+
+	sitelessCheckout: function( context ) {
+		const Checkout = require( './checkout' ),
+			CheckoutData = require( 'components/data/checkout' ),
+			CartData = require( 'components/data/cart' ),
+			SecondaryCart = require( './cart/secondary-cart' );
+
+		analytics.pageView.record( '/checkout/no-site', 'Checkout' );
+
+		// FIXME: Auto-converted from the Flux setTitle action. Please use <DocumentHead> instead.
+		context.store.dispatch( setTitle( i18n.translate( 'Checkout' ) ) );
+
+		renderWithReduxStore(
+			(
+				<CheckoutData>
+					<Checkout
+						productsList={ productsList }
+					/>
+				</CheckoutData>
+			),
+			document.getElementById( 'primary' ),
+			context.store
+		);
+
+		renderWithReduxStore(
+			(
+				<CartData>
+					<SecondaryCart />
 				</CartData>
 			),
 			document.getElementById( 'secondary' ),
@@ -205,7 +255,7 @@ module.exports = {
 	},
 
 	checkoutThankYou: function( context ) {
-		var CheckoutThankYouComponent = require( './checkout-thank-you' ),
+		const CheckoutThankYouComponent = require( './checkout-thank-you' ),
 			basePath = route.sectionify( context.path ),
 			receiptId = Number( context.params.receiptId );
 
@@ -215,13 +265,17 @@ module.exports = {
 
 		context.store.dispatch( setTitle( i18n.translate( 'Thank You' ) ) ); // FIXME: Auto-converted from the Flux setTitle action. Please use <DocumentHead> instead.
 
+		const state = context.store.getState();
+		const selectedSite = getSelectedSite( state );
+
 		renderWithReduxStore(
 			(
 				<CheckoutThankYouComponent
 					productsList={ productsList }
 					receiptId={ receiptId }
+					domainOnlySiteFlow={ isEmpty( context.params.site ) }
 					selectedFeature={ context.params.feature }
-					selectedSite={ sites.getSelectedSite() } />
+					selectedSite={ selectedSite } />
 			),
 			document.getElementById( 'primary' ),
 			context.store
@@ -232,19 +286,24 @@ module.exports = {
 
 	redirectIfNoSite: function( redirectTo ) {
 		return function( context, next ) {
-			var selectedSite = sites.getSelectedSite();
-
-			if ( ! selectedSite || ! selectedSite.isUpgradeable() ) {
-				return page.redirect( redirectTo );
+			const state = context.store.getState();
+			const siteId = getSelectedSiteId( state );
+			const userCanManageOptions = canCurrentUser( state, siteId, 'manage_options' );
+			if ( ! userCanManageOptions ) {
+				const user = getCurrentUser( state );
+				const visibleSiteCount = get( user, 'visible_site_count', 0 );
+				//if only one site navigate to stats to avoid redirect loop
+				const redirect = visibleSiteCount > 1 ? redirectTo : '/stats';
+				return page.redirect( redirect );
 			}
-
 			next();
 		};
 	},
 
 	redirectToAddMappingIfVipSite: function() {
 		return function( context, next ) {
-			const selectedSite = sites.getSelectedSite(),
+			const state = context.store.getState();
+			const selectedSite = getSelectedSite( state ),
 				domain = context.params.domain ? `/${ context.params.domain }` : '',
 				query = qs.stringify( { initialQuery: context.params.suggestion } );
 

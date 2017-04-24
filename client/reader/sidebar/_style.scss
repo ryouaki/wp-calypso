@@ -3,6 +3,10 @@
 
 	overflow-x: hidden;
 
+	@include breakpoint( "<660px" ) {
+		z-index: z-index( 'root', '.reader-mobile-sidebar' );
+	}
+
 	.sidebar__menu {
 		margin-bottom: 8px;
 
@@ -170,6 +174,7 @@
 
 	.sidebar__menu-empty,
 	.sidebar__menu-empty:hover {
+		max-width: 60%;
 		padding-right: 32px;
 		padding-left: 55px;
 		font-size: 13px;
@@ -192,15 +197,14 @@
 		padding: 8px 16px 8px 55px;
 
 		&::after {
-			@include long-content-fade( $color: lighten( $gray, 30% ), $size: 28% );
+			@include long-content-fade( $color: lighten( $gray, 30% ), $size: 20px );
 			padding-right: 50px;
 		}
 
-		.sidebar__menu-item-listname,
 		.sidebar__menu-item-tagname {
 
 			&::after {
-				@include long-content-fade( $color: lighten( $gray, 30% ), $size: 20% );
+				@include long-content-fade( $color: lighten( $gray, 30% ), $size: 20px );
 				right: 60px;
 			}
 		}

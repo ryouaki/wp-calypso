@@ -9,7 +9,7 @@ import i18n from 'i18n-calypso';
 */
 import stepActions from 'lib/signup/step-actions';
 
-module.exports = {
+export default {
 	survey: {
 		stepName: 'survey',
 		props: {
@@ -21,7 +21,27 @@ module.exports = {
 	themes: {
 		stepName: 'themes',
 		dependencies: [ 'siteSlug' ],
-		providesDependencies: [ 'theme' ]
+		providesDependencies: [ 'themeSlugWithRepo' ]
+	},
+
+	// `themes` does not update the theme for an existing site as we normally
+	// do this when the site is created. In flows where a site is merely being
+	// updated, we need to use a different API request function.
+	'themes-site-selected': {
+		stepName: 'themes-site-selected',
+		dependencies: [ 'siteSlug', 'themeSlugWithRepo' ],
+		providesDependencies: [ 'themeSlugWithRepo' ],
+		apiRequestFunction: stepActions.setThemeOnSite,
+		props: {
+			headerText: i18n.translate( 'Choose a theme for your new site.' ),
+		}
+	},
+
+	'plans-site-selected': {
+		stepName: 'plans-site-selected',
+		apiRequestFunction: stepActions.addPlanToCart,
+		dependencies: [ 'siteSlug', 'siteId' ],
+		providesDependencies: [ 'cartItem', 'privacyItem' ]
 	},
 
 	'design-type': {
@@ -47,12 +67,15 @@ module.exports = {
 		providesDependencies: [ 'bearer_token', 'username' ]
 	},
 
-	'survey-user': {
-		stepName: 'survey-user',
+	'user-social': {
+		stepName: 'user-social',
 		apiRequestFunction: stepActions.createAccount,
 		providesToken: true,
-		dependencies: [ 'surveySiteType', 'surveyQuestion' ],
-		providesDependencies: [ 'bearer_token', 'username' ]
+		providesDependencies: [ 'bearer_token', 'username' ],
+		props: {
+			headerText: i18n.translate( 'Create your account.' ),
+			isSocialSignupEnabled: true
+		},
 	},
 
 	'site-title': {
@@ -67,30 +90,28 @@ module.exports = {
 	plans: {
 		stepName: 'plans',
 		apiRequestFunction: stepActions.addPlanToCart,
-		dependencies: [ 'siteSlug' ],
-		providesDependencies: [ 'cartItem' ]
+		dependencies: [ 'siteSlug', 'siteId', 'domainItem' ],
+		providesDependencies: [ 'cartItem', 'privacyItem' ]
 	},
 
 	domains: {
 		stepName: 'domains',
 		apiRequestFunction: stepActions.createSiteWithCart,
 		providesDependencies: [ 'siteId', 'siteSlug', 'domainItem', 'themeItem' ],
-		dependencies: [ 'theme', 'surveyQuestion' ],
+		props: {
+			isDomainOnly: false
+		},
+		dependencies: [ 'themeSlugWithRepo' ],
 		delayApiRequestUntilComplete: true
 	},
 
-	'domains-with-plan': {
-		stepName: 'domains-with-plan',
-		apiRequestFunction: stepActions.createSiteWithCartAndStartFreeTrial,
-		providesDependencies: [ 'siteId', 'siteSlug', 'domainItem', 'themeItem' ],
-		dependencies: [ 'theme' ],
-		delayApiRequestUntilComplete: true
-	},
-
-	'domains-only': {
-		stepName: 'domains-only',
+	'domains-theme-preselected': {
+		stepName: 'domains-theme-preselected',
 		apiRequestFunction: stepActions.createSiteWithCart,
 		providesDependencies: [ 'siteId', 'siteSlug', 'domainItem', 'themeItem' ],
+		props: {
+			isDomainOnly: false
+		},
 		delayApiRequestUntilComplete: true
 	},
 
@@ -109,7 +130,7 @@ module.exports = {
 		apiRequestFunction: stepActions.createSiteWithCart,
 		stepName: 'get-dot-blog-plans',
 		dependencies: [ 'cartItem' ],
-		providesDependencies: [ 'cartItem', 'siteSlug', 'siteId', 'domainItem', 'themeItem' ]
+		providesDependencies: [ 'cartItem', 'siteSlug', 'siteId', 'domainItem', 'themeItem', 'privacyItem' ]
 	},
 
 	'get-dot-blog-themes': {
@@ -118,14 +139,19 @@ module.exports = {
 			designType: 'blog'
 		},
 		dependencies: [ 'siteSlug' ],
-		providesDependencies: [ 'theme' ]
+		providesDependencies: [ 'themeSlugWithRepo' ]
 	},
 
-	'get-dot-blog-survey': {
-		stepName: 'get-dot-blog-survey',
+	// Currently, this step explicitly submits other steps to skip them, and
+	// should not be used outside of the `domain-first` flow.
+	'site-or-domain': {
+		stepName: 'site-or-domain',
+		apiRequestFunction: stepActions.createSiteOrDomain,
 		props: {
-			surveySiteType: 'blog'
+			headerText: i18n.translate( 'Do you want to use this domain yet?' ),
+			subHeaderText: i18n.translate( "Don't worry you can easily add a site later if you're not ready" )
 		},
-		providesDependencies: [ 'surveySiteType', 'surveyQuestion' ]
+		providesDependencies: [ 'siteId', 'siteSlug', 'domainItem', 'themeSlugWithRepo' ],
+		delayApiRequestUntilComplete: true
 	},
 };

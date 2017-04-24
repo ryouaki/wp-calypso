@@ -5,12 +5,13 @@ import { localize } from 'i18n-calypso';
 import noop from 'lodash/noop';
 import React, { PropTypes } from 'react';
 import classNames from 'classnames';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
 import Button from 'components/button';
-import Gridicon from 'components/gridicon';
+import { abtest } from 'lib/abtest';
 
 const PlanFeaturesActions = ( {
 	canPurchase,
@@ -21,16 +22,19 @@ const PlanFeaturesActions = ( {
 	freePlan = false,
 	onUpgradeClick = noop,
 	isPlaceholder = false,
+	isPopular,
 	isInSignup,
 	translate,
-	manageHref
+	manageHref,
+	isLandingPage,
+	planName
 } ) => {
 	let upgradeButton;
 	const classes = classNames(
 		'plan-features__actions-button',
 		{
 			'is-current': current,
-			'is-primary': primaryUpgrade && ! isPlaceholder
+			'is-primary': ( primaryUpgrade && ! isPlaceholder ) || ( isPopular && abtest( 'signupPlansCallToAction' ) === 'modified' )
 		},
 		className
 	);
@@ -43,17 +47,23 @@ const PlanFeaturesActions = ( {
 			</Button>
 		);
 	} else if ( available || isPlaceholder ) {
+		let buttonText = freePlan
+			? translate( 'Select Free', { context: 'button' } )
+			: translate( 'Upgrade', { context: 'verb' } );
+		if ( isLandingPage ) {
+			buttonText = translate( 'Select', { context: 'button' } );
+		}
+		if ( isInSignup && ( abtest( 'signupPlansCallToAction' ) === 'modified' ) ) {
+			buttonText = 'Start with ' + planName;
+		}
+
 		upgradeButton = (
 			<Button
 				className={ classes }
 				onClick={ isPlaceholder ? noop : onUpgradeClick }
 				disabled={ isPlaceholder }
 			>
-				{
-					freePlan
-						? translate( 'Select Free', { context: 'button' } )
-						: translate( 'Upgrade', { context: 'verb' } )
-				}
+				{ buttonText }
 			</Button>
 		);
 	}
@@ -75,7 +85,8 @@ PlanFeaturesActions.propTypes = {
 	available: PropTypes.bool,
 	onUpgradeClick: PropTypes.func,
 	freePlan: PropTypes.bool,
-	isPlaceholder: PropTypes.bool
+	isPlaceholder: PropTypes.bool,
+	isLandingPage: PropTypes.bool
 };
 
 export default localize( PlanFeaturesActions );

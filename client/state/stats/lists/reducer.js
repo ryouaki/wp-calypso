@@ -2,17 +2,17 @@
  * External dependencies
  */
 import { combineReducers } from 'redux';
-import merge from 'lodash/merge';
+import { merge, unset } from 'lodash';
 
 /**
  * Internal dependencies
  */
+import { createReducer } from 'state/utils';
 import { isValidStateWithSchema } from 'state/utils';
 import { getSerializedStatsQuery } from './utils';
 import { itemSchema } from './schema';
 import {
 	DESERIALIZE,
-	SERIALIZE,
 	SITE_STATS_RECEIVE,
 	SITE_STATS_REQUEST,
 	SITE_STATS_REQUEST_FAILURE,
@@ -21,33 +21,44 @@ import {
 
 /**
  * Returns the updated requests state after an action has been dispatched. The
- * state maps site ID, post ID and stat keys to whether a request is in progress.
+ * state maps site ID, post ID and stat keys to the request stats.
  *
  * @param  {Object} state  Current state
  * @param  {Object} action Action payload
  * @return {Object}        Updated state
  */
-export function requesting( state = {}, action ) {
-	switch ( action.type ) {
-		case SITE_STATS_REQUEST:
-		case SITE_STATS_REQUEST_SUCCESS:
-		case SITE_STATS_REQUEST_FAILURE:
-			const queryKey = getSerializedStatsQuery( action.query );
-			return merge( {}, state, {
-				[ action.siteId ]: {
-					[ action.statType ]: {
-						[ queryKey ]: SITE_STATS_REQUEST === action.type
-					}
+export const requests = createReducer( {}, {
+	[ SITE_STATS_REQUEST ]: ( state, { siteId, statType, query } ) => {
+		const queryKey = getSerializedStatsQuery( query );
+		return merge( {}, state, {
+			[ siteId ]: {
+				[ statType ]: {
+					[ queryKey ]: { requesting: true, status: 'pending' }
 				}
-			} );
-
-		case SERIALIZE:
-		case DESERIALIZE:
-			return {};
+			}
+		} );
+	},
+	[ SITE_STATS_REQUEST_SUCCESS ]: ( state, { siteId, statType, query, date } ) => {
+		const queryKey = getSerializedStatsQuery( query );
+		return merge( {}, state, {
+			[ siteId ]: {
+				[ statType ]: {
+					[ queryKey ]: { requesting: false, status: 'success', date }
+				}
+			}
+		} );
+	},
+	[ SITE_STATS_REQUEST_FAILURE ]: ( state, { siteId, statType, query } ) => {
+		const queryKey = getSerializedStatsQuery( query );
+		return merge( {}, state, {
+			[ siteId ]: {
+				[ statType ]: {
+					[ queryKey ]: { requesting: false, status: 'error' }
+				}
+			}
+		} );
 	}
-
-	return state;
-}
+} );
 
 /**
  * Returns the updated items state after an action has been dispatched. The
@@ -61,7 +72,12 @@ export function items( state = {}, action ) {
 	switch ( action.type ) {
 		case SITE_STATS_RECEIVE:
 			const queryKey = getSerializedStatsQuery( action.query );
-			return merge( {}, state, {
+
+			// To avoid corrupted stat data with massive arrays
+			// From causing _.merge to crash, first clone, then unset existing data
+			const existingItems = Object.assign( {}, state );
+			unset( existingItems, [ action.siteId, action.statType, queryKey ] );
+			return merge( {}, existingItems, {
 				[ action.siteId ]: {
 					[ action.statType ]: {
 						[ queryKey ]: action.data
@@ -81,6 +97,6 @@ export function items( state = {}, action ) {
 }
 
 export default combineReducers( {
-	requesting,
+	requests,
 	items
 } );

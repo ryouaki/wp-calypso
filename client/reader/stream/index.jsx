@@ -2,152 +2,174 @@
  * External dependencies
  */
 import ReactDom from 'react-dom';
-import React from 'react';
+import React, { PropTypes } from 'react';
 import classnames from 'classnames';
-import noop from 'lodash/noop';
-import times from 'lodash/times';
+import { defer, findLast, noop, times, clamp, identity, map } from 'lodash';
+import { connect } from 'react-redux';
 
 /**
  * Internal dependencies
  */
-import config from 'config';
-import Main from 'components/main';
 import ReaderMain from 'components/reader-main';
-import DISPLAY_TYPES from 'lib/feed-post-store/display-types';
 import EmptyContent from './empty';
-import FeedStreamStoreActions from 'lib/feed-stream-store/actions';
-import FeedPostStoreActions from 'lib/feed-post-store/actions';
-import ListGap from 'reader/list-gap';
+import {
+	fetchNextPage,
+	selectFirstItem,
+	selectItem,
+	selectNextItem,
+	selectPrevItem,
+	showUpdates,
+	shufflePosts,
+} from 'lib/feed-stream-store/actions';
 import LikeStore from 'lib/like-store/like-store';
 import LikeStoreActions from 'lib/like-store/actions';
 import LikeHelper from 'reader/like-helper';
 import InfiniteList from 'components/infinite-list';
 import MobileBackToSidebar from 'components/mobile-back-to-sidebar';
-import Post from './post';
-import CrossPost from './x-post';
-import RefreshPost from './refresh-post';
-import page from 'page';
-import PostUnavailable from './post-unavailable';
 import PostPlaceholder from './post-placeholder';
 import PostStore from 'lib/feed-post-store';
 import UpdateNotice from 'reader/update-notice';
-import PostBlocked from './post-blocked';
 import KeyboardShortcuts from 'lib/keyboard-shortcuts';
 import scrollTo from 'lib/scroll-to';
 import XPostHelper from 'reader/xpost-helper';
+import PostLifecycle from './post-lifecycle';
+import FeedSubscriptionStore from 'lib/reader-feed-subscriptions';
+import { showSelectedPost } from 'reader/utils';
+import getBlockedSites from 'state/selectors/get-blocked-sites';
+import config from 'config';
+import { keysAreEqual } from 'lib/feed-stream-store/post-key';
+import { resetCardExpansions } from 'state/ui/reader/card-expansions/actions';
+import { combineCards, injectRecommendations, RECS_PER_BLOCK } from './utils';
+import { keyToString, keyForPost } from 'lib/feed-stream-store/post-key';
 
 const GUESSED_POST_HEIGHT = 600;
 const HEADER_OFFSET_TOP = 46;
 
-function oldCardFactory( post ) {
-	if ( post.display_type & DISPLAY_TYPES.X_POST ) {
-		return CrossPost;
-	}
+const MIN_DISTANCE_BETWEEN_RECS = 4; // page size is 7, so one in the middle of every page and one on page boundries, sometimes
+const MAX_DISTANCE_BETWEEN_RECS = 30;
 
-	if ( post.is_site_blocked ) {
-		return PostBlocked;
+function getDistanceBetweenRecs() {
+	// the distance between recs changes based on how many subscriptions the user has.
+	// We cap it at MAX_DISTANCE_BETWEEN_RECS.
+	// It grows at the natural log of the number of subs, times a multiplier, offset by a constant.
+	// This lets the distance between recs grow quickly as you add subs early on, and slow down as you
+	// become a common user of the reader.
+	const totalSubs = FeedSubscriptionStore.getTotalSubscriptions();
+	if ( totalSubs <= 0 ) {
+		// 0 means either we don't know yet, or the user actually has zero subs.
+		// if a user has zero subs, we don't show posts at all, so just treat 0 as 'unknown' and
+		// push recs to the max.
+		return MAX_DISTANCE_BETWEEN_RECS;
 	}
-
-	return Post;
+	const distance = clamp(
+		Math.floor( ( Math.log( totalSubs ) * Math.LOG2E * 5 ) - 6 ),
+		MIN_DISTANCE_BETWEEN_RECS,
+		MAX_DISTANCE_BETWEEN_RECS );
+	return distance;
 }
 
-function refreshCardFactory( post ) {
-	let postClass = oldCardFactory( post );
-	if ( postClass === Post ) {
-		postClass = RefreshPost;
+class ReaderStream extends React.Component {
+
+	static propTypes = {
+		postsStore: PropTypes.object.isRequired,
+		recommendationsStore: PropTypes.object,
+		trackScrollPage: PropTypes.func.isRequired,
+		suppressSiteNameLink: PropTypes.bool,
+		showPostHeader: PropTypes.bool,
+		showFollowInHeader: PropTypes.bool,
+		onUpdatesShown: PropTypes.func,
+		emptyContent: PropTypes.object,
+		className: PropTypes.string,
+		showDefaultEmptyContentIfMissing: PropTypes.bool,
+		showPrimaryFollowButtonOnCards: PropTypes.bool,
+		showMobileBackToSidebar: PropTypes.bool,
+		placeholderFactory: PropTypes.func,
+		followSource: PropTypes.string,
+		isDiscoverStream: PropTypes.bool,
+		shouldCombineCards: PropTypes.bool,
+		transformStreamItems: PropTypes.func,
 	}
-	return postClass;
-}
 
-const defaultCardFactory = config.isEnabled( 'reader/refresh/stream' ) ? refreshCardFactory : oldCardFactory;
+	static defaultProps = {
+		showPostHeader: true,
+		suppressSiteNameLink: false,
+		showFollowInHeader: false,
+		onUpdatesShown: noop,
+		className: '',
+		showDefaultEmptyContentIfMissing: true,
+		showPrimaryFollowButtonOnCards: true,
+		showMobileBackToSidebar: true,
+		isDiscoverStream: false,
+		shouldCombineCards: config.isEnabled( 'reader/combined-cards' ),
+		transformStreamItems: identity,
+	};
 
-module.exports = React.createClass( {
-	displayName: 'ReaderFollowing',
+	getStateFromStores( store = this.props.postsStore, recommendationsStore = this.props.recommendationsStore ) {
+		const posts = map( store.get(), this.props.transformStreamItems );
+		const recs = recommendationsStore ? recommendationsStore.get() : null;
+		// do we have enough recs? if we have a store, but not enough recs, we should fetch some more...
+		if ( recommendationsStore ) {
+			if ( ! recs || recs.length < posts.length * ( RECS_PER_BLOCK / getDistanceBetweenRecs() ) ) {
+				if ( ! recommendationsStore.isFetchingNextPage() ) {
+					defer( () => fetchNextPage( recommendationsStore.id ) );
+				}
+			}
+		}
 
-	propTypes: {
-		store: React.PropTypes.object.isRequired,
-		trackScrollPage: React.PropTypes.func.isRequired,
-		suppressSiteNameLink: React.PropTypes.bool,
-		showPostHeader: React.PropTypes.bool,
-		showFollowInHeader: React.PropTypes.bool,
-		onUpdatesShown: React.PropTypes.func,
-		emptyContent: React.PropTypes.object,
-		className: React.PropTypes.string,
-		showDefaultEmptyContentIfMissing: React.PropTypes.bool,
-		showPrimaryFollowButtonOnCards: React.PropTypes.bool,
-		showMobileBackToSidebar: React.PropTypes.bool
-	},
+		let items = this.state && this.state.items;
+		if ( ! this.state || posts !== this.state.posts || recs !== this.state.recs ) {
+			items = injectRecommendations( posts, recs, getDistanceBetweenRecs() );
+		}
 
-	getDefaultProps: function() {
+		if ( this.props.shouldCombineCards ) {
+			items = combineCards( items );
+		}
+
 		return {
-			showPostHeader: true,
-			suppressSiteNameLink: false,
-			showFollowInHeader: false,
-			onShowUpdates: noop,
-			className: '',
-			showDefaultEmptyContentIfMissing: true,
-			showPrimaryFollowButtonOnCards: false,
-			showMobileBackToSidebar: true
-		};
-	},
-
-	getInitialState: function() {
-		return this.getStateFromStores();
-	},
-
-	getStateFromStores: function( store ) {
-		store = store || this.props.store;
-		return {
-			posts: store.get(),
+			items,
+			posts,
+			recs,
 			updateCount: store.getUpdateCount(),
-			selectedIndex: store.getSelectedIndex()
+			selectedPostKey: store.getSelectedPostKey(),
+			isFetchingNextPage: store.isFetchingNextPage && store.isFetchingNextPage(),
+			isLastPage: store.isLastPage()
 		};
-	},
+	}
 
-	updateState: function( store ) {
+	state = this.getStateFromStores();
+
+	updateState = ( store ) => {
 		this.setState( this.getStateFromStores( store ) );
-	},
+	}
 
-	componentDidUpdate: function( prevProps, prevState ) {
-		if ( prevState.selectedIndex !== this.state.selectedIndex ) {
+	componentDidUpdate( prevProps, prevState ) {
+		if ( ! keysAreEqual( prevState.selectedPostKey, this.state.selectedPostKey ) ) {
 			this.scrollToSelectedPost( true );
 			if ( this.isPostFullScreen() ) {
-				this.showSelectedPost( { replaceHistory: true } );
+				showSelectedPost( {
+					store: this.props.postsStore,
+					replaceHistory: true,
+				} );
 			}
 		}
-	},
+	}
 
-	_popstate: function() {
-		if ( this.state.selectedIndex > -1 && history.scrollRestoration !== 'manual' ) {
+	_popstate = () => {
+		if ( this.state.selectedPostKey && history.scrollRestoration !== 'manual' ) {
 			this.scrollToSelectedPost( false );
 		}
-	},
+	}
 
-	cardClassForPost( post ) {
-		if ( this.props.cardFactory ) {
-			const externalPostClass = this.props.cardFactory( post );
-			if ( externalPostClass ) {
-				return externalPostClass;
-			}
-		}
-		return defaultCardFactory( post );
-	},
-
-	scrollToSelectedPost: function( animate ) {
-		let HEADER_OFFSET = -80, // a fixed position header means we can't just scroll the element into view.
-			selectedNode,
-			boundingClientRect,
-			documentElement,
-			windowTop,
-			scrollY;
-		selectedNode = ReactDom.findDOMNode( this ).querySelector( '.is-selected' );
+	scrollToSelectedPost( animate ) {
+		const HEADER_OFFSET = -80; // a fixed position header means we can't just scroll the element into view.
+		const selectedNode = ReactDom.findDOMNode( this ).querySelector( '.is-selected' );
 		if ( selectedNode ) {
-			documentElement = document.documentElement;
+			const documentElement = document.documentElement;
 			selectedNode.focus();
-			windowTop = ( window.pageYOffset || documentElement.scrollTop ) -
+			const windowTop = ( window.pageYOffset || documentElement.scrollTop ) -
 				( documentElement.clientTop || 0 );
-			boundingClientRect = selectedNode.getBoundingClientRect();
-			scrollY = parseInt( windowTop + boundingClientRect.top + HEADER_OFFSET, 10 );
+			const boundingClientRect = selectedNode.getBoundingClientRect();
+			const scrollY = parseInt( windowTop + boundingClientRect.top + HEADER_OFFSET, 10 );
 			if ( animate ) {
 				scrollTo( {
 					x: 0,
@@ -158,78 +180,63 @@ module.exports = React.createClass( {
 				window.scrollTo( 0, scrollY );
 			}
 		}
-	},
+	}
 
-	componentDidMount: function() {
-		this.props.store.on( 'change', this.updateState );
-		PostStore.on( 'change', this.updateState ); // should move this dep down into the individual items
+	componentDidMount() {
+		this.props.postsStore.on( 'change', this.updateState );
+		this.props.recommendationsStore && this.props.recommendationsStore.on( 'change', this.updateState );
+		this.props.resetCardExpansions();
 
 		KeyboardShortcuts.on( 'move-selection-down', this.selectNextItem );
 		KeyboardShortcuts.on( 'move-selection-up', this.selectPrevItem );
-		KeyboardShortcuts.on( 'open-selection', this.showSelectedPost );
+		KeyboardShortcuts.on( 'open-selection', this.handleOpenSelection );
 		KeyboardShortcuts.on( 'like-selection', this.toggleLikeOnSelectedPost );
 		KeyboardShortcuts.on( 'go-to-top', this.goToTop );
 		window.addEventListener( 'popstate', this._popstate );
 		if ( 'scrollRestoration' in history ) {
 			history.scrollRestoration = 'manual';
 		}
-	},
+	}
 
-	componentWillUnmount: function() {
-		this.props.store.off( 'change', this.updateState );
-		PostStore.off( 'change', this.updateState );
+	componentWillUnmount() {
+		this.props.postsStore.off( 'change', this.updateState );
+		this.props.recommendationsStore && this.props.recommendationsStore.off( 'change', this.updateState );
 
 		KeyboardShortcuts.off( 'move-selection-down', this.selectNextItem );
 		KeyboardShortcuts.off( 'move-selection-up', this.selectPrevItem );
-		KeyboardShortcuts.off( 'open-selection', this.showSelectedPost );
+		KeyboardShortcuts.off( 'open-selection', this.handleOpenSelection );
 		KeyboardShortcuts.off( 'like-selection', this.toggleLikeOnSelectedPost );
 		KeyboardShortcuts.off( 'go-to-top', this.goToTop );
 		window.removeEventListener( 'popstate', this._popstate );
 		if ( 'scrollRestoration' in history ) {
 			history.scrollRestoration = 'auto';
 		}
-	},
+	}
 
-	componentWillReceiveProps: function( nextProps ) {
-		if ( nextProps.store !== this.props.store ) {
-			this.props.store.off( 'change', this.updateState );
-			nextProps.store.on( 'change', this.updateState );
-			this.updateState( nextProps.store );
+	componentWillReceiveProps( nextProps ) {
+		if ( nextProps.postsStore !== this.props.postsStore ) {
+			this.props.postsStore.off( 'change', this.updateState );
+			this.props.recommendationsStore && this.props.recommendationsStore.off( 'change', this.updateState );
+
+			nextProps.postsStore.on( 'change', this.updateState );
+			nextProps.recommendationsStore && nextProps.recommendationsStore.on( 'change', this.updateState );
+			this.props.resetCardExpansions();
+
+			this.updateState( nextProps.postsStore, nextProps.recommendationsStore );
 			this._list && this._list.reset();
 		}
-	},
+	}
 
-	showSelectedPost: function( options ) {
-		let postKey = this.props.store.getSelectedPost(),
-			mappedPost;
-		if ( !! postKey ) {
-			// gap
-			if ( postKey.isGap === true ) {
-				return this._selectedGap.handleClick();
-			}
-			// xpost
-			const post = PostStore.get( postKey );
-			if ( this.cardClassForPost( post ) === CrossPost && ! options.replaceHistory ) {
-				return this.showFullXPost( XPostHelper.getXPostMetadata( post ) );
-			}
-			// normal
-			if ( !! postKey.feedId ) {
-				mappedPost = {
-					feed_ID: postKey.feedId,
-					feed_item_ID: postKey.postId
-				};
-			} else {
-				mappedPost = {
-					site_ID: postKey.blogId,
-					ID: postKey.postId
-				};
-			}
-			this.showFullPost( mappedPost, options );
-		}
-	},
+	handleOpenSelection = () => {
+		const selectedPostKey = this.props.postsStore.getSelectedPostKey();
+		showSelectedPost( {
+			store: this.props.postsStore,
+			postKey: selectedPostKey,
+		} );
+	}
 
-	toggleLikeOnSelectedPost: function() {
-		const postKey = this.props.store.getSelectedPost();
+	toggleLikeOnSelectedPost = () => {
+		const postKey = this.props.postsStore.getSelectedPostKey();
 		let post;
 
 		if ( postKey && ! postKey.isGap ) {
@@ -249,211 +256,181 @@ module.exports = React.createClass( {
 		if ( LikeHelper.shouldShowLikes( post ) ) {
 			this.toggleLikeAction( post.site_ID, post.ID );
 		}
-	},
+	}
 
-	toggleLikeAction: function( siteId, postId ) {
+	toggleLikeAction( siteId, postId ) {
 		const liked = LikeStore.isPostLikedByCurrentUser( siteId, postId );
 		if ( liked === null ) {
 			// unknown... ignore for now
 			return;
 		}
 		LikeStoreActions[ liked ? 'unlikePost' : 'likePost' ]( siteId, postId );
-	},
+	}
 
-	isPostFullScreen: function() {
+	isPostFullScreen() {
 		return !! window.location.pathname.match( /^\/read\/(blogs|feeds)\/([0-9]+)\/posts\/([0-9]+)$/i );
-	},
+	}
 
-	goToTop: function() {
+	goToTop = () => {
 		if ( this.state.updateCount && this.state.updateCount > 0 ) {
 			this.showUpdates();
 		} else {
-			FeedStreamStoreActions.selectItem( this.props.store.id, 0 );
+			selectFirstItem( this.props.postsStore.id );
 		}
-	},
+	}
 
-	getVisibleItemIndexes: function() {
+	getVisibleItemIndexes() {
 		return this._list && this._list.getVisibleItemIndexes( { offsetTop: HEADER_OFFSET_TOP } );
-	},
+	}
 
-	selectNextItem: function() {
-		let visibleIndexes = this.getVisibleItemIndexes(),
-			visibleIndex,
-			index,
-			i;
+	selectNextItem = () => {
+		// do we have a selected item? if so, just move to the next one
+		if ( this.state.selectedPostKey ) {
+			selectNextItem( this.props.postsStore.id );
+			return;
+		}
+
+		const visibleIndexes = this.getVisibleItemIndexes();
+		const { items, posts } = this.state;
+
+		// This is slightly magical...
+		// When a user tries to select the "next" item, we really want to select
+		// the next item if and only if the currently selected item is at the top of the
+		// screen. If the currently selected item is off screen, we'd rather select the item
+		// at the top of the screen, rather than the strictly "next" item. This is so a user can
+		// pick an item with the keyboard shortcuts, then scroll down a bit, then hit `next` again
+		// and have it pick the item at the top of the screen, rather than the item we scrolled past
 		if ( visibleIndexes && visibleIndexes.length > 0 ) {
-			index = visibleIndexes[ 0 ].index;
-			for ( i = 0; i < visibleIndexes.length; i++ ) {
-				visibleIndex = visibleIndexes[ i ];
-				if ( visibleIndex.bounds.top > 0 ) {
+			// default to the first item in the visible list. this item is likely off screen when the user
+			// is scrolled down the page
+			let index = visibleIndexes[ 0 ].index;
+
+			// walk down the list of "visible" items, looking for the first item whose top extent is on screen
+			for ( let i = 0; i < visibleIndexes.length; i++ ) {
+				const visibleIndex = visibleIndexes[ i ];
+				// skip items whose top are off screen or are recommendation blocks
+				if ( visibleIndex.bounds.top > 0 && ! items[ visibleIndex.index ].isRecommendationBlock ) {
 					index = visibleIndex.index;
 					break;
 				}
 			}
-			if ( index === this.state.selectedIndex ) {
-				FeedStreamStoreActions.selectNextItem( this.props.store.id, index );
-			} else {
-				FeedStreamStoreActions.selectItem( this.props.store.id, index );
-			}
-		}
-	},
 
-	selectPrevItem: function() {
-		let visibleIndexes = this.getVisibleItemIndexes(),
-			visibleIndex,
-			index,
-			i;
-		if ( visibleIndexes && visibleIndexes.length > 0 ) {
-			index = visibleIndexes[ 0 ].index;
-			for ( i = 0; i < visibleIndexes.length; i++ ) {
-				visibleIndex = visibleIndexes[ i ];
-				if ( visibleIndex.bounds.top < 0 ) {
-					index = visibleIndex.index;
-					break;
+			const candidateItem = items[ index ];
+			// is this a combo card?
+			if ( candidateItem.isCombination ) {
+				// pick the first item
+				const postKey = { postId: candidateItem.postIds[ 0 ] };
+				if ( candidateItem.feedId ) {
+					postKey.feedId = candidateItem.feedId;
+				} else {
+					postKey.blogId = candidateItem.blogId;
 				}
+				selectItem( this.props.postsStore.id, postKey );
 			}
-			if ( index === this.state.selectedIndex ) {
-				FeedStreamStoreActions.selectPrevItem( this.props.store.id, index );
+
+			// find the index of the post / gap in the posts array.
+			// Start the search from the index in the items array, which has to be equal to or larger than
+			// the index in the posts array.
+			// Use lastIndexOf to walk the array from right to left
+			const selectedPostKey = findLast( posts, items[ index ], index );
+			if ( keysAreEqual( selectedPostKey, this.state.selectedPostKey ) ) {
+				selectNextItem( this.props.postsStore.id );
 			} else {
-				FeedStreamStoreActions.selectItem( this.props.store.id, index );
+				selectItem( this.props.postsStore.id, selectedPostKey );
 			}
 		}
-	},
+	}
 
-	fetchNextPage: function( options ) {
-		if ( this.props.store.isLastPage() || this.props.store.isFetchingNextPage() ) {
+	selectPrevItem = () => {
+		// unlike selectNextItem, we don't want any magic here. Just move back an item if the user
+		// currently has a selected item. Otherwise do nothing.
+		// We avoid the magic here because we expect users to enter the flow using next, not previous.
+		if ( this.state.selectedPostKey ) {
+			selectPrevItem( this.props.postsStore.id );
+		}
+	}
+
+	fetchNextPage = ( options ) => {
+		if ( this.props.postsStore.isLastPage() || this.props.postsStore.isFetchingNextPage() ) {
 			return;
 		}
 		if ( options.triggeredByScroll ) {
-			this.props.trackScrollPage( this.props.store.getPage() + 1 );
+			this.props.trackScrollPage( this.props.postsStore.getPage() + 1 );
 		}
-		FeedStreamStoreActions.fetchNextPage( this.props.store.id );
-	},
+		fetchNextPage( this.props.postsStore.id );
+	}
 
-	showUpdates: function() {
+	showUpdates = () => {
 		this.props.onUpdatesShown();
-		FeedStreamStoreActions.showUpdates( this.props.store.id );
+		showUpdates( this.props.postsStore.id );
+		if ( this.props.recommendationsStore ) {
+			shufflePosts( this.props.recommendationsStore.id );
+		}
 		if ( this._list ) {
 			this._list.scrollToTop();
 		}
-	},
+	}
 
-	renderLoadingPlaceholders: function() {
-		let count = this.state.posts.length ? 2 : this.props.store.getPerPage(),
-			placeholders = [];
+	renderLoadingPlaceholders = () => {
+		const count = this.state.posts.length ? 2 : this.props.postsStore.getPerPage();
 
-		times( count, function( i ) {
-			placeholders.push( <PostPlaceholder key={ 'feed-post-placeholder-' + i } /> );
+		return times( count, ( i ) => {
+			if ( this.props.placeholderFactory ) {
+				return this.props.placeholderFactory( { key: 'feed-post-placeholder-' + i } );
+			}
+			return <PostPlaceholder key={ 'feed-post-placeholder-' + i } />;
+		} );
+	}
+
+	getPostRef = ( postKey ) => {
+		return keyToString( postKey );
+	}
+
+	renderPost = ( postKey, index ) => {
+		const recStoreId = this.props.recommendationsStore && this.props.recommendationsStore.id;
+		const selectedPostKey = this.props.postsStore.getSelectedPostKey();
+		const isSelected = !! ( selectedPostKey &&
+			selectedPostKey.postId === postKey.postId &&
+			(
+				selectedPostKey.blogId === postKey.blogId ||
+				selectedPostKey.feedId === postKey.feedId
+			)
+		);
+
+		const itemKey = this.getPostRef( postKey );
+		const showPost = ( args ) => showSelectedPost( {
+			...args,
+			postKey: postKey.isCombination
+				? keyForPost( args )
+				: postKey,
+			store: this.props.postsStore
 		} );
 
-		return placeholders;
-	},
+		return <PostLifecycle
+			key={ itemKey }
+			ref={ itemKey }
+			isSelected={ isSelected }
+			handleClick={ showPost }
+			postKey={ postKey }
+			store={ this.props.postsStore }
+			suppressSiteNameLink={ this.props.suppressSiteNameLink }
+			showPostHeader={ this.props.showPostHeader }
+			showFollowInHeader={ this.props.showFollowInHeader }
+			showPrimaryFollowButtonOnCards={ this.props.showPrimaryFollowButtonOnCards }
+			isDiscoverStream={ this.props.isDiscoverStream }
+			showSiteName={ this.props.showSiteNameOnCards }
+			followSource={ this.props.followSource }
+			blockedSites={ this.props.blockedSites }
+			index={ index }
+			selectedPostKey={ selectedPostKey }
+			recStoreId={ recStoreId }
+		/>;
+	}
 
-	getPostRef: function( postKey ) {
-		return 'feed-post-' + ( postKey.feedId || postKey.blogId ) + '-' + postKey.postId;
-	},
-
-	showFullXPost: function( xMetadata ) {
-		if ( xMetadata.blogId && xMetadata.postId ) {
-			const mappedPost = {
-				site_ID: xMetadata.blogId,
-				ID: xMetadata.postId
-			};
-			this.showFullPost( mappedPost );
-		} else {
-			window.open( xMetadata.postURL );
-		}
-	},
-
-	showFullPost: function( post, options ) {
-		options = options || {};
-		let hashtag = '';
-		if ( options.comments ) {
-			hashtag += '#comments';
-		}
-		const method = options && options.replaceHistory ? 'replace' : 'show';
-		if ( post.feed_ID && post.feed_item_ID ) {
-			page[ method ]( '/read/feeds/' + post.feed_ID + '/posts/' + post.feed_item_ID + hashtag );
-		} else {
-			page[ method ]( '/read/blogs/' + post.site_ID + '/posts/' + post.ID + hashtag );
-		}
-	},
-
-	renderPost: function( postKey, index ) {
-		let post,
-			postState,
-			itemKey,
-			content,
-			PostClass,
-			isSelected = index === this.state.selectedIndex;
-
-		if ( postKey.isGap ) {
-			return (
-				<ListGap
-				ref={ ( c ) => {
-					if ( isSelected ) {
-						this._selectedGap = c;
-					}
-				} }
-				key={ 'gap-' + postKey.from + '-' + postKey.to }
-				gap={ postKey }
-				selected={ isSelected }
-				store={ this.props.store } />
-				);
-		}
-
-		post = PostStore.get( postKey );
-		postState = post._state;
-		itemKey = this.getPostRef( postKey );
-
-		if ( ! post || postState === 'minimal' ) {
-			FeedPostStoreActions.fetchPost( postKey );
-			postState = 'pending';
-		}
-
-		switch ( postState ) {
-			case 'pending':
-				content = <PostPlaceholder key={ 'feed-post-placeholder-' + itemKey } />;
-				break;
-			case 'error':
-				content = <PostUnavailable key={ 'feed-post-unavailable-' + itemKey } post={ post } />;
-				break;
-			default:
-				PostClass = this.cardClassForPost( post );
-				if ( PostClass === CrossPost ) {
-					const xMetadata = XPostHelper.getXPostMetadata( post );
-					content = React.createElement( CrossPost, {
-						ref: itemKey,
-						key: itemKey,
-						post: post,
-						isSelected: isSelected,
-						xMetadata: xMetadata,
-						xPostedTo: this.props.store.getSitesCrossPostedTo( xMetadata.commentURL || xMetadata.postURL ),
-						handleClick: this.showFullXPost
-					} );
-				} else {
-					content = React.createElement( PostClass, {
-						ref: itemKey,
-						key: itemKey,
-						post: post,
-						isSelected: isSelected,
-						xPostedTo: this.props.store.getSitesCrossPostedTo( post.URL ),
-						suppressSiteNameLink: this.props.suppressSiteNameLink,
-						showPostHeader: this.props.showPostHeader,
-						showFollowInHeader: this.props.showFollowInHeader,
-						handleClick: this.showFullPost,
-						showPrimaryFollowButtonOnCards: this.props.showPrimaryFollowButtonOnCards
-					} );
-				}
-
-		}
-		return content;
-	},
-
-	render: function() {
-		let store = this.props.store,
-			hasNoPosts = store.isLastPage() && ( ( ! this.state.posts ) || this.state.posts.length === 0 ),
-			body, showingStream;
+	render() {
+		const store = this.props.postsStore,
+			hasNoPosts = store.isLastPage() && ( ( ! this.state.posts ) || this.state.posts.length === 0 );
+		let body, showingStream;
 
 		if ( hasNoPosts || store.hasRecentError( 'invalid_tag' ) ) {
 			body = this.props.emptyContent;
@@ -465,9 +442,9 @@ module.exports = React.createClass( {
 			body = ( <InfiniteList
 			ref={ ( c ) => this._list = c }
 			className="reader__content"
-			items={ this.state.posts }
-			lastPage={ this.props.store.isLastPage() }
-			fetchingNextPage={ this.props.store.isFetchingNextPage() }
+			items={ this.state.items }
+			lastPage={ this.state.isLastPage }
+			fetchingNextPage={ this.state.isFetchingNextPage }
 			guessedItemHeight={ GUESSED_POST_HEIGHT }
 			fetchNextPage={ this.fetchNextPage }
 			getItemRef= { this.getPostRef }
@@ -476,10 +453,8 @@ module.exports = React.createClass( {
 			showingStream = true;
 		}
 
-		const StreamMain = config.isEnabled( 'reader/refresh/stream' ) ? ReaderMain : Main;
-
 		return (
-			<StreamMain className={ classnames( 'following', this.props.className ) }>
+			<ReaderMain className={ classnames( 'following', this.props.className ) }>
 				{ this.props.showMobileBackToSidebar && <MobileBackToSidebar>
 					<h1>{ this.props.listName }</h1>
 				</MobileBackToSidebar> }
@@ -487,12 +462,18 @@ module.exports = React.createClass( {
 				<UpdateNotice count={ this.state.updateCount } onClick={ this.showUpdates } />
 				{ this.props.children }
 				{ body }
-				{ showingStream && this.props.store.isLastPage() && this.state.posts.length
+				{ showingStream && store.isLastPage() && this.state.posts.length
 					? <div className="infinite-scroll-end" />
 					: null
 				}
-			</StreamMain>
+			</ReaderMain>
 		);
 	}
+}
 
-} );
+export default connect(
+	( state ) => ( {
+		blockedSites: getBlockedSites( state )
+	} ),
+	{ resetCardExpansions }
+)( ReaderStream );

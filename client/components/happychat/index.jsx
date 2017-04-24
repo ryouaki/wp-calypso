@@ -4,118 +4,90 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
+import GridIcon from 'gridicons';
+
 /**
  * Internal dependencies
  */
-import GridIcon from 'components/gridicon';
-import {
-	first,
-	any,
-	when
-} from './functional';
-import { connectChat } from 'state/happychat/actions';
+import { localize } from 'i18n-calypso';
 import {
 	getHappychatConnectionStatus
 } from 'state/happychat/selectors';
 import {
 	openChat,
 	closeChat,
+	minimizeChat,
+	minimizedChat
 } from 'state/ui/happychat/actions';
 import {
-	isConnected,
-	isConnecting,
-	timeline,
-	composer
-} from './helpers';
-import { translate } from 'i18n-calypso';
-
-const isChatOpen = any( isConnected, isConnecting );
-
-/**
- * Renders the title text of the chat sidebar when happychat is connecting.
- * @param {Object} params - parameters for the component
- * @param {function} params.onCloseChat - function called when close button is pressed
- * @returns {Object} react component for title bar
- */
-const connectingTitle = ( { onCloseChat } ) => {
-	return (
-		<div className="happychat__active-toolbar">
-		<span>{ translate( 'Starting chat' ) }</span>
-			<div onClick={ onCloseChat }>
-				<GridIcon icon="cross" />
-			</div>
-		</div>
-	);
-};
+	blur,
+	focus,
+} from 'state/happychat/actions';
+import {
+	isHappychatMinimizing,
+	isHappychatOpen,
+} from 'state/ui/happychat/selectors';
+import HappychatConnection from './connection';
+import Composer from './composer';
+import Notices from './notices';
+import Timeline from './timeline';
 
 /**
- * Returns the title bar for Happychat when it is connected
- * @private
- * @param {Object} params - parameters for the component
- * @param {function} params.onCloseChat - function called when close button is pressed
- * @returns {Object} react component for title bar
+ * React component for rendering title bar
  */
-const connectedTitle = ( { onCloseChat } ) => (
+const Title = localize( ( { onCloseChat, translate } ) => (
 	<div className="happychat__active-toolbar">
-	<h4>{ translate( 'WP.com' ) }</h4>
+	<h4>{ translate( 'Support Chat' ) }</h4>
 		<div onClick={ onCloseChat }>
 			<GridIcon icon="cross" />
 		</div>
 	</div>
-);
-
-/**
- * Funciton for rendering correct titlebar based on happychat client state
- */
-const title = first(
-	when( isConnected, connectedTitle ),
-	when( isConnecting, connectingTitle ),
-	( { onOpenChat } ) => {
-		const onClick = () => onOpenChat();
-		return <div onClick={ onClick }>{ translate( 'Support Chat' ) }</div>;
-	}
-);
+) );
 
 /*
  * Main chat UI component
  */
-const Happychat = React.createClass( {
-
+class Happychat extends React.Component {
 	componentDidMount() {
-		this.props.connectChat();
-	},
+		this.props.setFocused();
+	}
+
+	componentWillUnmount() {
+		this.props.setBlurred();
+	}
 
 	render() {
 		const {
-			connectionStatus,
-			user,
+			isChatOpen,
+			isMinimizing,
 			onCloseChat,
-			onOpenChat
 		} = this.props;
 
 		return (
 			<div className="happychat">
+				<HappychatConnection />
 				<div
-					className={ classnames( 'happychat__container', { 'is-open': isChatOpen( { connectionStatus } ) } ) }>
+					className={ classnames( 'happychat__container', {
+						'is-open': isChatOpen,
+						'is-minimizing': isMinimizing
+					} ) } >
 					<div className="happychat__title">
-						{ title( {
-							connectionStatus,
-							user,
-							onCloseChat,
-							onOpenChat
-						} ) }
+						<Title onCloseChat={ onCloseChat } />
 					</div>
-					{ timeline( { connectionStatus } ) }
-					{ composer( { connectionStatus } ) }
+					<Timeline />
+					<Notices />
+					<Composer />
 				</div>
 			</div>
 		);
 	}
-} );
+}
 
 const mapState = state => {
 	return {
-		connectionStatus: getHappychatConnectionStatus( state )
+		connectionStatus: getHappychatConnectionStatus( state ),
+		isChatOpen: isHappychatOpen( state ),
+		isMinimizing: isHappychatMinimizing( state ),
 	};
 };
 
@@ -125,15 +97,19 @@ const mapDispatch = ( dispatch ) => {
 			dispatch( openChat() );
 		},
 		onCloseChat() {
-			dispatch( closeChat() );
+			dispatch( minimizeChat() );
+			setTimeout( function() {
+				dispatch( minimizedChat() );
+				dispatch( closeChat() );
+			}, 500 );
 		},
-		connectChat() {
-			dispatch( connectChat() );
-		}
+		setBlurred() {
+			dispatch( blur() );
+		},
+		setFocused() {
+			dispatch( focus() );
+		},
 	};
 };
 
-/*
- * Export redux connected component
- */
 export default connect( mapState, mapDispatch )( Happychat );

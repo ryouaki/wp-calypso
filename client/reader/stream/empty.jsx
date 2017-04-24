@@ -1,42 +1,42 @@
-var React = require( 'react' );
+/**
+ * External dependencies
+ */
+import React from 'react';
 
-var EmptyContent = require( 'components/empty-content' ),
-	stats = require( 'reader/stats' ),
-	discoverHelper = require( 'reader/discover/helper' );
+/**
+ * Internal dependencies
+ */
+import EmptyContent from 'components/empty-content';
+import {
+	recordAction,
+	recordGaEvent,
+	recordTrack,
+} from 'reader/stats';
+import { isDiscoverEnabled } from 'reader/discover/helper';
 
-var FollowingEmptyContent = React.createClass( {
+const FollowingEmptyContent = React.createClass( {
 	shouldComponentUpdate: function() {
 		return false;
 	},
 
 	recordAction: function() {
-		stats.recordAction( 'clicked_discover_on_empty' );
-		stats.recordGaEvent( 'Clicked Discover on EmptyContent' );
-		stats.recordTrack( 'calypso_reader_discover_on_empty_stream_clicked' );
-	},
-
-	recordSecondaryAction: function() {
-		stats.recordAction( 'clicked_recommendations_on_empty' );
-		stats.recordGaEvent( 'Clicked Recommendations on EmptyContent' );
-		stats.recordTrack( 'calypso_reader_recommendations_on_empty_stream_clicked' );
+		recordAction( 'clicked_search_on_empty' );
+		recordGaEvent( 'Clicked Search on EmptyContent' );
+		recordTrack( 'calypso_reader_search_on_empty_stream_clicked' );
 	},
 
 	render: function() {
-		var action = discoverHelper.isDiscoverEnabled()
+		const action = isDiscoverEnabled()
 		? (
 			<a
 				className="empty-content__action button is-primary"
 				onClick={ this.recordAction }
-				href="/discover">{ this.translate( 'Explore Discover' ) }</a> ) : null,
-			secondaryAction = (
-				<a
-					className="empty-content__action button"
-					onClick={ this.recordSecondaryAction }
-					href="/recommendations">{ this.translate( 'Get recommendations on who to follow' ) }</a> );
+				href="/read/search">{ this.translate( 'Find Sites to Follow' ) }</a> ) : null,
+			secondaryAction = null;
 
 		return ( <EmptyContent
-			title={ this.translate( 'Welcome to the Reader' ) }
-			line={ this.translate( 'Recent posts from blogs and sites you follow will appear here.' ) }
+			title={ this.translate( 'Welcome to Reader' ) }
+			line={ this.translate( 'Recent posts from sites you follow will appear here.' ) }
 			action={ action }
 			secondaryAction={ secondaryAction }
 			illustration={ '/calypso/images/drake/drake-all-done.svg' }
@@ -45,4 +45,4 @@ var FollowingEmptyContent = React.createClass( {
 	}
 } );
 
-module.exports = FollowingEmptyContent;
+export default FollowingEmptyContent;

@@ -6,8 +6,9 @@ import url from 'url';
 /**
  * Internal dependencies
  */
+import { X_POST } from 'lib/feed-post-store/display-types';
 
-export default {
+const exported = {
 	/**
 	 * Examines the post metadata, and returns metadata related to cross posts.
 	 * @param {object} post - post object
@@ -43,3 +44,13 @@ export default {
 		return xPostMetadata;
 	}
 };
+
+export default exported;
+
+export const {
+    getXPostMetadata
+} = exported;
+
+export function isXPost( post ) {
+	return post && post.display_type & X_POST;
+}

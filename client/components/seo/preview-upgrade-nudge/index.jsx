@@ -5,12 +5,12 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
 import page from 'page';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
 import QueryPlans from 'components/data/query-plans';
-import Gridicon from 'components/gridicon';
 import FeatureExample from 'components/feature-example';
 import FeatureComparison from 'my-sites/feature-comparison';
 import PlanCompareCard from 'my-sites/plan-compare-card';
@@ -68,14 +68,14 @@ const SeoPreviewNudge = ( { translate, domain, plan = {}, businessPlan = {} } ) 
 			<div className="preview-upgrade-nudge__plan">
 				<div className="preview-upgrade-nudge__plan-icon"></div>
 			</div>
-			<h2 className="preview-upgrade-nudge__title">{ translate( 'Advanced SEO Features' ) }</h2>
+			<h2 className="preview-upgrade-nudge__title">{ translate( 'SEO Features' ) }</h2>
 			<div className="preview-upgrade-nudge__features">
 				<FeatureExample>
 					<img src="/calypso/images/advanced-seo-nudge.png" />
 				</FeatureExample>
 				<div className="preview-upgrade-nudge__features-details">
 					<p className="preview-upgrade-nudge__features-title">
-						{ translate( 'By upgrading to a Business Plan you\'ll enable advanced SEO features on your site.' ) }
+						{ translate( 'By upgrading to a Business Plan you\'ll enable SEO Tools on your site.' ) }
 					</p>
 					<ul className="preview-upgrade-nudge__features-list">
 						<li className="preview-upgrade-nudge__features-list-item">
@@ -95,7 +95,7 @@ const SeoPreviewNudge = ( { translate, domain, plan = {}, businessPlan = {} } ) 
 			</div>
 			<FeatureComparison className="preview-upgrade-nudge__feature-comparison">
 				<PlanCompareCard
-					title={ plan.product_name_short }
+					title={ plan.product_name_short || '' }
 					line={ planPrice }
 					buttonName={ translate( 'Your Plan' ) }
 					currentPlan={ true } >
@@ -111,7 +111,7 @@ const SeoPreviewNudge = ( { translate, domain, plan = {}, businessPlan = {} } ) 
 					) ) }
 				</PlanCompareCard>
 				<PlanCompareCard
-					title={ businessPlan.product_name_short }
+					title={ businessPlan.product_name_short || '' }
 					line={ translate( '%(price)s per month, billed yearly', { args: { price: businessPlanPrice } } ) }
 					buttonName={ translate( 'Upgrade' ) }
 					onClick={ () => {

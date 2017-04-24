@@ -1,56 +1,69 @@
 /**
  * External Dependencies
  */
-var React = require( 'react' );
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import { localize } from 'i18n-calypso';
+import { flowRight } from 'lodash';
 
 /**
  * Internal dependencies
  */
-var SectionNav = require( 'components/section-nav' ),
-	NavTabs = require( 'components/section-nav/tabs' ),
-	NavItem = require( 'components/section-nav/item' ),
-	siteStatsStickyTabActions = require( 'lib/site-stats-sticky-tab/actions' );
+import SectionNav from 'components/section-nav';
+import NavTabs from 'components/section-nav/tabs';
+import NavItem from 'components/section-nav/item';
+import FollowersCount from 'blocks/followers-count';
+import { getSelectedSiteSlug } from 'state/ui/selectors';
 
-module.exports = React.createClass( {
-	propTypes: {
-		section: React.PropTypes.string.isRequired,
-		site: React.PropTypes.oneOfType( [
-			React.PropTypes.bool,
-			React.PropTypes.object
-		] )
-	},
+const StatsNavigation = ( props ) => {
+	const { translate, section, slug } = props;
+	const siteFragment = slug ? '/' + slug : '';
+	const sectionTitles = {
+		insights: translate( 'Insights' ),
+		day: translate( 'Days' ),
+		week: translate( 'Weeks' ),
+		month: translate( 'Months' ),
+		year: translate( 'Years' )
+	};
 
-	componentDidMount: function() {
-		var slug = this.props.site ? this.props.site.slug : '';
-		siteStatsStickyTabActions.saveFilterAndSlug( this.props.section, slug );
-	},
+	return (
+		<SectionNav selectedText={ sectionTitles[ section ] }>
+			<NavTabs label={ translate( 'Stats' ) }>
+				<NavItem path={ '/stats/insights' + siteFragment } selected={ section === 'insights' }>
+					{ sectionTitles.insights }
+				</NavItem>
+				<NavItem path={ '/stats/day' + siteFragment } selected={ section === 'day' }>
+					{ sectionTitles.day }
+				</NavItem>
+				<NavItem path={ '/stats/week' + siteFragment } selected={ section === 'week' }>
+					{ sectionTitles.week }
+				</NavItem>
+				<NavItem path={ '/stats/month' + siteFragment } selected={ section === 'month' }>
+					{ sectionTitles.month }
+				</NavItem>
+				<NavItem path={ '/stats/year' + siteFragment } selected={ section === 'year' }>
+					{ sectionTitles.year }
+				</NavItem>
+			</NavTabs>
+			<FollowersCount />
+		</SectionNav>
+	);
+};
 
-	componentDidUpdate: function() {
-		var slug = this.props.site ? this.props.site.slug : '';
-		siteStatsStickyTabActions.saveFilterAndSlug( this.props.section, slug );
-	},
+StatsNavigation.propTypes = {
+	section: PropTypes.string.isRequired,
+	slug: PropTypes.string,
+};
 
-	render: function() {
-		var activeSection = this.props.section,
-			siteFragment = this.props.site ? '/' + this.props.site.slug : '',
-			sectionTitles = {
-				insights: this.translate( 'Insights' ),
-				day: this.translate( 'Days' ),
-				week: this.translate( 'Weeks' ),
-				month: this.translate( 'Months' ),
-				year: this.translate( 'Years' )
-			};
-
-		return (
-			<SectionNav selectedText={ sectionTitles[ activeSection ] }>
-				<NavTabs label={ this.translate( 'Stats' ) }>
-					<NavItem path={ '/stats/insights' + siteFragment } selected={ activeSection === 'insights' }>{ sectionTitles.insights }</NavItem>
-					<NavItem path={ '/stats/day' + siteFragment } selected={ activeSection === 'day' }>{ sectionTitles.day }</NavItem>
-					<NavItem path={ '/stats/week' + siteFragment } selected={ activeSection === 'week' }>{ sectionTitles.week }</NavItem>
-					<NavItem path={ '/stats/month' + siteFragment } selected={ activeSection === 'month' }>{ sectionTitles.month }</NavItem>
-					<NavItem path={ '/stats/year' + siteFragment } selected={ activeSection === 'year' }>{ sectionTitles.year }</NavItem>
-				</NavTabs>
-			</SectionNav>
-		);
+const connectComponent = connect(
+	state => {
+		return {
+			slug: getSelectedSiteSlug( state )
+		};
 	}
-} );
+);
+
+export default flowRight(
+	connectComponent,
+	localize
+)( StatsNavigation );

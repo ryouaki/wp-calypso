@@ -16,11 +16,13 @@ import EmailData from 'components/data/domain-management/email' ;
 import EmailForwardingData from 'components/data/domain-management/email-forwarding' ;
 import NameserversData from 'components/data/domain-management/nameservers';
 import paths from 'my-sites/upgrades/paths';
-import PrimaryDomainData from 'components/data/domain-management/primary-domain';
 import ProductsList from 'lib/products-list';
 import { renderWithReduxStore } from 'lib/react-helpers';
 import SiteRedirectData from 'components/data/domain-management/site-redirect';
 import SitesList from 'lib/sites-list';
+import { getSelectedSiteId } from 'state/ui/selectors';
+import { getSiteSlug } from 'state/sites/selectors';
+import isSiteAutomatedTransfer from 'state/selectors/is-site-automated-transfer';
 import TransferData from 'components/data/domain-management/transfer';
 import WhoisData from 'components/data/domain-management/whois';
 import { setDocumentHeadTitle } from 'state/document-head/actions';
@@ -49,7 +51,7 @@ module.exports = {
 				component={ DomainManagement.List.default }
 				context={ pageContext }
 				productsList={ productsList }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -74,7 +76,7 @@ module.exports = {
 				context={ pageContext }
 				productsList={ productsList }
 				selectedDomainName={ pageContext.params.domain }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -92,11 +94,9 @@ module.exports = {
 		);
 
 		renderWithReduxStore(
-			<PrimaryDomainData
-				component={ DomainManagement.PrimaryDomain }
-				context={ pageContext }
+			<DomainManagement.PrimaryDomain
 				selectedDomainName={ pageContext.params.domain }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -165,7 +165,7 @@ module.exports = {
 				productsList={ productsList }
 				selectedDomainName={ pageContext.params.domain }
 				context={ pageContext }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -186,7 +186,7 @@ module.exports = {
 			<EmailForwardingData
 				component={ DomainManagement.EmailForwarding }
 				selectedDomainName={ pageContext.params.domain }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -207,7 +207,7 @@ module.exports = {
 			<DnsData
 				component={ DomainManagement.Dns }
 				selectedDomainName={ pageContext.params.domain }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -227,7 +227,7 @@ module.exports = {
 			<NameserversData
 				component={ DomainManagement.NameServers }
 				selectedDomainName={ pageContext.params.domain }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -273,7 +273,7 @@ module.exports = {
 				context={ pageContext }
 				productsList={ productsList }
 				selectedDomainName={ pageContext.params.domain }
-				sites={ sites } />,
+			/>,
 			document.getElementById( 'primary' ),
 			pageContext.store
 		);
@@ -313,6 +313,48 @@ module.exports = {
 		renderWithReduxStore(
 			<TransferData
 				component={ DomainManagement.Transfer }
+				selectedDomainName={ pageContext.params.domain }
+				sites={ sites }
+			/>,
+			document.getElementById( 'primary' ),
+			pageContext.store
+		);
+	},
+
+	domainManagementTransferToOtherUser( pageContext ) {
+		const state = pageContext.store.getState();
+		const siteId = getSelectedSiteId( state );
+		const isAutomatedTransfer = isSiteAutomatedTransfer( state, siteId );
+		if ( isAutomatedTransfer ) {
+			const siteSlug = getSiteSlug( state, siteId );
+			page.redirect( `/domains/manage/${ siteSlug }` );
+			return;
+		}
+
+		setTitle(
+			i18n.translate( 'Transfer Domain' ),
+			pageContext
+		);
+
+		renderWithReduxStore(
+			<TransferData
+				component={ DomainManagement.TransferToOtherUser }
+				selectedDomainName={ pageContext.params.domain }
+				sites={ sites } />,
+			document.getElementById( 'primary' ),
+			pageContext.store
+		);
+	},
+
+	domainManagementTransferOut( pageContext ) {
+		setTitle(
+			i18n.translate( 'Transfer Domain' ),
+			pageContext
+		);
+
+		renderWithReduxStore(
+			<TransferData
+				component={ DomainManagement.TransferOut }
 				selectedDomainName={ pageContext.params.domain }
 				sites={ sites } />,
 			document.getElementById( 'primary' ),

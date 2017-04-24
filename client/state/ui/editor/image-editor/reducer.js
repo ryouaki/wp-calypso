@@ -8,15 +8,18 @@ import { combineReducers } from 'redux';
  */
 import {
 	IMAGE_EDITOR_CROP,
+	IMAGE_EDITOR_COMPUTED_CROP,
 	IMAGE_EDITOR_ROTATE_COUNTERCLOCKWISE,
 	IMAGE_EDITOR_FLIP,
 	IMAGE_EDITOR_SET_ASPECT_RATIO,
+	IMAGE_EDITOR_SET_DEFAULT_ASPECT_RATIO,
 	IMAGE_EDITOR_SET_CROP_BOUNDS,
 	IMAGE_EDITOR_SET_FILE_INFO,
 	IMAGE_EDITOR_STATE_RESET,
 	IMAGE_EDITOR_STATE_RESET_ALL,
 	IMAGE_EDITOR_IMAGE_HAS_LOADED
 } from 'state/action-types';
+import { createReducer } from 'state/utils';
 import { AspectRatios } from './constants';
 
 export const defaultTransform = {
@@ -57,10 +60,21 @@ export function hasChanges( state = false, action ) {
 		case IMAGE_EDITOR_STATE_RESET:
 		case IMAGE_EDITOR_STATE_RESET_ALL:
 			return false;
+
+		case IMAGE_EDITOR_SET_DEFAULT_ASPECT_RATIO:
+		case IMAGE_EDITOR_COMPUTED_CROP:
+			return state;
 	}
 
 	return state;
 }
+
+export const originalAspectRatio = createReducer( null, {
+	[ IMAGE_EDITOR_IMAGE_HAS_LOADED ]: ( state, { width, height } ) => {
+		return { width, height };
+	},
+	[ IMAGE_EDITOR_STATE_RESET_ALL ]: () => null
+} );
 
 export function imageIsLoading( state = true, action ) {
 	switch ( action.type ) {
@@ -121,6 +135,7 @@ export function cropBounds( state = defaultCropBounds, action ) {
 export function crop( state = defaultCrop, action ) {
 	switch ( action.type ) {
 		case IMAGE_EDITOR_CROP:
+		case IMAGE_EDITOR_COMPUTED_CROP:
 			return Object.assign( {}, state, {
 				topRatio: action.topRatio,
 				leftRatio: action.leftRatio,
@@ -149,9 +164,17 @@ export function crop( state = defaultCrop, action ) {
 export function aspectRatio( state = AspectRatios.FREE, action ) {
 	switch ( action.type ) {
 		case IMAGE_EDITOR_SET_ASPECT_RATIO:
+		case IMAGE_EDITOR_SET_DEFAULT_ASPECT_RATIO:
 			return action.ratio;
 		case IMAGE_EDITOR_STATE_RESET:
 		case IMAGE_EDITOR_STATE_RESET_ALL:
+			const { additionalData = {} } = action;
+			const { aspectRatio: payloadAspectRatio } = additionalData;
+
+			if ( payloadAspectRatio && AspectRatios[ payloadAspectRatio ] ) {
+				return payloadAspectRatio;
+			}
+
 			return AspectRatios.FREE;
 	}
 
@@ -165,5 +188,6 @@ export default combineReducers( {
 	cropBounds,
 	crop,
 	aspectRatio,
+	originalAspectRatio,
 	imageIsLoading
 } );

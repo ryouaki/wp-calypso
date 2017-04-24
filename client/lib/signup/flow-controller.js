@@ -15,7 +15,8 @@ var debug = require( 'debug' )( 'calypso:signup:flow-controller' ), // eslint-di
 	filter = require( 'lodash/filter' ),
 	find = require( 'lodash/find' ),
 	pick = require( 'lodash/pick' ),
-	keys = require( 'lodash/keys' );
+	keys = require( 'lodash/keys' ),
+	page = require( 'page' );
 
 /**
  * Internal dependencies
@@ -26,7 +27,8 @@ var SignupActions = require( './actions' ),
 	flows = require( 'signup/config/flows' ),
 	steps = require( 'signup/config/steps' ),
 	wpcom = require( 'lib/wp' ),
-	user = require( 'lib/user' )();
+	user = require( 'lib/user' )(),
+	utils = require( 'signup/utils' );
 
 /**
  * Constants
@@ -59,6 +61,12 @@ function SignupFlowController( options ) {
 		this._resetStoresIfUserHasLoggedIn();
 	}
 
+	if ( this._flow.providesDependenciesInQuery ) {
+		this._assertFlowProvidedDependenciesFromConfig( options.providedDependencies );
+
+		SignupActions.provideDependencies( options.providedDependencies );
+	}
+
 	store.set( STORAGE_KEY, options.flowName );
 }
 
@@ -77,17 +85,30 @@ assign( SignupFlowController.prototype, {
 		}
 	},
 
+	_assertFlowProvidedDependenciesFromConfig: function( providedDependencies ) {
+		const dependencyDiff = difference( this._flow.providesDependenciesInQuery, keys( providedDependencies ) );
+		if ( dependencyDiff.length > 0 ) {
+			throw new Error( this._flowName + ' did not provide the query dependencies [' + dependencyDiff + '] it is configured to.' );
+		}
+	},
+
 	_assertFlowHasValidDependencies: function() {
 		return every( pick( steps, this._flow.steps ), function( step ) {
-			var dependenciesNotProvided;
 			if ( ! step.dependencies ) {
 				return true;
 			}
 
-			dependenciesNotProvided = difference( step.dependencies, this._getFlowProvidesDependencies() );
+			const dependenciesFound = pick( SignupDependencyStore.get(), step.dependencies );
+			const dependenciesNotProvided = difference( step.dependencies, keys( dependenciesFound ), this._getFlowProvidesDependencies() );
 			if ( ! isEmpty( dependenciesNotProvided ) ) {
+
+				if ( this._flowName !== flows.defaultFlowName ) {
+					// redirect to the default signup flow, hopefully it will be valid
+					page( utils.getStepUrl() );
+				}
+
 				throw new Error( 'The ' + step.stepName + ' step requires dependencies [' + dependenciesNotProvided + '] which ' +
-				'are not provided in the ' + this._flowName + ' flow.' );
+				'are not provided in the ' + this._flowName + ' flow and are not already present in the store.' );
 			}
 			return true;
 		}.bind( this ) );
@@ -113,14 +134,23 @@ assign( SignupFlowController.prototype, {
 		return wpcom.isTokenLoaded() || user.get();
 	},
 
+	/**
+	 * Returns a list of the dependencies provided in the flow configuration.
+	 *
+	 * @return {array} a list of dependency names
+	 */
 	_getFlowProvidesDependencies: function() {
 		return flatten( compact( map( this._flow.steps, function( step ) {
 			return steps[ step ].providesDependencies;
-		} ) ) );
+		} ) ) ).concat( this._flow.providesDependenciesInQuery );
 	},
 
 	_process: function() {
-		var signupProgress = SignupProgressStore.get(),
+		var currentSteps = this._flow.steps,
+			signupProgress = filter(
+				SignupProgressStore.get(),
+				step => ( -1 !== currentSteps.indexOf( step.stepName ) ),
+			),
 			pendingSteps = filter( signupProgress, { status: 'pending' } ),
 			completedSteps = filter( signupProgress, { status: 'completed' } ),
 			bearerToken = SignupDependencyStore.get().bearer_token,
@@ -134,7 +164,7 @@ assign( SignupFlowController.prototype, {
 			map( pendingSteps, this._processStep.bind( this ) );
 		}
 
-		if ( completedSteps.length === this._flow.steps.length && undefined !== this._onComplete ) {
+		if ( completedSteps.length === currentSteps.length && undefined !== this._onComplete ) {
 			if ( this._assertFlowProvidedRequiredDependencies() ) {
 				// deferred to ensure that the onComplete function is called after the stores have
 				// emitted their final change events.
@@ -150,9 +180,14 @@ assign( SignupFlowController.prototype, {
 			dependencies = steps[ step.stepName ].dependencies || [],
 			dependenciesFound = pick( SignupDependencyStore.get(), dependencies ),
 			dependenciesSatisfied = dependencies.length === keys( dependenciesFound ).length,
-			allStepsSubmitted = reject( SignupProgressStore.get(), {
+			currentSteps = this._flow.steps,
+			signupProgress = filter(
+				SignupProgressStore.get(),
+				_step => ( -1 !== currentSteps.indexOf( _step.stepName ) ),
+			),
+			allStepsSubmitted = reject( signupProgress, {
 				status: 'in-progress'
-			} ).length === this._flow.steps.length;
+			} ).length === currentSteps.length;
 
 		return dependenciesSatisfied &&
 			! this._processingSteps[ step.stepName ] &&
@@ -169,12 +204,12 @@ assign( SignupFlowController.prototype, {
 
 			SignupActions.processSignupStep( step );
 
-			const apiFunction = steps[ step.stepName ].apiRequestFunction.bind( this );
+			const apiFunction = steps[ step.stepName ].apiRequestFunction;
 
 			apiFunction( ( errors, providedDependencies ) => {
 				this._processingSteps[ step.stepName ] = false;
 				SignupActions.processedSignupStep( step, errors, providedDependencies );
-			}, dependenciesFound, step );
+			}, dependenciesFound, step, this._reduxStore );
 		}
 	},
 
@@ -184,6 +219,10 @@ assign( SignupFlowController.prototype, {
 		}
 
 		return this._flow.destination;
+	},
+
+	shouldAutoContinue: function() {
+		return !! this._flow.autoContinue;
 	},
 
 	reset: function() {

@@ -11,7 +11,6 @@ var assign = require( 'lodash/assign' ),
  */
 var UpgradesActionTypes = require( 'lib/upgrades/constants' ).action,
 	emitter = require( 'lib/mixins/emitter' ),
-	sites = require( 'lib/sites-list' )(),
 	cartSynchronizer = require( './cart-synchronizer' ),
 	wpcom = require( 'lib/wp' ).undocumented(),
 	PollerPool = require( 'lib/data-poller' ),
@@ -22,7 +21,7 @@ var UpgradesActionTypes = require( 'lib/upgrades/constants' ).action,
 	applyCoupon = cartValues.applyCoupon,
 	cartItems = cartValues.cartItems;
 
-var _selectedSiteID = null,
+var _cartKey = null,
 	_synchronizer = null,
 	_poller = null;
 
@@ -34,6 +33,27 @@ var CartStore = {
 			hasLoadedFromServer: hasLoadedFromServer(),
 			hasPendingServerUpdates: hasPendingServerUpdates()
 		} );
+	},
+	setSelectedSiteId( selectedSiteId ) {
+		if ( selectedSiteId && _cartKey === selectedSiteId ) {
+			return;
+		}
+
+		if ( ! selectedSiteId ) {
+			_cartKey = 'no-site';
+		} else {
+			_cartKey = selectedSiteId;
+		}
+
+		if ( _synchronizer && _poller ) {
+			PollerPool.remove( _poller );
+			_synchronizer.off( 'change', emitChange );
+		}
+
+		_synchronizer = cartSynchronizer( _cartKey, wpcom );
+		_synchronizer.on( 'change', emitChange );
+
+		_poller = PollerPool.add( CartStore, _synchronizer._poll.bind( _synchronizer ) );
 	}
 };
 
@@ -45,31 +65,6 @@ function hasLoadedFromServer() {
 
 function hasPendingServerUpdates() {
 	return ( _synchronizer && _synchronizer.hasPendingServerUpdates() );
-}
-
-function setSelectedSite() {
-	var selectedSite = sites.getSelectedSite();
-
-	if ( ! selectedSite ) {
-		_selectedSiteID = null;
-		return;
-	}
-
-	if ( _selectedSiteID === selectedSite.ID ) {
-		return;
-	}
-
-	if ( _synchronizer && _poller ) {
-		PollerPool.remove( _poller );
-		_synchronizer.off( 'change', emitChange );
-	}
-
-	_selectedSiteID = selectedSite.ID;
-
-	_synchronizer = cartSynchronizer( selectedSite.ID, wpcom );
-	_synchronizer.on( 'change', emitChange );
-
-	_poller = PollerPool.add( CartStore, _synchronizer._poll.bind( _synchronizer ) );
 }
 
 function emitChange() {
@@ -93,16 +88,35 @@ function update( changeFunction ) {
 	cartAnalytics.recordEvents( previousCart, nextCart );
 }
 
+function disable() {
+	if ( _synchronizer && _poller ) {
+		PollerPool.remove( _poller );
+		_synchronizer.off( 'change', emitChange );
+	}
+
+	_synchronizer = null;
+	_poller = null;
+	_cartKey = null;
+}
+
 CartStore.dispatchToken = Dispatcher.register( ( payload ) => {
 	const { action } = payload;
 
 	switch ( action.type ) {
+		case UpgradesActionTypes.CART_DISABLE:
+			disable();
+			break;
+
 		case UpgradesActionTypes.CART_PRIVACY_PROTECTION_ADD:
 			update( cartItems.addPrivacyToAllDomains( CartStore.get() ) );
 			break;
 
 		case UpgradesActionTypes.CART_PRIVACY_PROTECTION_REMOVE:
 			update( cartItems.removePrivacyFromAllDomains( CartStore.get() ) );
+			break;
+
+		case UpgradesActionTypes.GOOGLE_APPS_REGISTRATION_DATA_ADD:
+			update( cartItems.fillGoogleAppsRegistrationData( CartStore.get(), action.registrationData ) );
 			break;
 
 		case UpgradesActionTypes.CART_ITEMS_ADD:
@@ -119,7 +133,4 @@ CartStore.dispatchToken = Dispatcher.register( ( payload ) => {
 	}
 } );
 
-sites.on( 'change', setSelectedSite );
-setSelectedSite();
-
-module.exports = CartStore;
+export default CartStore;

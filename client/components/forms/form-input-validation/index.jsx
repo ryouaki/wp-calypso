@@ -3,18 +3,15 @@
  */
 import React from 'react';
 import classNames from 'classnames';
+import Gridicon from 'gridicons';
 
-/**
- * Interal dependencies
- */
-import Gridicon from 'components/gridicon';
-
-module.exports = React.createClass( {
+export default React.createClass( {
 
 	displayName: 'FormInputValidation',
 
 	propTypes: {
 		isError: React.PropTypes.bool,
+		isWarning: React.PropTypes.bool,
 		text: React.PropTypes.string,
 		icon: React.PropTypes.string
 	},
@@ -26,10 +23,11 @@ module.exports = React.createClass( {
 	render() {
 		const classes = classNames( {
 			'form-input-validation': true,
+			'is-warning': this.props.isWarning,
 			'is-error': this.props.isError
 		} );
 
-		const icon = this.props.isError ? 'notice-outline' : 'checkmark';
+		const icon = this.props.isError || this.props.isWarning ? 'notice-outline' : 'checkmark';
 
 		return (
 			<div className={ classes }>

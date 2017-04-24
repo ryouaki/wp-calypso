@@ -1,38 +1,622 @@
 /**
  * External dependencies
  */
-var React = require( 'react' ),
-	debug = require( 'debug' )( 'calypso:my-sites:site-settings' );
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { flowRight, pick } from 'lodash';
 
 /**
  * Internal dependencies
  */
-var formBase = require( './form-base' ),
-	protectForm = require( 'lib/mixins/protect-form' ),
-	dirtyLinkedState = require( 'lib/mixins/dirty-linked-state' ),
-	FormFieldset = require( 'components/forms/form-fieldset' ),
-	FormLabel = require( 'components/forms/form-label' ),
-	FormLegend = require( 'components/forms/form-legend' ),
-	FormTextarea = require( 'components/forms/form-textarea' ),
-	FormTextInput = require( 'components/forms/form-text-input' ),
-	FormCheckbox = require( 'components/forms/form-checkbox' ),
-	FormSelect = require( 'components/forms/form-select' ),
-	FormSettingExplanation = require( 'components/forms/form-setting-explanation' ),
-	Card = require( 'components/card' ),
-	Button = require( 'components/button' ),
-	SectionHeader = require( 'components/section-header' );
+import Button from 'components/button';
+import Card from 'components/card';
+import CommentDisplaySettings from './comment-display-settings';
+import FormFieldset from 'components/forms/form-fieldset';
+import FormLabel from 'components/forms/form-label';
+import FormLegend from 'components/forms/form-legend';
+import FormSelect from 'components/forms/form-select';
+import FormSettingExplanation from 'components/forms/form-setting-explanation';
+import FormTextarea from 'components/forms/form-textarea';
+import FormTextInput from 'components/forms/form-text-input';
+import CompactFormToggle from 'components/forms/form-toggle/compact';
+import QueryJetpackModules from 'components/data/query-jetpack-modules';
+import SectionHeader from 'components/section-header';
+import Subscriptions from './subscriptions';
+import wrapSettingsForm from './wrap-settings-form';
+import {
+	isJetpackSite,
+	siteSupportsJetpackSettingsUi
+} from 'state/sites/selectors';
+import { isJetpackModuleActive } from 'state/selectors';
+import { getSelectedSiteId } from 'state/ui/selectors';
+import JetpackModuleToggle from './jetpack-module-toggle';
 
-module.exports = React.createClass( {
+class SiteSettingsFormDiscussion extends Component {
+	handleCommentOrder = () => {
+		this.props.trackEvent( 'Toggled Comment Order on Page' );
+		this.props.updateFields( {
+			comment_order: this.props.fields.comment_order === 'desc' ? 'asc' : 'desc'
+		}, () => {
+			this.props.submitForm();
+		} );
+	}
 
-	displayName: 'SiteSettingsFormDiscussion',
+	defaultArticleSettings() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isRequestingSettings,
+			isSavingSettings,
+			translate
+		} = this.props;
+		return (
+			<FormFieldset>
+				<CompactFormToggle
+					checked={ !! fields.default_pingback_flag }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'default_pingback_flag' ) }>
+					{ translate( 'Attempt to notify any blogs linked to from the article' ) }
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.default_ping_status }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'default_ping_status' ) }>
+					{ translate( 'Allow link notifications from other blogs (pingbacks and trackbacks)' ) }
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.default_comment_status }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'default_comment_status' ) }>
+					{ translate( 'Allow people to post comments on new articles' ) }
+				</CompactFormToggle>
+				<FormSettingExplanation>
+					{ translate( 'These settings may be overridden for individual articles.' ) }
+				</FormSettingExplanation>
+			</FormFieldset>
+		);
+	}
 
-	mixins: [ dirtyLinkedState, protectForm.mixin, formBase ],
+	commentDisplaySettings() {
+		const { isJetpack, jetpackSettingsUISupported } = this.props;
+		if ( ! isJetpack || ! jetpackSettingsUISupported ) {
+			return null;
+		}
 
-	discussionAttributes: [
+		const { fields, isRequestingSettings, isSavingSettings, onChangeField } = this.props;
+
+		const commentDisplaySettingsFields = {
+			highlander_comment_form_prompt: fields.highlander_comment_form_prompt,
+			jetpack_comment_form_color_scheme: fields.jetpack_comment_form_color_scheme,
+		};
+
+		return (
+			<div>
+				<QueryJetpackModules siteId={ this.props.siteId } />
+				<CommentDisplaySettings
+					onChangeField={ onChangeField }
+					submittingForm={ isRequestingSettings || isSavingSettings }
+					fields={ commentDisplaySettingsFields } />
+				<hr />
+			</div>
+		);
+	}
+
+	otherCommentSettings() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isRequestingSettings,
+			isSavingSettings,
+			siteId,
+			translate
+		} = this.props;
+		return (
+			<FormFieldset className="site-settings__other-comment-settings">
+				<CompactFormToggle
+					checked={ !! fields.require_name_email }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'require_name_email' ) }>
+					{ translate( 'Comment author must fill out name and e-mail' ) }
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.comment_registration }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'comment_registration' ) }>
+					{ translate( 'Users must be registered and logged in to comment' ) }
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.close_comments_for_old_posts }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'close_comments_for_old_posts' ) }>
+					{
+						translate(
+							'Automatically close comments on articles older than {{numberOfDays /}} day',
+							'Automatically close comments on articles older than {{numberOfDays /}} days', {
+								count: fields.close_comments_days_old || 2,
+								components: {
+									numberOfDays: this.renderInputNumberDays()
+								}
+							}
+						)
+					}
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.thread_comments }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'thread_comments' ) }>
+					{
+						translate( 'Enable threaded (nested) comments up to {{number /}} levels deep', {
+							components: {
+								number: this.renderInputThreadDepth()
+							}
+						} )
+					}
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.page_comments }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'page_comments' ) }>
+					{
+						translate(
+							'Break comments into pages with {{numComments /}} top level comments per page and the ' +
+							'{{firstOrLast /}} page displayed by default',
+							{
+								components: {
+									numComments: this.renderInputNumComments(),
+									firstOrLast: this.renderInputDisplayDefault()
+								}
+							}
+						)
+					}
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ 'asc' === fields.comment_order }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ this.handleCommentOrder }>
+					{ translate( 'Comments should be displayed with the older comments at the top of each page' ) }
+				</CompactFormToggle>
+				<JetpackModuleToggle
+					disabled={ isRequestingSettings || isSavingSettings }
+					label={ translate( 'Enable pop-up business cards over commenters’ Gravatars' ) }
+					moduleSlug="gravatar-hovercards"
+					siteId={ siteId }
+				/>
+			</FormFieldset>
+		);
+	}
+
+	renderInputNumberDays() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			isSavingSettings,
+			onChangeField,
+			uniqueEventTracker
+		} = this.props;
+		return (
+			<FormTextInput
+				name="close_comments_days_old"
+				type="number"
+				min="0"
+				step="1"
+				id="close_comments_days_old"
+				className="small-text"
+				value={ 'undefined' === typeof fields.close_comments_days_old ? 14 : fields.close_comments_days_old }
+				onChange={ onChangeField( 'close_comments_days_old' ) }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onClick={ eventTracker( 'Clicked Automatically Close Days Field' ) }
+				onKeyPress={ uniqueEventTracker( 'Typed in Automatically Close Days Field' ) }
+			/>
+		);
+	}
+
+	renderInputThreadDepth() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			isSavingSettings,
+			onChangeField
+		} = this.props;
+		return (
+			<FormSelect
+				className="is-compact"
+				name="thread_comments_depth"
+				value={ fields.thread_comments_depth }
+				onChange={ onChangeField( 'thread_comments_depth' ) }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onClick={ eventTracker( 'Selected Comment Nesting Level' ) }>
+					{ [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ].map( level =>
+						<option value={ level } key={ 'comment-depth-' + level }>{ level }</option>
+					) }
+			</FormSelect>
+		);
+	}
+
+	renderInputNumComments() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			isSavingSettings,
+			onChangeField,
+			uniqueEventTracker
+		} = this.props;
+		return (
+			<FormTextInput
+				name="comments_per_page"
+				type="number"
+				step="1"
+				min="0"
+				id="comments_per_page"
+				value={ 'undefined' === typeof fields.comments_per_page ? 50 : fields.comments_per_page }
+				onChange={ onChangeField( 'comments_per_page' ) }
+				className="small-text"
+				disabled={ isRequestingSettings || isSavingSettings }
+				onClick={ eventTracker( 'Clicked Comments Per Page Field' ) }
+				onKeyPress={ uniqueEventTracker( 'Typed in Comments Per Page Field' ) } />
+		);
+	}
+
+	renderInputDisplayDefault() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			onChangeField,
+			translate,
+			isSavingSettings
+		} = this.props;
+		return (
+			<FormSelect
+				className="is-compact"
+				name="default_comments_page"
+				style={ { marginTop: '4px' } }
+				value={ fields.default_comments_page }
+				onChange={ onChangeField( 'default_comments_page' ) }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onClick={ eventTracker( 'Selected Comment Page Display Default' ) }>
+					<option value="newest">{ translate( 'last' ) }</option>
+					<option value="oldest">{ translate( 'first' ) }</option>
+			</FormSelect>
+		);
+	}
+
+	emailMeSettings() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isRequestingSettings,
+			isSavingSettings,
+			translate
+		} = this.props;
+		return (
+			<FormFieldset>
+				<FormLegend>{ translate( 'E-mail me whenever' ) }</FormLegend>
+				<CompactFormToggle
+					checked={ !! fields.comments_notify }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'comments_notify' ) }>
+					{ translate( 'Anyone posts a comment' ) }
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.moderation_notify }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'moderation_notify' ) }>
+					{ translate( 'A comment is held for moderation' ) }
+				</CompactFormToggle>
+				{ this.emailMeLikes() }
+				{ this.emailMeReblogs() }
+				{ this.emailMeFollows() }
+			</FormFieldset>
+		);
+	}
+
+	emailMeLikes() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isJetpack,
+			isLikesModuleActive,
+			isRequestingSettings,
+			isSavingSettings,
+			translate
+		} = this.props;
+		// likes are only supported on jetpack sites with the Likes module activated
+		if ( isJetpack && ! isLikesModuleActive ) {
+			return null;
+		}
+
+		return (
+			<CompactFormToggle
+				checked={ !! fields.social_notifications_like }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onChange={ handleAutosavingToggle( 'social_notifications_like' ) }>
+				{ translate( 'Someone likes one of my posts' ) }
+			</CompactFormToggle>
+		);
+	}
+
+	emailMeReblogs() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isJetpack,
+			isRequestingSettings,
+			isSavingSettings,
+			translate
+		} = this.props;
+		// reblogs are not supported on Jetpack sites
+		if ( isJetpack ) {
+			return null;
+		}
+
+		return (
+			<CompactFormToggle
+				checked={ !! fields.social_notifications_reblog }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onChange={ handleAutosavingToggle( 'social_notifications_reblog' ) }>
+				{ translate( 'Someone reblogs one of my posts' ) }
+			</CompactFormToggle>
+		);
+	}
+
+	emailMeFollows() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isJetpack,
+			isRequestingSettings,
+			isSavingSettings,
+			translate
+		} = this.props;
+		// follows are not supported on Jetpack sites
+		if ( isJetpack ) {
+			return null;
+		}
+
+		return (
+			<CompactFormToggle
+				checked={ !! fields.social_notifications_subscribe }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onChange={ handleAutosavingToggle( 'social_notifications_subscribe' ) }>
+				{ translate( 'Someone follows my blog' ) }
+			</CompactFormToggle>
+		);
+	}
+
+	beforeCommentSettings() {
+		const {
+			fields,
+			handleAutosavingToggle,
+			isRequestingSettings,
+			isSavingSettings,
+			translate
+		} = this.props;
+		return (
+			<FormFieldset>
+				<FormLegend>{ translate( 'Before a comment appears' ) }</FormLegend>
+				<CompactFormToggle
+					checked={ !! fields.comment_moderation }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'comment_moderation' ) }>
+					{ translate( 'Comment must be manually approved' ) }
+				</CompactFormToggle>
+				<CompactFormToggle
+					checked={ !! fields.comment_whitelist }
+					disabled={ isRequestingSettings || isSavingSettings }
+					onChange={ handleAutosavingToggle( 'comment_whitelist' ) }>
+					{ translate( 'Comment author must have a previously approved comment' ) }
+				</CompactFormToggle>
+			</FormFieldset>
+		);
+	}
+
+	commentModerationSettings() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			isSavingSettings,
+			onChangeField,
+			translate,
+			uniqueEventTracker
+		} = this.props;
+		return (
+			<FormFieldset className="site-settings__moderation-settings">
+				<FormLegend>{ translate( 'Comment Moderation' ) }</FormLegend>
+				<p>{
+					translate(
+						'Hold a comment in the queue if it contains {{numberOfLinks /}} or more links. ' +
+						'(A common characteristic of comment spam is a large number of hyperlinks.)',
+						{
+							components: {
+								numberOfLinks: this.renderInputNumLinks()
+							}
+						}
+					)
+				}</p>
+				<FormLabel htmlFor="moderation_keys">{
+					translate(
+						'When a comment contains any of these words in its content, name, URL, e-mail, or IP, it will be ' +
+						'held in the {{link}}moderation queue{{/link}}. One word or IP per line. It will match inside words, so "press" ' +
+						'will match "WordPress".',
+						{
+							components: {
+								link: <a
+									href={ fields.admin_url + 'edit-comments.php?comment_status=moderated' }
+									target="_blank"
+									rel="noopener noreferrer" />
+							}
+						}
+					)
+				}</FormLabel>
+				<FormTextarea
+					name="moderation_keys"
+					id="moderation_keys"
+					value={ fields.moderation_keys }
+					onChange={ onChangeField( 'moderation_keys' ) }
+					disabled={ isRequestingSettings || isSavingSettings }
+					autoCapitalize="none"
+					onClick={ eventTracker( 'Clicked Moderation Queue Field' ) }
+					onKeyPress={ uniqueEventTracker( 'Typed in Moderation Queue Field' ) }>
+				</FormTextarea>
+			</FormFieldset>
+		);
+	}
+
+	commentBlacklistSettings() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			isSavingSettings,
+			onChangeField,
+			translate,
+			uniqueEventTracker
+		} = this.props;
+		return (
+			<FormFieldset>
+				<FormLegend>{ translate( 'Comment Blacklist' ) }</FormLegend>
+				<FormLabel htmlFor="blacklist_keys">{ translate(
+					'When a comment contains any of these words in its content, name, URL, e-mail, or IP, it will be put in the trash. ' +
+					'One word or IP per line. It will match inside words, so "press" will match "WordPress".'
+				) }</FormLabel>
+				<FormTextarea
+					name="blacklist_keys"
+					id="blacklist_keys"
+					value={ fields.blacklist_keys }
+					onChange={ onChangeField( 'blacklist_keys' ) }
+					disabled={ isRequestingSettings || isSavingSettings }
+					autoCapitalize="none"
+					onClick={ eventTracker( 'Clicked Blacklist Field' ) }
+					onKeyPress={ uniqueEventTracker( 'Typed in Blacklist Field' ) }>
+				</FormTextarea>
+			</FormFieldset>
+		);
+	}
+
+	renderInputNumLinks() {
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			isSavingSettings,
+			onChangeField,
+			uniqueEventTracker
+		} = this.props;
+		return (
+			<FormTextInput
+				name="comment_max_links"
+				type="number"
+				step="1"
+				min="0"
+				className="small-text"
+				value={ 'undefined' === typeof fields.comment_max_links ? 2 : fields.comment_max_links }
+				onChange={ onChangeField( 'comment_max_links' ) }
+				disabled={ isRequestingSettings || isSavingSettings }
+				onClick={ eventTracker( 'Clicked Comment Queue Link Count Field' ) }
+				onKeyPress={ uniqueEventTracker( 'Typed in Comment Queue Link Count Field' ) } />
+		);
+	}
+
+	renderSectionHeader( title, showButton = true ) {
+		const { handleSubmitForm, isRequestingSettings, isSavingSettings, translate } = this.props;
+		return (
+			<SectionHeader label={ title }>
+				{ showButton &&
+					<Button
+						compact
+						primary
+						onClick={ handleSubmitForm }
+						disabled={ isRequestingSettings || isSavingSettings }>
+						{ isSavingSettings ? translate( 'Saving…' ) : translate( 'Save Settings' ) }
+					</Button>
+				}
+			</SectionHeader>
+		);
+	}
+
+	render() {
+		const {
+			fields,
+			handleSubmitForm,
+			handleAutosavingToggle,
+			siteId,
+			isRequestingSettings,
+			isSavingSettings,
+			isJetpack,
+			jetpackSettingsUISupported,
+			translate
+		} = this.props;
+		return (
+			<form id="site-settings" onSubmit={ handleSubmitForm }>
+				{ this.renderSectionHeader( translate( 'Default Article Settings' ), false ) }
+				<Card className="site-settings__discussion-settings">
+					{ this.defaultArticleSettings() }
+				</Card>
+
+				{ this.renderSectionHeader( translate( 'Comments' ) ) }
+				<Card className="site-settings__discussion-settings">
+					{ this.commentDisplaySettings() }
+					{ this.otherCommentSettings() }
+					<hr />
+					{ this.emailMeSettings() }
+					<hr />
+					{ this.beforeCommentSettings() }
+					<hr />
+					{ this.commentModerationSettings() }
+					<hr />
+					{ this.commentBlacklistSettings() }
+				</Card>
+
+				{
+					isJetpack && jetpackSettingsUISupported && (
+						<div>
+							<QueryJetpackModules siteId={ siteId } />
+
+							{ this.renderSectionHeader( translate( 'Subscriptions' ), false ) }
+
+							<Subscriptions
+								onSubmitForm={ handleSubmitForm }
+								handleAutosavingToggle={ handleAutosavingToggle }
+								isSavingSettings={ isSavingSettings }
+								isRequestingSettings={ isRequestingSettings }
+								fields={ fields }
+							/>
+						</div>
+					)
+				}
+			</form>
+		);
+	}
+}
+
+const connectComponent = connect(
+	( state ) => {
+		const siteId = getSelectedSiteId( state );
+
+		const isJetpack = isJetpackSite( state, siteId );
+		const jetpackSettingsUISupported = siteSupportsJetpackSettingsUi( state, siteId );
+		const isLikesModuleActive = isJetpackModuleActive( state, siteId, 'likes' );
+
+		return {
+			siteId,
+			isJetpack,
+			jetpackSettingsUISupported,
+			isLikesModuleActive,
+		};
+	}
+);
+
+const getFormSettings = settings => {
+	return pick( settings, [
 		'default_pingback_flag',
 		'default_ping_status',
 		'default_comment_status',
 		'require_name_email',
+		'comments',
 		'comment_registration',
 		'close_comments_for_old_posts',
 		'close_comments_days_old',
@@ -44,6 +628,7 @@ module.exports = React.createClass( {
 		'comment_order',
 		'comments_notify',
 		'moderation_notify',
+		'likes',
 		'social_notifications_like',
 		'social_notifications_reblog',
 		'social_notifications_subscribe',
@@ -53,400 +638,15 @@ module.exports = React.createClass( {
 		'moderation_keys',
 		'blacklist_keys',
 		'admin_url',
-		'wpcom_publish_comments_with_markdown',
-		'markdown_supported',
-	],
+		'highlander_comment_form_prompt',
+		'jetpack_comment_form_color_scheme',
+		'subscriptions',
+		'stb_enabled',
+		'stc_enabled',
+	] );
+};
 
-	getSettingsFromSite: function( siteInstance ) {
-		var site = siteInstance || this.props.site,
-			settings = {};
-
-		if ( site.settings ) {
-			this.discussionAttributes.map( function( attribute ) {
-				settings[ attribute ] = site.settings[ attribute ];
-			}, this );
-		}
-
-		settings.fetchingSettings = site.fetchingSettings;
-
-		return settings;
-	},
-
-	resetState: function() {
-		var clearSettings = { fetchingSettings: true };
-		this.discussionAttributes.forEach( function( attribute ) {
-			clearSettings[ attribute ] = '';
-		} );
-		this.replaceState( clearSettings );
-		debug( 'resetting state' );
-	},
-
-	defaultArticleSettings: function() {
-		return (
-			<FormFieldset>
-				<FormLegend>{ this.translate( 'Default article settings' ) }</FormLegend>
-				<FormLabel>
-					<FormCheckbox
-						name="default_pingback_flag"
-						checkedLink={ this.linkState( 'default_pingback_flag' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Attempt to Notify Checkbox' ) } />
-					<span>{ this.translate( 'Attempt to notify any blogs linked to from the article' ) }</span>
-				</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="default_ping_status"
-						checkedLink={ this.linkState( 'default_ping_status' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Allow Link Notifications Checkbox' ) } />
-					<span>{ this.translate( 'Allow link notifications from other blogs (pingbacks and trackbacks)' ) }</span>
-				</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="default_comment_status"
-						checkedLink={ this.linkState( 'default_comment_status' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Allow People to Post Comments Checkbox' ) } />
-					<span>{ this.translate( 'Allow people to post comments on new articles' ) }</span>
-				</FormLabel>
-				<FormSettingExplanation>
-						{ this.translate( '(These settings may be overridden for individual articles.)' ) }
-				</FormSettingExplanation>
-			</FormFieldset>
-		);
-	},
-
-	otherCommentSettings: function() {
-		const markdownSupported = this.state.markdown_supported;
-		return (
-			<FormFieldset className="has-divider">
-				<FormLabel>{ this.translate( 'Other comment settings' ) }</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="require_name_email"
-						checkedLink={ this.linkState( 'require_name_email' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Comment Author Must Fill Checkbox' ) } />
-					<span>{ this.translate( 'Comment author must fill out name and e-mail' ) }</span>
-				</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="comment_registration"
-						checkedLink={ this.linkState( 'comment_registration' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Users Must Be Registered Checkbox' ) } />
-					<span>{ this.translate( 'Users must be registered and logged in to comment' ) }</span>
-				</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="close_comments_for_old_posts"
-						checkedLink={ this.linkState( 'close_comments_for_old_posts' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Automatically Close Days Checkbox' ) } />
-					<span>{
-						this.translate(
-							'Automatically close comments on articles older than {{numberOfDays /}} day',
-							'Automatically close comments on articles older than {{numberOfDays /}} days', {
-								count: this.state.close_comments_days_old || 2,
-								components: {
-									numberOfDays: <FormTextInput
-										name="close_comments_days_old"
-										type="number"
-										min="0"
-										step="1"
-										id="close_comments_days_old"
-										className="small-text"
-										valueLink={ this.linkState( 'close_comments_days_old' ) }
-										disabled={ this.state.fetchingSettings }
-										onClick={ this.recordEvent.bind( this, 'Clicked Automatically Close Days Field' ) }
-										onKeyPress={ this.recordEventOnce.bind( this, 'typedAutoCloseDays', 'Typed in Automatically Close Days Field' ) } />
-								}
-							} )
-						}</span>
-				</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="thread_comments"
-						checkedLink={ this.linkState( 'thread_comments' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Enable Threaded Checkbox' ) } />
-					<span>{
-						this.translate( 'Enable threaded (nested) comments up to {{number /}} levels deep', {
-							components: {
-								number: <FormSelect
-									className="is-compact"
-									name="thread_comments_depth"
-									valueLink={ this.linkState( 'thread_comments_depth' ) }
-									disabled={ this.state.fetchingSettings }
-									onClick={ this.recordClickEventAndStop.bind( this, 'Selected Comment Nesting Level' ) }>
-										{ [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ].map( level =>
-											<option value={ level } key={ 'comment-depth-' + level }>{ level }</option>
-										) }
-								</FormSelect>
-							}
-						} )
-						}</span>
-				</FormLabel>
-				<FormLabel>
-					<FormCheckbox
-						name="page_comments"
-						id="page_comments"
-						checkedLink={ this.linkState( 'page_comments' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Break Comments Into Pages Checkbox' ) } />
-					<span>{
-						this.translate( 'Break comments into pages with {{numComments /}} top level comments per page and the {{firstOrLast /}} page displayed by default', {
-							components: {
-								numComments: <FormTextInput
-									name="comments_per_page"
-									type="number"
-									step="1"
-									min="0"
-									id="comments_per_page"
-									valueLink={ this.linkState( 'comments_per_page' ) }
-									className="small-text"
-									disabled={ this.state.fetchingSettings }
-									onClick={ this.recordEvent.bind( this, 'Clicked Comments Per Page Field' ) }
-									onKeyPress={ this.recordEventOnce.bind( this, 'typedCommentsPerPage', 'Typed in Comments Per Page Field' ) } />,
-								firstOrLast: <FormSelect
-									className="is-compact"
-									name="default_comments_page"
-									valueLink={ this.linkState( 'default_comments_page' ) }
-									disabled={ this.state.fetchingSettings }
-									onClick={ this.recordClickEventAndStop.bind( this, 'Selected Comment Page Display Default' ) }>
-										<option value="newest">{ this.translate( 'last' ) }</option>
-										<option value="oldest">{ this.translate( 'first' ) }</option>
-								</FormSelect>
-							}
-						} )
-						}</span>
-				</FormLabel>
-				{ markdownSupported &&
-					<FormLabel>
-						<FormCheckbox
-							name="wpcom_publish_comments_with_markdown"
-							checkedLink={ this.linkState( 'wpcom_publish_comments_with_markdown' ) }
-							disabled={ this.state.fetchingSettings }
-							onClick={ this.recordEvent.bind( this, 'Clicked Markdown for Comments Checkbox' ) } />
-						<span>{ this.translate( 'Enable Markdown for comments. {{a}}Learn more about markdown{{/a}}.', {
-								components: {
-									a: <a href="http://en.support.wordpress.com/markdown-quick-reference/" target="_blank" rel="noopener noreferrer" />
-								}
-							} ) }</span>
-					</FormLabel>
-				}
-				<FormLabel>
-					<span>{
-						this.translate( 'Comments should be displayed with the {{olderOrNewer /}} comments at the top of each page', {
-							components: {
-								olderOrNewer: <FormSelect
-									className="is-compact"
-									name="comment_order"
-									valueLink={ this.linkState( 'comment_order' ) }
-									disabled={ this.state.fetchingSettings }
-									onClick={ this.recordEvent.bind( this, 'Selected Comment Order on Page' ) }>
-										<option value="asc">{ this.translate( 'older', { textOnly: true } ) }</option>
-										<option value="desc">{ this.translate( 'newer', { textOnly: true } ) }</option>
-								</FormSelect>
-							}
-						} )
-						}</span>
-				</FormLabel>
-			</FormFieldset>
-		);
-	},
-
-	emailMeSettings: function() {
-		return (
-			<FormFieldset>
-				<FormLegend>{ this.translate( 'E-mail me whenever' ) }</FormLegend>
-				<FormLabel className="short-settings">
-					<FormCheckbox
-						name="comments_notify"
-						checkedLink={ this.linkState( 'comments_notify' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Anyone Posts a Comment Checkbox' ) } />
-					<span>{ this.translate( 'Anyone posts a comment' ) }</span>
-				</FormLabel>
-				<FormLabel className="short-settings">
-					<FormCheckbox
-						name="moderation_notify"
-						checkedLink={ this.linkState( 'moderation_notify' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked a Comment is Held Checkbox' ) } />
-					<span>{ this.translate( 'A comment is held for moderation' ) }</span>
-				</FormLabel>
-				{ this.emailMeLikes() }
-				{ this.emailMeReblogs() }
-				{ this.emailMeFollows() }
-			</FormFieldset>
-		);
-	},
-
-	emailMeLikes: function() {
-		// likes are only supported on jetpack sites with the Likes module activated
-		if ( this.props.site.jetpack && ! this.props.site.isModuleActive( 'likes' ) ) {
-			return null;
-		}
-
-		return (
-			<FormLabel className="short-settings">
-				<FormCheckbox
-					name="social_notifications_like"
-					checkedLink={ this.linkState( 'social_notifications_like' ) }
-					disabled={ this.state.fetchingSettings }
-					onClick={ this.recordEvent.bind( this, 'Clicked Someone Likes Checkbox' ) } />
-				<span>{ this.translate( 'Someone likes one of my posts' ) }</span>
-			</FormLabel>
-		);
-	},
-
-	emailMeReblogs: function() {
-		// reblogs are not supported on Jetpack sites
-		if ( this.props.site.jetpack ) {
-			return null;
-		}
-
-		return (
-			<FormLabel className="short-settings">
-				<FormCheckbox
-					name="social_notifications_reblog"
-					checkedLink={ this.linkState( 'social_notifications_reblog' ) }
-					disabled={ this.state.fetchingSettings }
-					onClick={ this.recordEvent.bind( this, 'Clicked Someone Reblogs Checkbox' ) } />
-				<span>{ this.translate( 'Someone reblogs one of my posts' ) }</span>
-			</FormLabel>
-		);
-	},
-
-	emailMeFollows: function() {
-		// follows are not supported on Jetpack sites
-		if ( this.props.site.jetpack ) {
-			return null;
-		}
-
-		return (
-			<FormLabel className="short-settings">
-				<FormCheckbox
-					name="social_notifications_subscribe"
-					checkedLink={ this.linkState( 'social_notifications_subscribe' ) }
-					disabled={ this.state.fetchingSettings }
-					onClick={ this.recordEvent.bind( this, 'Clicked Someone Follows Checkbox' ) } />
-				<span>{ this.translate( 'Someone follows my blog' ) }</span>
-			</FormLabel>
-		);
-	},
-
-	beforeCommentSettings: function() {
-		return (
-			<FormFieldset>
-				<FormLegend>{ this.translate( 'Before a comment appears' ) }</FormLegend>
-				<FormLabel className="short-settings">
-					<FormCheckbox
-						name="comment_moderation"
-						checkedLink={ this.linkState( 'comment_moderation' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Comment Manually Approved Checkbox' ) } />
-					<span>{ this.translate( 'Comment must be manually approved' ) }</span>
-				</FormLabel>
-				<FormLabel className="short-settings">
-					<FormCheckbox
-						name="comment_whitelist"
-						checkedLink={ this.linkState( 'comment_whitelist' ) }
-						disabled={ this.state.fetchingSettings }
-						onClick={ this.recordEvent.bind( this, 'Clicked Comment Previously Approved Checkbox' ) } />
-					<span>{ this.translate( 'Comment author must have a previously approved comment' ) }</span>
-				</FormLabel>
-			</FormFieldset>
-		);
-	},
-
-	commentModerationSettings: function() {
-		return (
-			<FormFieldset className="has-divider">
-				<FormLabel htmlFor="moderation_keys">{ this.translate( 'Comment Moderation' ) }</FormLabel>
-				<p>{
-					this.translate( 'Hold a comment in the queue if it contains {{numberOfLinks /}} or more links. (A common characteristic of comment spam is a large number of hyperlinks.)', {
-						components: {
-							numberOfLinks: <FormTextInput
-								name="comment_max_links"
-								type="number"
-								step="1"
-								min="0"
-								className="small-text"
-								valueLink={ this.linkState( 'comment_max_links' ) }
-								disabled={ this.state.fetchingSettings }
-								onClick={ this.recordEvent.bind( this, 'Clicked Comment Queue Link Count Field' ) }
-								onKeyPress={ this.recordEventOnce.bind( this, 'typedCommentQueue', 'Typed In Comment Queue Link Count Field' ) } />
-						}
-					} )
-				}</p>
-				<p>{
-					this.translate( 'When a comment contains any of these words in its content, name, URL, e-mail, or IP, it will be held in the {{link}}moderation queue{{/link}}. One word or IP per line. It will match inside words, so "press" will match "WordPress".',
-						{
-							components: {
-								link: <a href={ this.state.admin_url + 'edit-comments.php?comment_status=moderated' } target="_blank" rel="noopener noreferrer" />
-							}
-						}
-					)
-					}</p>
-				<p>
-					<FormTextarea
-						name="moderation_keys"
-						id="moderation_keys"
-						valueLink={ this.linkState( 'moderation_keys' ) }
-						disabled={ this.state.fetchingSettings }
-						autoCapitalize="none"
-						onClick={ this.recordEvent.bind( this, 'Clicked Moderation Queue Field' ) }
-						onKeyPress={ this.recordEventOnce.bind( this, 'typedModerationKeys', 'Typed In Moderation Queue Field' ) }>
-					</FormTextarea>
-				</p>
-			</FormFieldset>
-		);
-	},
-
-	commentBlacklistSettings: function() {
-		return (
-			<FormFieldset>
-				<FormLabel htmlFor="blacklist_keys">{ this.translate( 'Comment Blacklist' ) }</FormLabel>
-				<p>{ this.translate( 'When a comment contains any of these words in its content, name, URL, e-mail, or IP, it will be marked as spam. One word or IP per line. It will match inside words, so "press" will match "WordPress".' ) }</p>
-				<p>
-					<FormTextarea
-						name="blacklist_keys"
-						id="blacklist_keys"
-						valueLink={ this.linkState( 'blacklist_keys' ) }
-						disabled={ this.state.fetchingSettings }
-						autoCapitalize="none"
-						onClick={ this.recordEvent.bind( this, 'Clicked Blacklist Field' ) }
-						onKeyPress={ this.recordEventOnce.bind( this, 'typedBlacklistKeys', 'Typed In Blacklist Field' ) }>
-					</FormTextarea>
-				</p>
-			</FormFieldset>
-		);
-	},
-
-	render: function() {
-		return (
-
-			<form id="site-settings" onSubmit={ this.handleSubmitForm } onChange={ this.markChanged }>
-				<SectionHeader label={ this.translate( 'Discussion Settings' ) }>
-					<Button
-						primary
-						compact
-						disabled={ this.state.fetchingSettings || this.state.submittingForm }
-						onClick={ this.handleSubmitForm }>
-						{ this.state.submittingForm ? this.translate( 'Saving…' ) : this.translate( 'Save Settings' ) }
-					</Button>
-				</SectionHeader>
-				<Card className="discussion-settings">
-					{ this.defaultArticleSettings() }
-					{ this.otherCommentSettings() }
-					{ this.emailMeSettings() }
-					{ this.beforeCommentSettings() }
-					{ this.commentModerationSettings() }
-					{ this.commentBlacklistSettings() }
-				</Card>
-			</form>
-		);
-	}
-} );
+export default flowRight(
+	connectComponent,
+	wrapSettingsForm( getFormSettings )
+)( SiteSettingsFormDiscussion );

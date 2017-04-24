@@ -8,7 +8,6 @@
 	position: absolute;
 	z-index: z-index( '.popover', '.post-schedule__header' );
 	top: 47px;
-	color: $gray;
 	font-size: 18px;
 	font-weight: 300;
 	width: 80%;
@@ -26,6 +25,16 @@
 		padding-left: 16px;
 		padding-right: 16px;
 		border: 0;
+		color: $gray-dark;
+	}
+
+	::placeholder {
+		color: $gray-dark;
+	}
+
+	::-moz-placeholder {
+		color: $gray-dark;
+		opacity: 1;
 	}
 }
 
@@ -38,8 +47,7 @@
 	position: relative;
 	text-align: center;
 	font-size: 12px;
-	color: lighten( $gray, 10% );
-	height: 20;
+	height: 20px;
 	line-height: 20px;
 	padding: 0 5px;
 	margin-left: 10px;
@@ -71,7 +79,6 @@
 .post-schedule__clock {
 	text-align: center;
 	margin: 15px auto 10px;
-	color: $gray;
 	font-size: 12px;
 }
 
@@ -81,29 +88,41 @@ hr.post-schedule__hr {
 	margin: 0 -16px;
 }
 
-input.post-schedule__clock_time {
-	height: 26px;
-	line-height: 26px;
+input.post-schedule__clock-time {
+	height: 28px;
 	display: inline-block;
 	border: 1px solid lighten( $gray, 30% );
 	width: 42px;
 	text-align: center;
 	padding: 0;
-	color: lighten( $gray, 10% );
-	font-size: 12px;
+	font-size: 13px;
 }
 
 .post-schedule__clock-divisor {
 	margin: 0 6px;
 }
 
+.post-schedule__clock .segmented-control {
+	display: inline-flex;
+	margin: 0 6px;
+	vertical-align: bottom;
+}
+
+.post-schedule__clock .segmented-control__item {
+	display: inline-table;
+}
+
+.post-schedule__clock .segmented-control__link {
+	display: inline-block;
+}
+
 .info-popover__tooltip.post-schedule__timezone-info,
 .post-schedule__clock-timezone {
-	color: $gray;
 	line-height: 20px;
 }
 
 .post-schedule__clock-timezone {
+	text-align: left;
 	margin-top: 10px;
 	padding: 10px 0 0;
 	border-top: 1px solid lighten( $gray, 25% );
@@ -121,5 +140,6 @@ input.post-schedule__clock_time {
 
 	.popover__inner {
 		font-size: 12px;
+		max-width: 250px;
 	}
 }

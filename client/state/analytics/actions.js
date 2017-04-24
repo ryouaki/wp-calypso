@@ -1,16 +1,24 @@
-/** @ssr-ready **/
+/**
+ * External dependencies
+ */
+import {
+	curry,
+	flatMap,
+	get,
+	isFunction,
+	merge,
+	property,
+} from 'lodash';
 
-import curry from 'lodash/curry';
-import get from 'lodash/get';
-import isFunction from 'lodash/isFunction';
-import merge from 'lodash/merge';
-import property from 'lodash/property';
-
+/**
+ * Internal dependencies
+ */
 import {
 	ANALYTICS_EVENT_RECORD,
 	ANALYTICS_MULTI_TRACK,
 	ANALYTICS_PAGE_VIEW_RECORD,
-	ANALYTICS_STAT_BUMP
+	ANALYTICS_STAT_BUMP,
+	ANALYTICS_TRACKING_ON,
 } from 'state/action-types';
 
 const mergedMetaData = ( a, b ) => [
@@ -20,13 +28,16 @@ const mergedMetaData = ( a, b ) => [
 
 const joinAnalytics = ( analytics, action ) =>
 	isFunction( action )
-		? dispatch => { dispatch( analytics ); dispatch( action ); }
+		? dispatch => {
+			dispatch( analytics );
+			dispatch( action );
+		}
 		: merge( {}, action, { meta: { analytics: mergedMetaData( analytics, action ) } } );
 
 export const composeAnalytics = ( ...analytics ) => ( {
 	type: ANALYTICS_MULTI_TRACK,
 	meta: {
-		analytics: analytics.map( property( 'meta.analytics' ) )
+		analytics: flatMap( analytics, property( 'meta.analytics' ) ),
 	}
 } );
 
@@ -52,11 +63,27 @@ export const recordEvent = ( service, args ) => ( {
 	}
 } );
 
+export const loadTrackingTool = ( trackingTool ) => ( {
+	type: ANALYTICS_TRACKING_ON,
+	meta: {
+		analytics: [ {
+			type: ANALYTICS_TRACKING_ON,
+			payload: trackingTool,
+		} ]
+	}
+} );
+
 export const recordGoogleEvent = ( category, action, label, value ) =>
 	recordEvent( 'ga', { category, action, label, value } );
 
 export const recordTracksEvent = ( name, properties ) =>
 	recordEvent( 'tracks', { name, properties } );
+
+export const recordCustomFacebookConversionEvent = ( name, properties ) =>
+	recordEvent( 'fb', { name, properties } );
+
+export const recordCustomAdWordsRemarketingEvent = ( properties ) =>
+	recordEvent( 'adwords', { properties } );
 
 export const recordPageView = ( url, title, service ) => ( {
 	type: ANALYTICS_PAGE_VIEW_RECORD,

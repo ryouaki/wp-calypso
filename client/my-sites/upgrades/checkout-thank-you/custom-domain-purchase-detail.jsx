@@ -11,26 +11,29 @@ import PurchaseDetail from 'components/purchase-detail';
 import { hasCustomDomain } from 'lib/site/utils';
 
 const CustomDomainPurchaseDetail = ( { selectedSite, hasDomainCredit, translate } ) => {
-	const renderClaimCustomDomain = () =>
-		<PurchaseDetail
-			icon="globe"
-			title={ translate( 'Select Your Custom Domain' ) }
-			description={
-				translate(
-					'Your plan includes a free custom domain. Replace {{em}}%(siteDomain)s{{/em}} ' +
-					'with a custom domain to personalize your site.',
-					{
-						args: { siteDomain: selectedSite.domain },
-						components: { em: <em /> }
-					}
-				)
-			}
-			buttonText={ translate( 'Claim your free domain' ) }
-			href={ `/domains/add/${ selectedSite.slug }` }
-		/>;
-
-	const renderHasCustomDomain = () =>
-		<PurchaseDetail
+	if ( hasDomainCredit && selectedSite.plan.user_is_owner ) {
+		return ( <PurchaseDetail
+				icon="globe"
+				title={ translate( 'Select your custom domain' ) }
+				description={
+					translate(
+						'Your plan includes a free custom domain. Replace {{em}}%(siteDomain)s{{/em}} ' +
+						'with a custom domain to personalize your site.',
+						{
+							args: { siteDomain: selectedSite.domain },
+							components: { em: <em /> }
+						}
+					)
+				}
+				buttonText={ translate( 'Claim your free domain' ) }
+				href={ `/domains/add/${ selectedSite.slug }` }
+			/>
+		);
+	} else if ( ! hasDomainCredit && hasCustomDomain( selectedSite ) ) {
+		const actionButton = {};
+		actionButton.buttonText = translate( 'Manage my domains' );
+		actionButton.href = `/domains/manage/${ selectedSite.slug }`;
+		return ( <PurchaseDetail
 			icon="globe"
 			title={ translate( 'Custom Domain' ) }
 			description={ translate(
@@ -39,23 +42,11 @@ const CustomDomainPurchaseDetail = ( { selectedSite, hasDomainCredit, translate 
 					components: { em: <em /> }
 				}
 			) }
-			buttonText={ translate( 'Manage my domains' ) }
-			href={ `/domains/manage/${ selectedSite.slug }` }
-		/>;
-
-	const renderCustomDomainDetail = () => {
-		if ( hasCustomDomain( selectedSite ) ) {
-			return renderHasCustomDomain();
-		}
-
+			{ ...actionButton }
+		/> );
+	} else {
 		return null;
-	};
-
-	return (
-		hasDomainCredit
-			? renderClaimCustomDomain()
-			: renderCustomDomainDetail()
-	);
+	}
 };
 
 CustomDomainPurchaseDetail.propTypes = {

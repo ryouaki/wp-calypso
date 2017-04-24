@@ -5,7 +5,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { localize } from 'i18n-calypso';
-import VirtualScroll from 'react-virtualized/VirtualScroll';
+import List from 'react-virtualized/List';
 import {
 	debounce,
 	difference,
@@ -44,6 +44,7 @@ const ITEM_HEIGHT = 25;
 const TermTreeSelectorList = React.createClass( {
 
 	propTypes: {
+		hideTermAndChildren: PropTypes.number,
 		terms: PropTypes.array,
 		taxonomy: PropTypes.string,
 		multiple: PropTypes.bool,
@@ -54,7 +55,9 @@ const TermTreeSelectorList = React.createClass( {
 		defaultTermId: PropTypes.number,
 		lastPage: PropTypes.number,
 		onSearch: PropTypes.func,
-		onChange: PropTypes.func
+		onChange: PropTypes.func,
+		isError: PropTypes.bool,
+		height: PropTypes.number,
 	},
 
 	getInitialState() {
@@ -73,14 +76,15 @@ const TermTreeSelectorList = React.createClass( {
 			terms: [],
 			onSearch: () => {},
 			onChange: () => {},
-			onNextPage: () => {}
+			onNextPage: () => {},
+			height: 300
 		};
 	},
 
 	componentWillMount() {
 		this.itemHeights = {};
 		this.hasPerformedSearch = false;
-		this.virtualScroll = null;
+		this.list = null;
 
 		this.termIds = map( this.props.terms, 'ID' );
 		this.getTermChildren = memoize( this.getTermChildren );
@@ -109,7 +113,7 @@ const TermTreeSelectorList = React.createClass( {
 		);
 
 		if ( forceUpdate ) {
-			this.virtualScroll.forceUpdate();
+			this.list.forceUpdateGrid();
 		}
 
 		if ( this.props.terms !== prevProps.terms ) {
@@ -118,16 +122,15 @@ const TermTreeSelectorList = React.createClass( {
 	},
 
 	recomputeRowHeights: function() {
-		if ( ! this.virtualScroll ) {
+		if ( ! this.list ) {
 			return;
 		}
 
-		this.virtualScroll.recomputeRowHeights();
-		this.virtualScroll.forceUpdate();
+		this.list.recomputeRowHeights();
 
-		// Compact mode passes the height of the scrollable region as a derived
+		// Small mode passes the height of the scrollable region as a derived
 		// number, and will not be updated unless our component re-renders
-		if ( this.isCompact() ) {
+		if ( this.isSmall() ) {
 			this.forceUpdate();
 		}
 	},
@@ -199,7 +202,7 @@ const TermTreeSelectorList = React.createClass( {
 		}
 	},
 
-	isCompact() {
+	isSmall() {
 		if ( ! this.props.terms || this.state.searchTerm ) {
 			return false;
 		}
@@ -223,6 +226,11 @@ const TermTreeSelectorList = React.createClass( {
 
 		// if item has a parent, and parent is in payload, height is already part of parent
 		if ( item.parent && ! _recurse && includes( this.termIds, item.parent ) ) {
+			return 0;
+		}
+
+		// If this subtree is excluded, do not render
+		if ( item.ID === this.props.hideTermAndChildren ) {
 			return 0;
 		}
 
@@ -287,13 +295,18 @@ const TermTreeSelectorList = React.createClass( {
 		this.debouncedSearch();
 	},
 
-	setVirtualScrollRef( ref ) {
-		this.virtualScroll = ref;
+	setListRef( ref ) {
+		this.list = ref;
 	},
 
 	renderItem( item, _recurse = false ) {
 		// if item has a parent and it is in current props.terms, do not render
 		if ( item.parent && ! _recurse && includes( this.termIds, item.parent ) ) {
+			return;
+		}
+
+		// If this subtree is excluded, do not render
+		if ( item.ID === this.props.hideTermAndChildren ) {
 			return;
 		}
 
@@ -377,16 +390,26 @@ const TermTreeSelectorList = React.createClass( {
 		);
 	},
 
+	cellRendererWrapper( { key, style, ...rest } ) {
+		return (
+			<div key={ key } style={ style }>
+				{ this.renderRow( rest ) }
+			</div>
+		);
+	},
+
 	render() {
 		const rowCount = this.getRowCount();
-		const isCompact = this.isCompact();
+		const isSmall = this.isSmall();
 		const searchLength = this.state.searchTerm.length;
-		const showSearch = ( searchLength > 0 || ! isCompact ) &&
+		const showSearch = ( searchLength > 0 || ! isSmall ) &&
 			( this.props.terms || ( ! this.props.terms && searchLength > 0 ) );
-		const { className, loading, siteId, taxonomy, query } = this.props;
+		const { className, isError, loading, siteId, taxonomy, query, height } = this.props;
 		const classes = classNames( 'term-tree-selector', className, {
 			'is-loading': loading,
-			'is-compact': isCompact
+			'is-small': isSmall,
+			'is-error': isError,
+			'is-compact': this.props.compact,
 		} );
 
 		return (
@@ -403,15 +426,15 @@ const TermTreeSelectorList = React.createClass( {
 						searchTerm={ this.state.searchTerm }
 						onSearch={ this.onSearch } />
 				) }
-				<VirtualScroll
-					ref={ this.setVirtualScrollRef }
+				<List
+					ref={ this.setListRef }
 					width={ this.getResultsWidth() }
-					height={ isCompact ? this.getCompactContainerHeight() : 300 }
+					height={ isSmall ? this.getCompactContainerHeight() : height }
 					onRowsRendered={ this.setRequestedPages }
 					rowCount={ rowCount }
 					estimatedRowSize={ ITEM_HEIGHT }
 					rowHeight={ this.getRowHeight }
-					rowRenderer={ this.renderRow }
+					rowRenderer={ this.cellRendererWrapper }
 					noRowsRenderer={ this.renderNoResults }
 					className="term-tree-selector__results" />
 			</div>
@@ -431,4 +454,3 @@ export default connect( ( state, ownProps ) => {
 		query
 	};
 } )( localize( TermTreeSelectorList ) );
-

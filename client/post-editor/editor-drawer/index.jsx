@@ -4,38 +4,45 @@
 import React from 'react';
 import createFragment from 'react-addons-create-fragment';
 import { connect } from 'react-redux';
+import { get } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import Accordion from 'components/accordion';
 import AccordionSection from 'components/accordion/section';
-import Gridicon from 'components/gridicon';
 import CategoriesTagsAccordion from 'post-editor/editor-categories-tags/accordion';
-import EditorSharingAccordion from 'post-editor/editor-sharing/accordion';
+import AsyncLoad from 'components/async-load';
 import FormTextarea from 'components/forms/form-textarea';
-import PostFormatsAccordion from 'post-editor/editor-post-formats/accordion';
-import Location from 'post-editor/editor-location';
-import Discussion from 'post-editor/editor-discussion';
-import SeoAccordion from 'post-editor/editor-seo-accordion';
 import EditorMoreOptionsSlug from 'post-editor/editor-more-options/slug';
 import PostMetadata from 'lib/post-metadata';
 import TrackInputChanges from 'components/track-input-changes';
 import actions from 'lib/posts/actions';
 import { recordStat, recordEvent } from 'lib/posts/stats';
-import siteUtils from 'lib/site/utils';
 import { isBusiness, isEnterprise } from 'lib/products-values';
 import QueryPostTypes from 'components/data/query-post-types';
+import QuerySiteSettings from 'components/data/query-site-settings';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { getEditorPostId } from 'state/ui/editor/selectors';
 import { getEditedPostValue } from 'state/posts/selectors';
 import { getPostType } from 'state/post-types/selectors';
-import { isJetpackMinimumVersion } from 'state/sites/selectors';
+import {
+	isJetpackMinimumVersion,
+	isJetpackModuleActive,
+	isJetpackSite,
+} from 'state/sites/selectors';
 import config from 'config';
-import EditorDrawerFeaturedImage from './featured-image';
+import {
+	areSitePermalinksEditable,
+	isPrivateSite,
+	isHiddenSite
+} from 'state/selectors';
+
 import EditorDrawerTaxonomies from './taxonomies';
 import EditorDrawerPageOptions from './page-options';
 import EditorDrawerLabel from './label';
+import EditorMoreOptionsCopyPost from 'post-editor/editor-more-options/copy-post';
+import EditPostStatus from 'post-editor/edit-post-status';
 
 /**
  * Constants
@@ -70,11 +77,14 @@ const POST_TYPE_SUPPORTS = {
 const EditorDrawer = React.createClass( {
 	propTypes: {
 		site: React.PropTypes.object,
+		savedPost: React.PropTypes.object,
 		post: React.PropTypes.object,
 		canJetpackUseTaxonomies: React.PropTypes.bool,
 		typeObject: React.PropTypes.object,
 		isNew: React.PropTypes.bool,
-		type: React.PropTypes.string
+		type: React.PropTypes.string,
+		setPostDate: React.PropTypes.func,
+		onSave: React.PropTypes.func,
 	},
 
 	onExcerptChange: function( event ) {
@@ -134,7 +144,8 @@ const EditorDrawer = React.createClass( {
 		}
 
 		return (
-			<PostFormatsAccordion
+			<AsyncLoad
+				require="post-editor/editor-post-formats/accordion"
 				post={ this.props.post }
 				className="editor-drawer__accordion"
 			/>
@@ -143,7 +154,8 @@ const EditorDrawer = React.createClass( {
 
 	renderSharing: function() {
 		return (
-			<EditorSharingAccordion
+			<AsyncLoad
+				require="post-editor/editor-sharing/accordion"
 				site={ this.props.site }
 				post={ this.props.post } />
 		);
@@ -155,9 +167,11 @@ const EditorDrawer = React.createClass( {
 		}
 
 		return (
-			<EditorDrawerFeaturedImage
+			<AsyncLoad
+				require="./featured-image"
 				site={ this.props.site }
-				post={ this.props.post } />
+				post={ this.props.post }
+			/>
 		);
 	},
 
@@ -194,7 +208,7 @@ const EditorDrawer = React.createClass( {
 	},
 
 	renderLocation: function() {
-		if ( ! this.props.site || this.props.site.jetpack ) {
+		if ( ! this.props.site || this.props.isJetpack ) {
 			return;
 		}
 
@@ -205,7 +219,10 @@ const EditorDrawer = React.createClass( {
 		return (
 			<AccordionSection>
 				<EditorDrawerLabel labelText={ this.translate( 'Location' ) } />
-				<Location coordinates={ PostMetadata.geoCoordinates( this.props.post ) } />
+				<AsyncLoad
+					require="post-editor/editor-location"
+					coordinates={ PostMetadata.geoCoordinates( this.props.post ) }
+				/>
 			</AccordionSection>
 		);
 	},
@@ -217,7 +234,8 @@ const EditorDrawer = React.createClass( {
 
 		return (
 			<AccordionSection>
-				<Discussion
+				<AsyncLoad
+					require="post-editor/editor-discussion"
 					site={ this.props.site }
 					post={ this.props.post }
 					isNew={ this.props.isNew }
@@ -227,27 +245,51 @@ const EditorDrawer = React.createClass( {
 	},
 
 	renderSeo: function() {
-		if ( ! config.isEnabled( 'manage/advanced-seo' ) || ! this.props.site ) {
+		const { jetpackVersionSupportsSeo } = this.props;
+
+		if ( ! this.props.site ) {
 			return;
+		}
+
+		if ( this.props.isJetpack ) {
+			if ( ! this.props.isSeoToolsModuleActive || ! jetpackVersionSupportsSeo ) {
+				return;
+			}
 		}
 
 		const { plan } = this.props.site;
 		const hasBusinessPlan = isBusiness( plan ) || isEnterprise( plan );
-		if ( ! hasBusinessPlan ) {
+		const { isPrivate, isHidden } = this.props;
+
+		if ( ! hasBusinessPlan || isPrivate || isHidden ) {
 			return;
 		}
 
 		return (
-			<SeoAccordion metaDescription={ PostMetadata.metaDescription( this.props.post ) } />
+			<AsyncLoad
+				require="post-editor/editor-seo-accordion"
+				metaDescription={ PostMetadata.metaDescription( this.props.post ) }
+			/>
 		);
 	},
 
+	renderCopyPost: function() {
+		const { type } = this.props;
+		if ( 'post' !== type && 'page' !== type ) {
+			return;
+		}
+
+		return <EditorMoreOptionsCopyPost type={ type } />;
+	},
+
 	renderMoreOptions: function() {
+		const { isPermalinkEditable } = this.props;
+
 		if (
 			! this.currentPostTypeSupports( 'excerpt' ) &&
 			! this.currentPostTypeSupports( 'geo-location' ) &&
 			! this.currentPostTypeSupports( 'comments' ) &&
-			! siteUtils.isPermalinkEditable( this.props.site )
+			! isPermalinkEditable
 		) {
 			return;
 		}
@@ -255,13 +297,13 @@ const EditorDrawer = React.createClass( {
 		return (
 			<Accordion
 				title={ this.translate( 'More Options' ) }
-				icon={ <Gridicon icon="ellipsis" /> }
 				className="editor-drawer__more-options"
 			>
-				{ siteUtils.isPermalinkEditable( this.props.site ) && <EditorMoreOptionsSlug /> }
+				{ isPermalinkEditable && <EditorMoreOptionsSlug /> }
 				{ this.renderExcerpt() }
 				{ this.renderLocation() }
 				{ this.renderDiscussion() }
+				{ this.renderCopyPost() }
 			</Accordion>
 		);
 	},
@@ -274,6 +316,28 @@ const EditorDrawer = React.createClass( {
 		return <EditorDrawerPageOptions />;
 	},
 
+	renderStatus() {
+		// TODO: REDUX - remove this logic and prop for EditPostStatus when date is moved to redux
+		const postDate = get( this.props.post, 'date', null );
+		const postStatus = get( this.props.post, 'status', null );
+
+		return (
+			<Accordion title={ this.translate( 'Status' ) }>
+				<EditPostStatus
+					savedPost={ this.props.savedPost }
+					postDate={ postDate }
+					type={ this.props.type }
+					onSave={ this.props.onSave }
+					onTrashingPost={ this.props.onTrashingPost }
+					onPrivatePublish={ this.props.onPrivatePublish }
+					setPostDate={ this.props.setPostDate }
+					site={ this.props.site }
+					status={ postStatus }
+				/>
+			</Accordion>
+		);
+	},
+
 	render: function() {
 		const { site } = this.props;
 
@@ -282,6 +346,10 @@ const EditorDrawer = React.createClass( {
 				{ site && (
 					<QueryPostTypes siteId={ site.ID } />
 				) }
+				{ site && (
+					<QuerySiteSettings siteId={ site.ID } />
+				) }
+				{ this.renderStatus() }
 				{ this.renderTaxonomies() }
 				{ this.renderFeaturedImage() }
 				{ this.renderPageOptions() }
@@ -300,8 +368,14 @@ export default connect(
 		const type = getEditedPostValue( state, siteId, getEditorPostId( state ), 'type' );
 
 		return {
+			isPermalinkEditable: areSitePermalinksEditable( state, siteId ),
 			canJetpackUseTaxonomies: isJetpackMinimumVersion( state, siteId, '4.1' ),
-			typeObject: getPostType( state, siteId, type )
+			isJetpack: isJetpackSite( state, siteId ),
+			isSeoToolsModuleActive: isJetpackModuleActive( state, siteId, 'seo-tools' ),
+			jetpackVersionSupportsSeo: isJetpackMinimumVersion( state, siteId, '4.4-beta1' ),
+			typeObject: getPostType( state, siteId, type ),
+			isPrivate: isPrivateSite( state, siteId ),
+			isHidden: isHiddenSite( state, siteId ),
 		};
 	},
 	null,

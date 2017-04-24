@@ -12,7 +12,12 @@ import page from 'page';
 import FeedPostStore from 'lib/feed-post-store';
 import FeedPostStoreActions from 'lib/feed-post-store/actions';
 import { getSourceData as getDiscoverSourceData } from 'reader/discover/helper';
-import * as stats from 'reader/stats';
+import {
+	recordAction,
+	recordGaEvent,
+	recordTrackForPost,
+} from 'reader/stats';
+import cssSafeUrl from 'lib/css-safe-url';
 
 export default React.createClass( {
 	displayName: 'FeedFeatured',
@@ -87,9 +92,9 @@ export default React.createClass( {
 
 	handleClick( postData ) {
 		const post = postData.post;
-		stats.recordTrackForPost( 'calypso_reader_clicked_featured_post', post );
-		stats.recordAction( 'clicked_featured_post' );
-		stats.recordGaEvent( 'Clicked Featured Post' );
+		recordTrackForPost( 'calypso_reader_clicked_featured_post', post );
+		recordAction( 'clicked_featured_post' );
+		recordGaEvent( 'Clicked Featured Post' );
 
 		page( postData.url );
 	},
@@ -106,7 +111,7 @@ export default React.createClass( {
 					break;
 				default:
 					let style = {
-						backgroundImage: post.canonical_image && post.canonical_image.uri ? 'url(' + post.canonical_image.uri + ')' : null
+						backgroundImage: post.canonical_image && post.canonical_image.uri ? 'url(' + cssSafeUrl( post.canonical_image.uri ) + ')' : null
 					};
 
 					return (

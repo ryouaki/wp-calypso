@@ -1,15 +1,14 @@
 /**
  * External dependencies
  */
-import ReactDom from 'react-dom';
 import React from 'react';
-import { Provider as ReduxProvider } from 'react-redux';
 import i18n from 'i18n-calypso';
 
 /**
  * Internal dependencies
  */
 import analytics from 'lib/analytics';
+import { login } from 'lib/paths';
 import route from 'lib/route';
 import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
 import config from 'config';
@@ -17,8 +16,31 @@ import { renderWithReduxStore } from 'lib/react-helpers';
 import HelpComponent from './main';
 import CoursesComponent from './help-courses';
 import ContactComponent from './help-contact';
+import support from 'lib/url/support';
+import userUtils from 'lib/user/utils';
 
 export default {
+	loggedOut( context, next ) {
+		if ( userUtils.isLoggedIn() ) {
+			return next();
+		}
+
+		let url;
+		switch ( context.path ) {
+			case '/help':
+				url = support.SUPPORT_ROOT;
+				break;
+			case '/help/contact':
+				url = support.CONTACT;
+				break;
+			default:
+				url = login( { redirectTo: window.location.href } );
+		}
+
+		// Not using the page library here since this is an external URL
+		window.location.href = url;
+	},
+
 	help( context ) {
 		const basePath = route.sectionify( context.path );
 
@@ -39,11 +61,10 @@ export default {
 
 		analytics.pageView.record( basePath, 'Help > Courses' );
 
-		ReactDom.render(
-			<ReduxProvider store={ context.store } >
-				<CoursesComponent />
-			</ReduxProvider>,
-			document.getElementById( 'primary' )
+		renderWithReduxStore(
+			<CoursesComponent />,
+			'primary',
+			context.store
 		);
 	},
 
@@ -57,11 +78,10 @@ export default {
 			window.scrollTo( 0, 0 );
 		}
 
-		ReactDom.render(
-			<ReduxProvider store={ context.store } >
-				<ContactComponent clientSlug={ config( 'client_slug' ) } />
-			</ReduxProvider>,
-			document.getElementById( 'primary' )
+		renderWithReduxStore(
+			<ContactComponent clientSlug={ config( 'client_slug' ) } />,
+			'primary',
+			context.store
 		);
 	}
 };

@@ -11,6 +11,7 @@ const debug = debugFactory( 'calypso:me:sidebar' );
  * Internal dependencies
  */
 const Sidebar = require( 'layout/sidebar' ),
+	SidebarFooter = require( 'layout/sidebar/footer' ),
 	SidebarHeading = require( 'layout/sidebar/heading' ),
 	SidebarItem = require( 'layout/sidebar/item' ),
 	SidebarMenu = require( 'layout/sidebar/menu' ),
@@ -23,6 +24,7 @@ import Button from 'components/button';
 import purchasesPaths from 'me/purchases/paths';
 import { setNextLayoutFocus } from 'state/ui/layout-focus/actions';
 import { getCurrentUser } from 'state/current-user/selectors';
+import { isHappychatAvailable } from 'state/happychat/selectors';
 
 const MeSidebar = React.createClass( {
 
@@ -51,12 +53,12 @@ const MeSidebar = React.createClass( {
 	},
 
 	render: function() {
-		const context = this.props.context;
+		const { context } = this.props;
 		const filterMap = {
 			'/me': 'profile',
 			'/me/security/two-step': 'security',
 			'/me/security/connected-applications': 'security',
-			'/me/security/checkup': 'security',
+			'/me/security/account-recovery': 'security',
 			'/me/notifications/comments': 'notifications',
 			'/me/notifications/updates': 'notifications',
 			'/me/notifications/subscriptions': 'notifications',
@@ -125,7 +127,7 @@ const MeSidebar = React.createClass( {
 
 						<SidebarItem
 							selected={ selected === 'security' }
-							link={ config.isEnabled( 'me/security' ) ? '/me/security' : '//wordpress.com/me/security' }
+							link={ '/me/security' }
 							label={ this.translate( 'Security' ) }
 							icon="lock"
 							onNavigate={ this.onNavigate }
@@ -135,7 +137,7 @@ const MeSidebar = React.createClass( {
 						<SidebarItem
 							selected={ selected === 'notifications' }
 							link={ config.isEnabled( 'me/notifications' ) ? '/me/notifications' : '//wordpress.com/me/notifications' }
-							label={ this.translate( 'Notifications' ) }
+							label={ this.translate( 'Notification Settings' ) }
 							icon="bell"
 							onNavigate={ this.onNavigate }
 							preloadSectionName="notification-settings"
@@ -154,24 +156,9 @@ const MeSidebar = React.createClass( {
 							onNavigate={ this.onNavigate }
 						/>
 						{ this.renderNextStepsItem( selected ) }
-						<SidebarItem
-							selected={ selected === 'help' }
-							link={ config.isEnabled( 'help' ) ? '/help' : '//support.wordpress.com' }
-							label={ this.translate( 'Help' ) }
-							external={ config.isEnabled( 'help' ) ? 'false' : 'true' }
-							icon="help-outline"
-							onNavigate={ this.onNavigate }
-							preloadSectionName="help"
-						/>
-						{ config.isEnabled( 'happychat' ) && <SidebarItem
-								selected= { selected === 'happychat' }
-								link="/me/chat"
-								icon="comment"
-								label= { this.translate( 'Support Chat' ) }
-								preloadSectionName="happychat"
-								onNavigate={ this.onNavigate } /> }
 					</ul>
 				</SidebarMenu>
+				<SidebarFooter />
 			</Sidebar>
 		);
 	},
@@ -195,6 +182,7 @@ const MeSidebar = React.createClass( {
 function mapStateToProps( state ) {
 	return {
 		currentUser: getCurrentUser( state ),
+		isHappychatAvailable: isHappychatAvailable( state )
 	};
 }
 

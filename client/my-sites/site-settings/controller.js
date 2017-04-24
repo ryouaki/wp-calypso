@@ -18,9 +18,11 @@ import { sectionify } from 'lib/route/path';
 import SiteSettingsComponent from 'my-sites/site-settings/main';
 import sitesFactory from 'lib/sites-list';
 import StartOver from './start-over';
+import ThemeSetup from './theme-setup';
 import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
 import titlecase from 'to-title-case';
 import utils from 'lib/site/utils';
+import { getSelectedSite } from 'state/ui/selectors';
 
 /**
  * Module vars
@@ -150,24 +152,30 @@ module.exports = {
 	},
 
 	startOver( context ) {
-		let site = sites.getSelectedSite();
-
-		if ( sites.initialized ) {
-			if ( ! canDeleteSite( site ) ) {
-				return page( '/settings/general/' + site.slug );
-			}
-		} else {
-			sites.once( 'change', function() {
-				site = sites.getSelectedSite();
-				if ( ! canDeleteSite( site ) ) {
-					return page( '/settings/general/' + site.slug );
-				}
-			} );
+		const site = getSelectedSite( context.store.getState() );
+		if ( site && ! canDeleteSite( site ) ) {
+			return page( '/settings/general/' + site.slug );
 		}
 
 		renderPage(
 			context,
-			<StartOver sites={ sites } path={ context.path } />
+			<StartOver path={ context.path } />
+		);
+	},
+
+	themeSetup( context ) {
+		const site = getSelectedSite( context.store.getState() );
+		if ( site && site.jetpack ) {
+			return page( '/settings/general/' + site.slug );
+		}
+
+		if ( ! config.isEnabled( 'settings/theme-setup' ) ) {
+			return page( '/settings/general/' + site.slug );
+		}
+
+		renderPage(
+			context,
+			<ThemeSetup activeSiteDomain={ context.params.site_id } />
 		);
 	},
 

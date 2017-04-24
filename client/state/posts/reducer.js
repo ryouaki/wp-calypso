@@ -2,24 +2,26 @@
  * External dependencies
  */
 import { combineReducers } from 'redux';
-import { get, set, omit, omitBy, isEqual, reduce, merge, findKey, mapValues } from 'lodash';
+import { get, set, omit, omitBy, isEqual, reduce, merge, findKey, mapValues, mapKeys } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import PostQueryManager from 'lib/query-manager/post';
 import {
+	EDITOR_START,
+	EDITOR_STOP,
 	POST_DELETE,
 	POST_DELETE_SUCCESS,
 	POST_DELETE_FAILURE,
 	POST_EDIT,
-	POST_EDITS_RESET,
 	POST_REQUEST,
 	POST_REQUEST_SUCCESS,
 	POST_REQUEST_FAILURE,
 	POST_RESTORE,
 	POST_RESTORE_FAILURE,
 	POST_SAVE,
+	POST_SAVE_SUCCESS,
 	POSTS_RECEIVE,
 	POSTS_REQUEST,
 	POSTS_REQUEST_SUCCESS,
@@ -28,8 +30,10 @@ import {
 	DESERIALIZE
 } from 'state/action-types';
 import counts from './counts/reducer';
+import likes from './likes/reducer';
 import {
 	getSerializedPostsQuery,
+	isTermsEqual,
 	mergeIgnoringArrays,
 	normalizePostForState
 } from './utils';
@@ -250,6 +254,9 @@ export function edits( state = {}, action ) {
 				}
 
 				return set( memoState, [ post.site_ID, post.ID ], omitBy( postEdits, ( value, key ) => {
+					if ( key === 'terms' ) {
+						return isTermsEqual( value, post[ key ] );
+					}
 					return isEqual( post[ key ], value );
 				} ) );
 			}, state );
@@ -261,7 +268,15 @@ export function edits( state = {}, action ) {
 				}
 			} );
 
-		case POST_EDITS_RESET:
+		case EDITOR_START:
+			return Object.assign( {}, state, {
+				[ action.siteId ]: {
+					...state[ action.siteId ],
+					[ action.postId || '' ]: { type: action.postType }
+				}
+			} );
+
+		case EDITOR_STOP:
 			if ( ! state.hasOwnProperty( action.siteId ) ) {
 				break;
 			}
@@ -269,6 +284,20 @@ export function edits( state = {}, action ) {
 			return Object.assign( {}, state, {
 				[ action.siteId ]: omit( state[ action.siteId ], action.postId || '' )
 			} );
+
+		case POST_SAVE_SUCCESS:
+			if ( ! state.hasOwnProperty( action.siteId ) || ! action.savedPost || action.postId ) {
+				break;
+			}
+			const { siteId, savedPost } = action;
+
+			// if postId is null, copy over any edits
+			return {
+				...state,
+				[ siteId ]: mapKeys( state[ siteId ], ( value, key ) => (
+					'' === key ? savedPost.ID : key
+				) )
+			};
 
 		case SERIALIZE:
 		case DESERIALIZE:
@@ -284,5 +313,6 @@ export default combineReducers( {
 	siteRequests,
 	queryRequests,
 	queries,
-	edits
+	edits,
+	likes,
 } );

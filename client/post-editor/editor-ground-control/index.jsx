@@ -5,23 +5,24 @@ const noop = require( 'lodash/noop' ),
 	React = require( 'react' ),
 	PureRenderMixin = require( 'react-pure-render/mixin' ),
 	i18n = require( 'i18n-calypso' );
+import page from 'page';
 
 /**
  * Internal dependencies
  */
 const Card = require( 'components/card' ),
-	EditPostStatus = require( 'post-editor/edit-post-status' ),
-	Gridicon = require( 'components/gridicon' ),
+	Gridicon = require( 'gridicons' ),
 	Popover = require( 'components/popover' ),
 	Site = require( 'blocks/site' ),
-	StatusLabel = require( 'post-editor/editor-status-label' ),
 	postUtils = require( 'lib/posts/utils' ),
 	siteUtils = require( 'lib/site/utils' ),
-	PostSchedule = require( 'components/post-schedule' ),
-	postActions = require( 'lib/posts/actions' ),
-	Tooltip = require( 'components/tooltip' ),
 	PostListFetcher = require( 'components/post-list-fetcher' ),
 	stats = require( 'lib/posts/stats' );
+
+import AsyncLoad from 'components/async-load';
+import EditorPublishButton, { getPublishButtonStatus } from 'post-editor/editor-publish-button';
+import Button from 'components/button';
+import EditorPostType from 'post-editor/editor-post-type';
 
 export default React.createClass( {
 	displayName: 'EditorGroundControl',
@@ -32,16 +33,18 @@ export default React.createClass( {
 		isSaveBlocked: React.PropTypes.bool,
 		isPublishing: React.PropTypes.bool,
 		isSaving: React.PropTypes.bool,
-		onClose: React.PropTypes.func,
 		onPreview: React.PropTypes.func,
 		onPublish: React.PropTypes.func,
+		onSave: React.PropTypes.func,
 		onSaveDraft: React.PropTypes.func,
 		onMoreInfoAboutEmailVerify: React.PropTypes.func,
 		post: React.PropTypes.object,
 		savedPost: React.PropTypes.object,
+		setPostDate: React.PropTypes.func,
 		site: React.PropTypes.object,
 		user: React.PropTypes.object,
 		userUtils: React.PropTypes.object,
+		toggleSidebar: React.PropTypes.func,
 		type: React.PropTypes.string
 	},
 
@@ -54,7 +57,6 @@ export default React.createClass( {
 			isSaveBlocked: false,
 			isPublishing: false,
 			isSaving: false,
-			onClose: noop,
 			onPublish: noop,
 			onSaveDraft: noop,
 			post: null,
@@ -62,6 +64,7 @@ export default React.createClass( {
 			site: {},
 			user: null,
 			userUtils: null,
+			setPostDate: noop
 		};
 	},
 
@@ -95,7 +98,6 @@ export default React.createClass( {
 		return {
 			showSchedulePopover: false,
 			showAdvanceStatus: false,
-			showDateTooltip: false,
 			firstDayOfTheMonth: this.getFirstDayOfTheMonth(),
 			lastDayOfTheMonth: this.getLastDayOfTheMonth(),
 			needsVerification: this.props.userUtils && this.props.userUtils.needsVerificationForSite( this.props.site ),
@@ -120,11 +122,6 @@ export default React.createClass( {
 		}
 	},
 
-	setPostDate: function( date ) {
-		// TODO: REDUX - remove flux actions when whole post-editor is reduxified
-		postActions.edit( { date: date ? date.format() : null } );
-	},
-
 	setCurrentMonth: function( date ) {
 		this.setState( {
 			firstDayOfTheMonth: this.getFirstDayOfTheMonth( date ),
@@ -140,85 +137,15 @@ export default React.createClass( {
 		return this.translate( 'Preview' );
 	},
 
-	trackPrimaryButton: function() {
-		const postEvents = {
-			update: 'Clicked Update Post Button',
-			schedule: 'Clicked Schedule Post Button',
-			requestReview: 'Clicked Request-Review Post Button',
-			publish: 'Clicked Publish Post Button',
-		};
-		const pageEvents = {
-			update: 'Clicked Update Page Button',
-			schedule: 'Clicked Schedule Page Button',
-			requestReview: 'Clicked Request-Review Page Button',
-			publish: 'Clicked Publish Page Button',
-		};
-		const buttonState = this.getPrimaryButtonState();
-		const eventString = postUtils.isPage( this.props.post ) ? pageEvents[ buttonState ] : postEvents[ buttonState ];
-		stats.recordEvent( eventString );
-		stats.recordEvent( 'Clicked Primary Button' );
-	},
-
-	getPrimaryButtonState: function() {
-		if (
-			postUtils.isPublished( this.props.savedPost ) &&
-			! postUtils.isBackDatedPublished( this.props.savedPost ) &&
-			! postUtils.isFutureDated( this.props.post ) ||
-			(
-				this.props.savedPost &&
-				this.props.savedPost.status === 'future' &&
-				postUtils.isFutureDated( this.props.post )
-			)
-		) {
-			return 'update';
-		}
-
-		if ( postUtils.isFutureDated( this.props.post ) ) {
-			return 'schedule';
-		}
-
-		if ( siteUtils.userCan( 'publish_posts', this.props.site ) ) {
-			return 'publish';
-		}
-
-		if ( this.props.savedPost && this.props.savedPost.status === 'pending' ) {
-			return 'update';
-		}
-
-		return 'requestReview';
-	},
-
-	getPrimaryButtonLabel: function() {
-		const primaryButtonState = this.getPrimaryButtonState();
-		const buttonLabels = {
-			update: this.translate( 'Update' ),
-			schedule: this.translate( 'Schedule' ),
-			publish: this.translate( 'Publish' ),
-			requestReview: this.translate( 'Submit for Review' ),
-		};
-		return buttonLabels[ primaryButtonState ];
-	},
-
 	getVerificationNoticeLabel: function() {
-		const primaryButtonState = this.getPrimaryButtonState();
-		let buttonLabels;
+		const primaryButtonState = getPublishButtonStatus( this.props.site, this.props.post, this.props.savedPost ),
+			buttonLabels = {
+				update: i18n.translate( 'To update, check your email and confirm your address.' ),
+				schedule: i18n.translate( 'To schedule, check your email and confirm your address.' ),
+				publish: i18n.translate( 'To publish, check your email and confirm your address.' ),
+				requestReview: i18n.translate( 'To submit for review, check your email and confirm your address.' ),
+			};
 
-		// TODO: switch entirely to new wording once translations catch up
-		if ( i18n.getLocaleSlug() === 'en' ) {
-			buttonLabels = {
-				update: this.translate( 'To update, check your email and confirm your address.' ),
-				schedule: this.translate( 'To schedule, check your email and confirm your address.' ),
-				publish: this.translate( 'To publish, check your email and confirm your address.' ),
-				requestReview: this.translate( 'To submit for review, check your email and confirm your address.' ),
-			};
-		} else {
-			buttonLabels = {
-				update: this.translate( 'To update, please confirm your email address.' ),
-				schedule: this.translate( 'To schedule, please confirm your email address.' ),
-				publish: this.translate( 'To publish, please confirm your email address.' ),
-				requestReview: this.translate( 'To submit for review, please confirm your email address.' ),
-			};
-		}
 		return buttonLabels[ primaryButtonState ];
 	},
 
@@ -246,13 +173,15 @@ export default React.createClass( {
 				: null;
 
 		return (
-			<PostSchedule
+			<AsyncLoad
+				require="components/post-schedule"
 				selectedDay={ postDate }
 				timezone={ tz }
 				gmtOffset={ gmtOffset }
-				onDateChange={ this.setPostDate }
-				onMonthChange={ this.setCurrentMonth }>
-			</PostSchedule>
+				onDateChange={ this.props.setPostDate }
+				onMonthChange={ this.setCurrentMonth }
+				site={ this.props.site }
+			/>
 		);
 	},
 
@@ -306,6 +235,18 @@ export default React.createClass( {
 			.second( -1 );
 	},
 
+	getSaveStatusLabel: function() {
+		if ( this.props.isSaving ) {
+			return this.translate( 'Saving…' );
+		}
+
+		if ( ! this.props.post || postUtils.isPublished( this.props.post ) || ! this.props.post.ID ) {
+			return null;
+		}
+
+		return this.translate( 'Saved' );
+	},
+
 	isSaveEnabled: function() {
 		return ! this.props.isSaving &&
 			! this.props.isSaveBlocked &&
@@ -321,31 +262,12 @@ export default React.createClass( {
 			! this.props.isSaveBlocked;
 	},
 
-	isPrimaryButtonEnabled: function() {
-		return ! this.props.isPublishing &&
-			! this.props.isSaveBlocked &&
-			this.props.hasContent &&
-			! this.state.needsVerification;
+	canPublishPost: function() {
+		return siteUtils.userCan( 'publish_posts', this.props.site );
 	},
 
 	toggleAdvancedStatus: function() {
 		this.setState( { showAdvanceStatus: ! this.state.showAdvanceStatus } );
-	},
-
-	onPrimaryButtonClick: function() {
-		this.trackPrimaryButton();
-
-		if ( postUtils.isPublished( this.props.savedPost ) &&
-			! postUtils.isBackDatedPublished( this.props.savedPost )
-		) {
-			return this.props.onSave();
-		}
-
-		if ( siteUtils.userCan( 'publish_posts', this.props.site ) ) {
-			return this.props.onPublish();
-		}
-
-		return this.props.onSave( 'pending' );
 	},
 
 	onSaveButtonClick: function() {
@@ -356,122 +278,33 @@ export default React.createClass( {
 	},
 
 	onPreviewButtonClick: function( event ) {
-		this.props.onPreview( event );
-		const eventLabel = postUtils.isPage( this.props.page ) ? 'Clicked Preview Page Button' : 'Clicked Preview Post Button';
-		stats.recordEvent( eventLabel );
-	},
-
-	renderDateTooltip: function() {
-		if ( this.state.showSchedulePopover ) {
-			return null;
+		if ( this.isPreviewEnabled() ) {
+			this.props.onPreview( event );
+			const eventLabel = postUtils.isPage( this.props.page ) ? 'Clicked Preview Page Button' : 'Clicked Preview Post Button';
+			stats.recordEvent( eventLabel );
 		}
-
-		return (
-			<Tooltip
-				context={ this.refs && this.refs.schedulePost }
-				isVisible={ this.state.showDateTooltip }
-				position="top"
-				onClose={ noop }
-			>
-				{ this.translate( 'Set date and time' ) }
-			</Tooltip>
-		);
-	},
-
-	showDateTooltip: function() {
-		this.setState( { showDateTooltip: true } );
-	},
-
-	hideDateTooltip: function() {
-		this.setState( { showDateTooltip: false } );
 	},
 
 	render: function() {
 		return (
 			<Card className="editor-ground-control">
+				<Button
+					borderless
+					className="editor-ground-control__back"
+					href={ '' }
+					onClick={ page.back.bind( page, this.props.allPostsUrl ) }
+					aria-label={ this.translate( 'Go back' ) }
+				>
+					<Gridicon icon="arrow-left" />
+				</Button>
 				<Site
+					compact
 					site={ this.props.site }
 					indicator={ false }
 					homeLink={ true }
 					externalLink={ true }
 				/>
-				<hr className="editor-ground-control__separator" />
-				<div className="editor-ground-control__status">
-					<StatusLabel
-						post={ this.props.savedPost }
-						onClick={ this.toggleAdvancedStatus }
-						advancedStatus={ this.state.showAdvanceStatus }
-						type={ this.props.type }
-					/>
-					{ this.isSaveEnabled() &&
-						<button
-							className="editor-ground-control__save button is-link"
-							onClick={ this.onSaveButtonClick }
-							tabIndex={ 3 }
-						>
-							{ this.translate( 'Save' ) }
-						</button>
-					}
-					{ this.props.isSaving &&
-						<span className="editor-ground-control__saving">
-							{ this.translate( 'Saving…' ) }
-						</span>
-					}
-				</div>
-				{
-					this.state.showAdvanceStatus &&
-						<EditPostStatus
-							savedPost={ this.props.savedPost }
-							type={ this.props.type }
-							onSave={ this.props.onSave }
-							onTrashingPost={ this.props.onTrashingPost }
-							onDateChange={ this.setPostDate }
-							site={ this.props.site }>
-						</EditPostStatus>
-				}
-				<div className="editor-ground-control__action-buttons">
-					<button
-						className="editor-ground-control__preview-button button"
-						disabled={ ! this.isPreviewEnabled() }
-						onClick={ this.onPreviewButtonClick }
-						tabIndex={ 4 }
-					>
-						{ this.getPreviewLabel() }
-					</button>
-					<div className="editor-ground-control__publish-combo">
-						<button
-							className="editor-ground-control__publish-button button is-primary"
-							onClick={ this.onPrimaryButtonClick }
-							disabled={ ! this.isPrimaryButtonEnabled() }
-							tabIndex={ 5 }
-						>
-							{ this.getPrimaryButtonLabel() }
-						</button>
-						{ siteUtils.userCan( 'publish_posts', this.props.site ) &&
-							<button
-								ref="schedulePost"
-								className="editor-ground-control__time-button button is-primary"
-								onClick={ this.toggleSchedulePopover }
-								onMouseEnter={ this.showDateTooltip }
-								onMouseLeave={ this.hideDateTooltip }
-								aria-label={ this.translate( 'Schedule date and time to publish post.' ) }
-								aria-pressed={ !! this.state.showSchedulePopover }
-								tabIndex={ 6 }
-							>
-								{ postUtils.isFutureDated( this.props.post )
-									? <Gridicon icon="scheduled" size={ 18 } />
-									: <Gridicon icon="calendar" size={ 18 } />
-								}
-							</button>
-						}
-						{ this.renderDateTooltip() }
-					</div>
-					{ siteUtils.userCan( 'publish_posts', this.props.site ) &&
-						this.schedulePostPopover()
-					}
-				</div>
-				{
-					this.state.needsVerification &&
+				{ this.state.needsVerification &&
 					<div className="editor-ground-control__email-verification-notice"
 						tabIndex={ 7 }
 						onClick={ this.props.onMoreInfoAboutEmailVerify }>
@@ -483,6 +316,82 @@ export default React.createClass( {
 						<span className="editor-ground-control__email-verification-notice-more">{ this.translate( 'Learn More' ) }</span>
 					</div>
 				}
+				<div className="editor-ground-control__status">
+					{ this.isSaveEnabled() &&
+						<button
+							className="editor-ground-control__save button is-link"
+							onClick={ this.onSaveButtonClick }
+							tabIndex={ 3 }
+						>
+							{ this.translate( 'Save' ) }
+						</button>
+					}
+					{ ! this.isSaveEnabled() &&
+						<span className="editor-ground-control__save-status">
+							{ this.getSaveStatusLabel() }
+						</span>
+					}
+				</div>
+				<div className="editor-ground-control__action-buttons">
+					<Button
+						borderless
+						className="editor-ground-control__preview-button"
+						disabled={ ! this.isPreviewEnabled() }
+						onClick={ this.onPreviewButtonClick }
+						tabIndex={ 4 }
+					>
+						<Gridicon icon="visible" /> <span className="editor-ground-control__button-label">{ this.getPreviewLabel() }</span>
+					</Button>
+					<Button
+						borderless
+						className="editor-ground-control__toggle-sidebar"
+						onClick={ this.props.toggleSidebar }
+					>
+						<Gridicon icon="cog" /> <span className="editor-ground-control__button-label"><EditorPostType isSettings /></span>
+					</Button>
+					<div className="editor-ground-control__publish-combo">
+						<EditorPublishButton
+							site={ this.props.site }
+							post={ this.props.post }
+							savedPost={ this.props.savedPost }
+							onSave={ this.props.onSave }
+							onPublish={ this.props.onPublish }
+							tabIndex={ 5 }
+							isPublishing={ this.props.isPublishing }
+							isSaveBlocked={ this.props.isSaveBlocked }
+							hasContent={ this.props.hasContent }
+							needsVerification={ this.state.needsVerification }
+							busy={ this.props.isPublishing || ( postUtils.isPublished( this.props.savedPost ) && this.props.isSaving ) }
+						/>
+						{ this.canPublishPost() &&
+							<Button
+								primary
+								compact
+								ref="schedulePost"
+								className="editor-ground-control__time-button"
+								onClick={ this.toggleSchedulePopover }
+								aria-label={ this.translate( 'Schedule date and time to publish post.' ) }
+								aria-pressed={ !! this.state.showSchedulePopover }
+								title={ this.translate( 'Set date and time' ) }
+								tabIndex={ 6 }
+							>
+								{ postUtils.isFutureDated( this.props.post )
+									? <Gridicon icon="scheduled" />
+									: <Gridicon icon="calendar" />
+								}
+								<span className="editor-ground-control__time-button-label">
+									{ postUtils.isFutureDated( this.props.post )
+										? this.moment( this.props.post.date ).calendar()
+										: this.translate( 'Choose Date' )
+									}
+								</span>
+							</Button>
+						}
+					</div>
+					{ this.canPublishPost() &&
+						this.schedulePostPopover()
+					}
+				</div>
 			</Card>
 		);
 	}

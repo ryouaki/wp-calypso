@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -14,7 +12,7 @@ import HeaderCakeBack from './back';
 
 export default class HeaderCake extends Component {
 	render() {
-		const { backText, backHref } = this.props;
+		const { backText, backHref, actionText, actionIcon, actionHref, actionOnClick } = this.props;
 		const classes = classNames(
 			'header-cake',
 			this.props.className,
@@ -36,7 +34,12 @@ export default class HeaderCake extends Component {
 					{ this.props.children }
 				</div>
 
-				<HeaderCakeBack text={ backText } href={ backHref } spacer />
+				<HeaderCakeBack
+					text={ actionText || backText }
+					href={ actionHref || backHref }
+					onClick={ actionOnClick }
+					icon={ actionIcon }
+					spacer={ ! actionOnClick } />
 			</Card>
 		);
 	}
@@ -49,6 +52,10 @@ HeaderCake.propTypes = {
 	onTitleClick: PropTypes.func,
 	backText: PropTypes.string,
 	backHref: PropTypes.string,
+	actionText: PropTypes.string,
+	actionHref: PropTypes.string,
+	actionIcon: PropTypes.string,
+	actionOnClick: PropTypes.func,
 };
 
 HeaderCake.defaultProps = {

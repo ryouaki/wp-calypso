@@ -4,13 +4,13 @@
 import React from 'react';
 import i18n from 'i18n-calypso';
 import classNames from 'classnames';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
 
 import ExternalLink from 'components/external-link';
-import Gridicon from 'components/gridicon';
 import Version from 'components/version';
 import PluginRatings from 'my-sites/plugins/plugin-ratings/';
 import versionCompare from 'lib/version-compare';
@@ -26,7 +26,7 @@ export default React.createClass( {
 		isPlaceholder: React.PropTypes.bool,
 		hasUpdate: React.PropTypes.bool,
 		pluginVersion: React.PropTypes.string,
-		siteVersion: React.PropTypes.oneOfType( [ React.PropTypes.string, React.PropTypes.bool] ),
+		siteVersion: React.PropTypes.oneOfType( [ React.PropTypes.string, React.PropTypes.bool ] ),
 	},
 
 	getDefaultProps() {
@@ -52,6 +52,7 @@ export default React.createClass( {
 				icon={ true }
 				href={ this.props.plugin.plugin_url }
 				onClick={ recordEvent }
+				target="_blank"
 				className="plugin-information__external-link" >
 				{ this.translate( 'Plugin homepage' ) }
 			</ExternalLink>
@@ -68,6 +69,7 @@ export default React.createClass( {
 				icon={ true }
 				href={ 'https://' + this._WPORG_PLUGINS_URL + this.props.plugin.slug + '/' }
 				onClick={ recordEvent }
+				target="_blank"
 				className="plugin-information__external-link" >
 				{ this.translate( 'WordPress.org Plugin page' ) }
 			</ExternalLink>

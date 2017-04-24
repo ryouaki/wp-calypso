@@ -4,13 +4,8 @@
 import find from 'lodash/find';
 import React, { PropTypes } from 'react';
 import Button from 'components/button';
-import Gridicon from 'components/gridicon';
+import Gridicon from 'gridicons';
 import Notice from 'components/notice';
-
-/**
- * Internal dependencies
- */
-import { abtest } from 'lib/abtest';
 
 module.exports = React.createClass( {
 	displayName: 'SignupProcessingScreen',
@@ -27,7 +22,7 @@ module.exports = React.createClass( {
 			return;
 		}
 
-		if ( this.props.hasCartItems && abtest( 'paidNuxStreamlined' ) === 'streamlined' ) {
+		if ( this.props.hasCartItems ) {
 			return;
 		}
 

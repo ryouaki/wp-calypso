@@ -16,7 +16,7 @@ var Follow = require( './action-follow' ),
 	Emojify = require( 'components/emojify' ),
 	titlecase = require( 'to-title-case' ),
 	analytics = require( 'lib/analytics' ),
-	Gridicon = require( 'components/gridicon' );
+	Gridicon = require( 'gridicons' );
 
 module.exports = React.createClass( {
 	displayName: 'StatsListItem',
@@ -82,18 +82,15 @@ module.exports = React.createClass( {
 			if ( 'function' === typeof this.props.itemClickHandler ) {
 				event.stopPropagation();
 				this.props.itemClickHandler( event, this.props.data );
-			} else {
-				// Default click handler actions
-				if ( this.props.data.page && ! this.props.children ) {
-					gaEvent = [ 'Clicked', moduleName, 'Summary Link' ].join( ' ' );
-					page( this.props.data.page );
-				} else if ( this.props.data.link && ! this.props.children ) {
-					gaEvent = [ 'Clicked', moduleName, 'External Link' ].join( ' ' );
+			} else if ( this.props.data.page && ! this.props.children ) {
+				gaEvent = [ 'Clicked', moduleName, 'Summary Link' ].join( ' ' );
+				page( this.props.data.page );
+			} else if ( this.props.data.link && ! this.props.children ) {
+				gaEvent = [ 'Clicked', moduleName, 'External Link' ].join( ' ' );
 
-					window.open( this.props.data.link );
-				} else if ( ! this.props.children ) {
-					gaEvent = 'Clicked on ' + moduleName;
-				}
+				window.open( this.props.data.link );
+			} else if ( ! this.props.children ) {
+				gaEvent = 'Clicked on ' + moduleName;
 			}
 
 			if ( gaEvent ) {
@@ -171,23 +168,27 @@ module.exports = React.createClass( {
 		label = labelData.map( function( labelItem, i ) {
 			var iconClassSetOptions = { avatar: true },
 				icon,
-				avatar,
 				gridiconSpan;
 
 			if ( labelItem.labelIcon ) {
 				gridiconSpan = ( <Gridicon icon={ labelItem.labelIcon } /> );
 			}
 
-			if ( 'icon' in labelItem ) {
+			if ( labelItem.icon ) {
 				if ( labelItem.iconClassName ) {
 					iconClassSetOptions[ labelItem.iconClassName ] = true;
 				}
 
-				if ( labelItem.icon ) {
-					avatar = ( <span className='icon'><img alt="" src={ labelItem.icon } width="20" height="20" className={ classNames( iconClassSetOptions ) } /></span> );
-				}
+				icon = (
+					<span className='icon'>
+						<img alt="" src={ labelItem.icon } className={ classNames( iconClassSetOptions ) } />
+					</span>
+				);
+			}
 
-				icon = avatar;
+			if ( labelItem.backgroundImage ) {
+				const style = { backgroundImage: `url( ${ labelItem.backgroundImage } )` };
+				icon = ( <span className="stats-list__flag-icon" style={ style } /> );
 			}
 
 			return ( <span className={ wrapperClassSet } key={ i } >{ gridiconSpan }{ icon }<Emojify>{ labelItem.label }</Emojify></span> );

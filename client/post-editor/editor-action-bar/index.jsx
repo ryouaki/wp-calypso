@@ -2,20 +2,18 @@
  * External dependencies
  */
 import React from 'react';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
-import EditorAuthor from 'post-editor/editor-author';
-import EditorDeletePost from 'post-editor/editor-delete-post';
-import EditorPostType from 'post-editor/editor-post-type';
+import AsyncLoad from 'components/async-load';
 import EditorSticky from 'post-editor/editor-sticky';
-import EditorVisibility from 'post-editor/editor-visibility';
-import Gridicon from 'components/gridicon';
 import utils from 'lib/posts/utils';
 import Tooltip from 'components/tooltip';
 import Button from 'components/button';
 import EditorActionBarViewLabel from './view-label';
+import EditorStatusLabel from 'post-editor/editor-status-label';
 
 export default React.createClass( {
 
@@ -23,7 +21,6 @@ export default React.createClass( {
 
 	propTypes: {
 		isNew: React.PropTypes.bool,
-		onTrashingPost: React.PropTypes.func,
 		onPrivatePublish: React.PropTypes.func,
 		post: React.PropTypes.object,
 		savedPost: React.PropTypes.object,
@@ -37,47 +34,29 @@ export default React.createClass( {
 		};
 	},
 
-	renderPostVisibility() {
-		if ( ! this.props.post ) {
-			return;
-		}
-
-		const { status, password, type } = this.props.post || {};
-		const isPrivateSite = this.props.site && this.props.site.is_private;
-		const savedStatus = this.props.savedPost ? this.props.savedPost.status : null;
-		const savedPassword = this.props.savedPost ? this.props.savedPost.password : null;
-		const props = {
-			visibility: utils.getVisibility( this.props.post ),
-			onPrivatePublish: this.props.onPrivatePublish,
-			isPrivateSite,
-			type,
-			status,
-			password,
-			savedStatus,
-			savedPassword
-		};
-
-		return (
-			<EditorVisibility { ...props } />
-		);
-	},
-
 	render() {
 		const multiUserSite = this.props.site && ! this.props.site.single_user_site;
 
 		return (
 			<div className="editor-action-bar">
-				<div className="editor-action-bar__first-group">
-					{ multiUserSite && <EditorAuthor post={ this.props.post } isNew={ this.props.isNew } /> }
-				</div>
-				<EditorPostType />
-				<div className="editor-action-bar__last-group">
-					{ this.props.post && this.props.type === 'post' && <EditorSticky /> }
-					{ this.renderPostVisibility() }
-					<EditorDeletePost
-						post={ this.props.post }
-						onTrashingPost={ this.props.onTrashingPost }
+				<div className="editor-action-bar__cell is-left">
+					<EditorStatusLabel
+						post={ this.props.savedPost }
+						advancedStatus
+						type={ this.props.type }
 					/>
+				</div>
+				<div className="editor-action-bar__cell is-center">
+					{ multiUserSite &&
+						<AsyncLoad
+							require="post-editor/editor-author"
+							post={ this.props.post }
+							isNew={ this.props.isNew }
+						/>
+					}
+				</div>
+				<div className="editor-action-bar__cell is-right">
+					{ this.props.post && this.props.type === 'post' && <EditorSticky /> }
 					{ utils.isPublished( this.props.savedPost ) && (
 						<Button
 							href={ this.props.savedPost.URL }

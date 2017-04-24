@@ -6,17 +6,24 @@ import page from 'page';
 /**
  * Internal dependencies
  */
-import controller from './controller';
-import readerController from 'reader/controller';
+import {
+	likes
+} from './controller';
+import {
+	preloadReaderBundle,
+	loadSubscriptions,
+	initAbTests,
+	updateLastRoute,
+	sidebar,
+} from 'reader/controller';
 
 export default function() {
 	page( '/activities/likes',
-		readerController.preloadReaderBundle,
-		readerController.loadSubscriptions,
-		readerController.initAbTests,
-		readerController.updateLastRoute,
-		readerController.removePost,
-		readerController.sidebar,
-		controller.likes
+		preloadReaderBundle,
+		loadSubscriptions,
+		initAbTests,
+		updateLastRoute,
+		sidebar,
+		likes
 	);
 }

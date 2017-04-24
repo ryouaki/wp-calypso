@@ -9,6 +9,8 @@ var fs = require( 'fs' );
 var forIn = require( 'lodash/forIn' );
 var mapValues = require( 'lodash/mapValues' );
 var orderBy = require( 'lodash/orderBy' );
+var last = require( 'lodash/last' );
+var includes = require( 'lodash/includes' );
 
 var areaCodes = {
 	CA: [ "204", "236", "249", "250", "289", "306", "343", "365", "387", "403", "416", "418", "431", "437", "438", "450", "506", "514", "519", "548", "579", "581", "587", "604", "613", "639", "647", "672", "705", "709", "742", "778", "780", "782", "807", "819", "825", "867", "873", "902", "905" ],
@@ -24,41 +26,50 @@ var areaCodes = {
  */
 var priorityData = {
 	// dial code: +1
-	us: 10,
-	ca: 5,
-	'do': 3,
-	pr: 1,
+	US: 10,
+	CA: 5,
+	DO: 3,
+	PR: 1,
+	UM: -99,
 	// dial code: +7
-	ru: 10,
-	kz: 1,
+	RU: 10,
+	KZ: 1,
 	// dial code: +39
-	it: 10,
-	va: 1,
+	IT: 10,
+	VA: 1,
 	// dial code: +44
-	gb: 10,
-	je: 5,
-	im: 3,
-	gg: 1,
+	GB: 10,
+	JE: 5,
+	IM: 3,
+	GG: 1,
 	// dial code: +47
-	no: 10,
-	sj: 1,
+	NO: 10,
+	SJ: 1,
+	BV: -99,
 	// dial code: +61
-	au: 10,
-	cx: 5,
-	cc: 1,
+	AU: 10,
+	CX: 5,
+	CC: 1,
+	HM: -99,
+	// dial code: +64
+	NZ: 10,
+	PN: -99,
 	// dial code: +290
-	sh: 10,
-	ta: 1,
+	SH: 10,
+	TA: 1,
 	// dial code: +358
-	fi: 10,
-	ax: 1,
+	FI: 10,
+	AX: 1,
+	// dial code: +500
+	FK: 10,
+	GS: -99,
 	// dial code: +590
-	gp: 10,
-	mf: 5,
-	bl: 1,
+	GP: 10,
+	MF: 5,
+	BL: 1,
 	// dial code: +599
-	cw: 10,
-	bq: 1
+	CW: 10,
+	BQ: 1
 };
 
 var LIBPHONENUMBER_METADATA_URL = 'https://raw.githubusercontent.com/googlei18n/libphonenumber/master/javascript/i18n/phonenumbers/metadatalite.js';
@@ -77,7 +88,12 @@ var libPhoneNumberIndexes = {
 var numberFormatIndexes = {
 	PATTERN: 1,
 	FORMAT: 2,
+	LEADING_DIGIT_PATTERN: 3,
 	NATIONAL_CALLING_FORMAT: 4
+};
+
+var aliases = {
+	UK: 'GB'
 };
 
 function tabs( depth ) {
@@ -114,7 +130,8 @@ function processNumberFormat( format ) {
 	return {
 		match: format[ numberFormatIndexes.PATTERN ],
 		replace: format[ numberFormatIndexes.FORMAT ],
-		nationalFormat: format.length > numberFormatIndexes.NATIONAL_CALLING_FORMAT && format[ numberFormatIndexes.NATIONAL_CALLING_FORMAT ] || undefined
+		nationalFormat: format[ numberFormatIndexes.NATIONAL_CALLING_FORMAT ] || undefined,
+		leadingDigitPattern: last( format[ numberFormatIndexes.LEADING_DIGIT_PATTERN ] || [] )
 	}
 }
 
@@ -206,6 +223,20 @@ function removeAllNumberKeys( obj ) {
 	return _.omitBy( obj, function( val, key ) { return /^\d+$/.test( key ); } );
 }
 
+function removeRegionCodeAndCountryDialCodeIfSameWithCountryDialCode( countryData ) {
+	for ( var key in countryData ) {
+		if ( countryData.hasOwnProperty( key ) ) {
+			const country = countryData[ key ],
+				{ countryDialCode, dialCode } = country;
+			if ( countryDialCode === dialCode ) {
+				delete country.regionCode;
+				delete country.countryDialCode;
+			}
+		}
+	}
+	return countryData;
+}
+
 /**
  * Processes Google's libphonenumber data and generates a proper JS object
  * @param {{}} libPhoneNumberData
@@ -215,16 +246,18 @@ function processLibPhoneNumberMetadata( libPhoneNumberData ) {
 	var data = {};
 	for ( var countryCode in libPhoneNumberData ) {
 		if ( libPhoneNumberData.hasOwnProperty( countryCode ) ) {
-			var countryCodeLower = countryCode.toLowerCase();
+			var countryCodeUpper = countryCode.toUpperCase();
 			var country = libPhoneNumberData[ countryCode ];
-			data[ countryCodeLower ] = {
-				isoCode: countryCodeLower,
+			data[ countryCodeUpper ] = {
+				isoCode: countryCodeUpper,
 				dialCode: String( country[ libPhoneNumberIndexes.COUNTRY_DIAL_CODE ] + ( country[ libPhoneNumberIndexes.REGION_AREA_CODE ] || '' ) ),
+				countryDialCode: String( country[ libPhoneNumberIndexes.COUNTRY_DIAL_CODE ] ),
+				regionCode: country[ libPhoneNumberIndexes.REGION_AREA_CODE ] || '',
 				areaCodes: areaCodes[ countryCode ],
 				nationalPrefix: country[ libPhoneNumberIndexes.NATIONAL_PREFIX ],
 				patterns: ( country[ libPhoneNumberIndexes.NUMBER_FORMAT ] || [] ).map( processNumberFormat ),
 				internationalPatterns: ( country[ libPhoneNumberIndexes.INTERNATIONAL_NUMBER_FORMAT ] || [] ).map( processNumberFormat ),
-				priority: priorityData[ countryCodeLower ]
+				priority: priorityData[ countryCodeUpper ]
 			};
 		}
 	}
@@ -233,6 +266,66 @@ function processLibPhoneNumberMetadata( libPhoneNumberData ) {
 	forIn( noPattern, function( country ) {
 		country.patternRegion = ( _.maxBy( _.values( _.filter( data, _.conforms( { dialCode: function ( d ) { return d === country.dialCode } } ) ) ), 'priority' ) || {} ).isoCode;
 		console.log( 'Info: ' + country.isoCode + ' didn\'t have a pattern' + ( country.patternRegion ? ' so we use ' + country.patternRegion : '.' ) );
+	} );
+	return data;
+}
+
+// Political correction
+function injectHardCodedValues( libPhoneNumberData ) {
+	return Object.assign( {}, {
+		KV: {
+			isoCode: 'KV',
+			dialCode: '383',
+			nationalPrefix: '0',
+			priority: priorityData.KV
+		},
+		UM: {
+			isoCode: 'UM',
+			dialCode: '1',
+			nationalPrefix: '',
+			patternRegion: 'us',
+			priority: priorityData.UM
+		},
+		BV: {
+			isoCode: 'BV',
+			dialCode: '47',
+			nationalPrefix: '',
+			priority: priorityData.BV
+		},
+		TF: {
+			isoCode: 'TF',
+			dialCode: '262',
+			nationalPrefix: '0',
+			priority: priorityData.TF
+		},
+		HM: {
+			isoCode: 'HM',
+			dialCode: '61',
+			nationalPrefix: '0',
+			priority: priorityData.HM
+		},
+		PN: {
+			isoCode: 'PN',
+			dialCode: '64',
+			nationalPrefix: '0',
+			priority: priorityData.PN
+		},
+		GS: {
+			isoCode: 'GS',
+			nationalPrefix: '',
+			dialCode: '500',
+			priority: priorityData.GS
+		}
+	}, libPhoneNumberData );
+}
+
+/**
+ * Creates aliases. E.g. allows `uk` to be found by both `gb` and `uk`.
+ * @param data
+ */
+function insertCountryAliases( data ) {
+	Object.keys( aliases ).forEach( source => {
+		data[ source ] = data[ aliases[ source ] ];
 	} );
 	return data;
 }
@@ -268,7 +361,9 @@ function generateDialCodeMap( metadata ) {
 			return;
 		}
 		res[ key ] = res[ key ] || [];
-		res[ key ].push( value );
+		if ( ! includes( res[ key ], value ) ) {
+			res[ key ].push( value );
+		}
 	}
 	forIn( metadata, function( country ) {
 		addValue( country.dialCode, country.isoCode );
@@ -289,8 +384,11 @@ function generateFullDataset( metadata ) {
 
 getLibPhoneNumberData()
 	.then( processLibPhoneNumberMetadata )
+	.then( injectHardCodedValues )
 	.then( generateDeepRemoveEmptyArraysFromObject( [ 'patterns', 'internationalPatterns' ] ) )
+	.then( insertCountryAliases )
 	.then( removeAllNumberKeys )
+	.then( removeRegionCodeAndCountryDialCodeIfSameWithCountryDialCode )
 	.then( generateFullDataset )
 	.then( deepRemoveUndefinedKeysFromObject )
 	.then( convertToJSStringAndVerify )

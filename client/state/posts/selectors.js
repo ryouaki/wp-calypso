@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { has, get, includes, isEqual, omit, some } from 'lodash';
+import { filter, find, has, get, includes, isEqual, omit, some } from 'lodash';
 import createSelector from 'lib/create-selector';
 import moment from 'moment-timezone';
 
@@ -17,6 +17,7 @@ import {
 	normalizePostForEditing,
 	normalizePostForDisplay
 } from './utils';
+import { getSite } from 'state/sites/selectors';
 import { DEFAULT_POST_QUERY, DEFAULT_NEW_POST_VALUES } from './constants';
 import addQueryArgs from 'lib/route/add-query-args';
 
@@ -286,19 +287,22 @@ export function isRequestingSitePost( state, siteId, postId ) {
  * @param  {Number} postId Post ID
  * @return {Object}        Post object with revisions
  */
-export function getEditedPost( state, siteId, postId ) {
-	const post = getSitePost( state, siteId, postId );
-	const edits = getPostEdits( state, siteId, postId );
-	if ( ! edits ) {
-		return post;
-	}
+export const getEditedPost = createSelector(
+	( state, siteId, postId ) => {
+		const post = getSitePost( state, siteId, postId );
+		const edits = getPostEdits( state, siteId, postId );
+		if ( ! edits ) {
+			return post;
+		}
 
-	if ( ! post ) {
-		return edits;
-	}
+		if ( ! post ) {
+			return edits;
+		}
 
-	return mergeIgnoringArrays( {}, post, edits );
-}
+		return mergeIgnoringArrays( {}, post, edits );
+	},
+	( state ) => [ state.posts.items, state.posts.edits ]
+);
 
 /**
  * Returns an object of edited post attributes for the site ID post ID pairing.
@@ -401,7 +405,7 @@ export function getEditedPostSlug( state, siteId, postId ) {
 
 	// when post is published, return the slug
 	if ( isPostPublished( state, siteId, postId ) ) {
-		return postSlug;
+		return decodeURI( postSlug );
 	}
 
 	// only return suggested_slug if slug has not been edited
@@ -444,5 +448,19 @@ export function getPostPreviewUrl( state, siteId, postId ) {
 		}, previewUrl );
 	}
 
+	// Support mapped domains https
+	const site = getSite( state, siteId );
+	if ( site && site.options ) {
+		const { is_mapped_domain, unmapped_url } = site.options;
+		previewUrl = is_mapped_domain ? previewUrl.replace( site.URL, unmapped_url ) : previewUrl;
+	}
+
 	return previewUrl;
+}
+
+export function getSitePostsByTerm( state, siteId, taxonomy, termId ) {
+	return filter( getSitePosts( state, siteId ), post => {
+		return post.terms && post.terms[ taxonomy ] &&
+			find( post.terms[ taxonomy ], postTerm => postTerm.ID === termId );
+	} );
 }

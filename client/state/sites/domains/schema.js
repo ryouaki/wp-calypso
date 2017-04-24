@@ -18,7 +18,7 @@ export const itemsSchema = {
 					expiry: { type: [ 'null', 'string' ] },
 					expirySoon: { type: 'boolean' },
 					googleAppsSubscription: { type: 'object' },
-					hasPrivateRegistration: { type: 'boolean' },
+					hasPrivacyProtection: { type: 'boolean' },
 					hasRegistration: { type: 'boolean' },
 					hasZone: { type: 'boolean' },
 					isPendingIcannVerification: { type: 'boolean' },
@@ -33,6 +33,7 @@ export const itemsSchema = {
 					pendingRegistration: { type: 'boolean' },
 					pendingRegistrationTime: { type: 'string' },
 					pointsToWpcom: { type: 'boolean' },
+					registrar: { type: 'string' },
 					registrationDate: { type: 'string' },
 					type: { type: 'string' }
 				}

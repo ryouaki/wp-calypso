@@ -23,7 +23,7 @@ Once items have been inserted into the query manager, they can then be retrieved
 - `removeItem( itemKey: string )` - Removes a single item, returning a new instance if changed
 - `removeItems( itemKeys: string[] )` - Removes items, returning a new instance if changed
 
-Under the hood, Query Manager reconciles any change to an item across all queries where that item is tracked. 
+Under the hood, Query Manager reconciles any change to an item across all queries where that item is tracked.
 
 ## Example
 
@@ -37,18 +37,21 @@ Currently, the following implementations exist:
 
 - [`PaginatedQueryManager`](./paginated): An extendable class for managing paginated data
 - [`PostQueryManager`](./post): Manages paginated queries of post objects ([refer to API documentation for querying options](https://developer.wordpress.com/docs/api/1.1/get/sites/%24site/posts/))
-- [`TermQueryManager`](./pterm): Manages paginated queries of term objects ([refer to API documentation for querying options](https://developer.wordpress.com/docs/api/1.1/get/sites/%24site/taxonomies/%24taxonomy/terms/))
+- [`TermQueryManager`](./term): Manages paginated queries of term objects ([refer to API documentation for querying options](https://developer.wordpress.com/docs/api/1.1/get/sites/%24site/taxonomies/%24taxonomy/terms/))
+- [`ThemeQueryManager`](./theme): Manages paginated queries of theme objects
 
 ## Extending
 
-Depending on the level of customization you need, you'll likely only need to implement the `matches` and `sort` methods.
+Depending on the level of customization you need, you'll likely only need to implement the `matches` and `compare` (or possibly `sort`) methods.
 
 - `matches( query: object, item: object )` should return true if the passed item should be included in the query set
-- `sort( itemA: object, itemB: object )` is a sort comparator function, returning -1 to indicate "A before B", 1 to indicate "A after B", or 0 to indicate equality ([see `Array.prototype.sort`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort))
+- `compare( itemA: object, itemB: object )` is a sort comparator function, returning -1 to indicate "A before B", 1 to indicate "A after B", or 0 to indicate equality ([see `Array.prototype.sort`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)). Note that the latter doesn't work in all browsers and environments!
+- `sort( keys: array, items: array, query: object )` is a sorting function that sorts `keys` by comparing their corresponding `items`. It will normally just use `compare` for the comparison. Its main purpose is to allow for a `QueryManager` to leave
+the order of keys unchanged (and rely on the REST API for ordering) by overriding it with a function that just returns the untouched `keys` argument. This wouldn't be feasible by overloading `compare`, since `Array.prototype.sort` isn't guaranteed to be a stable sort; in some environments ([such as Chrome and node!](https://bugs.chromium.org/p/v8/issues/detail?id=90)), it will change the order of the array's items even if the compare function always returns zero.
 
 Sometimes you may need to make further customizations. Some examples include:
 
-- `PostQueryManager` and `TermQueryManager` extend the [`QueryKey`](./key.js) implementation to remove default query values from the serialized query. The purpose of this is to ensure that queries are considered the same whether or not they include a default value. For example, including `page: 1` in a query should be counted the same if it were left out entirely.
+- `PostQueryManager`, `TermQueryManager`, and `ThemeQueryManager` extend the [`QueryKey`](./key.js) implementation to remove default query values from the serialized query. The purpose of this is to ensure that queries are considered the same whether or not they include a default value. For example, including `page: 1` in a query should be counted the same if it were left out entirely.
 
 ## More Information
 

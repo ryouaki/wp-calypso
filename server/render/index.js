@@ -3,7 +3,7 @@
  */
 import ReactDomServer from 'react-dom/server';
 import superagent from 'superagent';
-import Lru from 'lru-cache';
+import Lru from 'lru';
 import pick from 'lodash/pick';
 import debugFactory from 'debug';
 
@@ -95,6 +95,7 @@ export function serverRender( req, res ) {
 	}
 
 	context.head = { title, metas, links };
+	context.config = config.ssrConfig;
 
 	if ( config.isEnabled( 'desktop' ) ) {
 		res.render( 'desktop.jade', context );

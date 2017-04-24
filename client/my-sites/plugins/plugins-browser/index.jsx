@@ -2,7 +2,6 @@
  * External dependencies
  */
 import React from 'react';
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 /**
@@ -10,6 +9,7 @@ import { connect } from 'react-redux';
  */
 import pluginsAccessControl from 'my-sites/plugins/access-control';
 import SidebarNavigation from 'my-sites/sidebar-navigation';
+import DocumentHead from 'components/data/document-head';
 import Search from 'components/search';
 import SearchCard from 'components/search-card';
 import SectionNav from 'components/section-nav';
@@ -27,10 +27,11 @@ import JetpackManageErrorPage from 'my-sites/jetpack-manage-error-page';
 import FeatureExample from 'components/feature-example';
 import { hasTouch } from 'lib/touch-detect';
 import { recordTracksEvent } from 'state/analytics/actions';
+import { getSelectedSite } from 'state/ui/selectors';
+import { isJetpackSite, canJetpackSiteManage } from 'state/sites/selectors';
+import { isATEnabled } from 'lib/automated-transfer';
 
 const PluginsBrowser = React.createClass( {
-
-	displayName: 'PluginsBrowser',
 	_SHORT_LIST_LENGTH: 6,
 
 	visibleCategories: [ 'new', 'popular', 'featured' ],
@@ -265,7 +266,7 @@ const PluginsBrowser = React.createClass( {
 		);
 	},
 
-	getMockPluginItems: function() {
+	getMockPluginItems() {
 		return <PluginsBrowserList
 			plugins={ this.getPluginsShortList( 'popular' ) }
 			listName={ 'Plugins' }
@@ -273,10 +274,15 @@ const PluginsBrowser = React.createClass( {
 			size={ 12 } />;
 	},
 
+	renderDocumentHead() {
+		return <DocumentHead title={ this.translate( 'Plugin Browser', { textOnly: true } ) } />;
+	},
+
 	renderAccessError() {
 		if ( this.state.accessError ) {
 			return (
 				<MainComponent>
+					{ this.renderDocumentHead() }
 					<SidebarNavigation />
 					<EmptyContent { ...this.state.accessError } />
 					{ this.state.accessError.featureExample
@@ -286,15 +292,16 @@ const PluginsBrowser = React.createClass( {
 				</MainComponent>
 			);
 		}
-		const selectedSite = this.props.sites.getSelectedSite();
+		const { selectedSite } = this.props;
 
 		return (
 			<MainComponent>
+				{ this.renderDocumentHead() }
 				<SidebarNavigation />
 				<JetpackManageErrorPage
 					template="optInManage"
 					title={ this.translate( 'Looking to manage this site\'s plugins?' ) }
-					site={ selectedSite }
+					siteId={ selectedSite.ID }
 					section="plugins"
 					illustration="/calypso/images/jetpack/jetpack-manage.svg"
 					featureExample={ this.getMockPluginItems() } />
@@ -303,15 +310,30 @@ const PluginsBrowser = React.createClass( {
 	},
 
 	render() {
-		const selectedSite = this.props.sites.getSelectedSite();
-		if ( this.state.accessError ||
-				( selectedSite && selectedSite.jetpack && ! selectedSite.canManage() )
-			) {
+		const { selectedSite } = this.props;
+
+		const cantManage = (
+			selectedSite &&
+			this.props.isJetpackSite( selectedSite.ID ) &&
+			! this.props.canJetpackSiteManage( selectedSite.ID )
+		);
+
+		if (
+			( this.state.accessError || cantManage ) &&
+			(
+				// If automated transfer is _off_ then behave
+				// as normal. If it's on, then only show if we
+				// are getting an error on a Jetpack site
+				! this.props.atEnabled ||
+				( selectedSite && selectedSite.jetpack )
+			)
+		) {
 			return this.renderAccessError( selectedSite );
 		}
 
 		return (
-			<MainComponent>
+			<MainComponent className="is-wide-layout">
+				{ this.renderDocumentHead() }
 				<SidebarNavigation />
 				{ this.getPageHeaderView() }
 				{ this.getPluginBrowserContent() }
@@ -321,8 +343,16 @@ const PluginsBrowser = React.createClass( {
 } );
 
 export default connect(
-	null,
-	dispatch => bindActionCreators( {
+	state => {
+		const selectedSite = getSelectedSite( state );
+		return {
+			selectedSite,
+			atEnabled: isATEnabled( selectedSite ),
+			isJetpackSite: siteId => isJetpackSite( state, siteId ),
+			canJetpackSiteManage: siteId => canJetpackSiteManage( state, siteId ),
+		};
+	},
+	{
 		recordTracksEvent
-	}, dispatch )
+	}
 )( PluginsBrowser );

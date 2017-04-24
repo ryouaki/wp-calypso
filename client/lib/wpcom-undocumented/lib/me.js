@@ -180,10 +180,11 @@ UndocumentedMe.prototype.changeUsername = function( username, action, callback )
 UndocumentedMe.prototype.storedCardAdd = function( paygateToken, callback ) {
 	debug( '/me/stored-cards' );
 
-	this.wpcom.req.post( {
+	return this.wpcom.req.post( {
 		path: '/me/stored-cards'
 	}, {
-		payment_key: paygateToken
+		payment_key: paygateToken,
+		use_for_existing: true
 	}, callback );
 };
 
@@ -213,6 +214,20 @@ UndocumentedMe.prototype.blockSite = function( site, callback ) {
 UndocumentedMe.prototype.unblockSite = function( site, callback ) {
 	var args = {
 		path: '/me/block/sites/' + encodeURIComponent( site ) + '/delete',
+	};
+	return this.wpcom.req.post( args, callback );
+};
+
+UndocumentedMe.prototype.dismissSite = function( site, callback ) {
+	const args = {
+		path: '/me/dismiss/sites/' + encodeURIComponent( site ) + '/new',
+	};
+	return this.wpcom.req.post( args, callback );
+};
+
+UndocumentedMe.prototype.undismissSite = function( site, callback ) {
+	const args = {
+		path: '/me/dismiss/sites/' + encodeURIComponent( site ) + '/delete',
 	};
 	return this.wpcom.req.post( args, callback );
 };
@@ -283,6 +298,25 @@ UndocumentedMe.prototype.deleteAccountRecoveryPhone = function( callback ) {
 	return this.wpcom.req.post( args, callback );
 };
 
+UndocumentedMe.prototype.newValidationAccountRecoveryPhone = function( callback ) {
+	var args = {
+		apiVersion: '1.1',
+		path: '/me/account-recovery/phone/validation/new',
+	};
+
+	return this.wpcom.req.post( args, callback );
+};
+
+UndocumentedMe.prototype.validateAccountRecoveryPhone = function( code, callback ) {
+	var args = {
+		apiVersion: '1.1',
+		path: '/me/account-recovery/phone/validation',
+		body: { code },
+	};
+
+	return this.wpcom.req.post( args, callback );
+};
+
 UndocumentedMe.prototype.updateAccountRecoveryEmail = function( email, callback ) {
 	var args = {
 		apiVersion: '1.1',
@@ -304,10 +338,19 @@ UndocumentedMe.prototype.deleteAccountRecoveryEmail = function( callback ) {
 	return this.wpcom.req.post( args, callback );
 };
 
+UndocumentedMe.prototype.newValidationAccountRecoveryEmail = function( callback ) {
+	var args = {
+		apiVersion: '1.1',
+		path: '/me/account-recovery/email/validation/new',
+	};
+
+	return this.wpcom.req.post( args, callback );
+};
+
 UndocumentedMe.prototype.deletePurchase = function( purchaseId, fn ) {
 	debug( '/me/purchases/{purchaseId}/delete' );
 
-	this.wpcom.req.post( {
+	return this.wpcom.req.post( {
 		path: `/me/purchases/${purchaseId}/delete`
 	}, fn );
 };

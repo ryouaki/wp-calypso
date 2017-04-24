@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -9,13 +7,13 @@ import classNames from 'classnames';
 import debounce from 'lodash/debounce';
 import noop from 'lodash/noop';
 import i18n from 'i18n-calypso';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
 import analytics from 'lib/analytics';
 import Spinner from 'components/spinner';
-import Gridicon from 'components/gridicon';
 import { isMobile } from 'lib/viewport';
 
 /**
@@ -43,6 +41,7 @@ const Search = React.createClass( {
 	propTypes: {
 		additionalClasses: PropTypes.string,
 		initialValue: PropTypes.string,
+		value: PropTypes.string,
 		placeholder: PropTypes.string,
 		pinned: PropTypes.bool,
 		delaySearch: PropTypes.bool,
@@ -56,6 +55,7 @@ const Search = React.createClass( {
 		autoFocus: PropTypes.bool,
 		disabled: PropTypes.bool,
 		onKeyDown: PropTypes.func,
+		onClick: PropTypes.func,
 		disableAutocorrect: PropTypes.bool,
 		onBlur: PropTypes.func,
 		searching: PropTypes.bool,
@@ -63,7 +63,9 @@ const Search = React.createClass( {
 		dir: PropTypes.oneOf( [ 'ltr', 'rtl' ] ),
 		fitsContainer: PropTypes.bool,
 		maxLength: PropTypes.number,
-		hideClose: PropTypes.bool
+		hideClose: PropTypes.bool,
+		compact: PropTypes.bool,
+		hideOpenIcon: PropTypes.bool,
 	},
 
 	getInitialState: function() {
@@ -85,12 +87,18 @@ const Search = React.createClass( {
 			onSearchOpen: noop,
 			onSearchClose: noop,
 			onKeyDown: noop,
+			onClick: noop,
+			//undefined value for overlayStyling is an optimization that will
+			//disable overlay scrolling calculation when no overlay is provided.
+			overlayStyling: undefined,
 			disableAutocorrect: false,
 			searching: false,
 			isOpen: false,
 			dir: undefined,
 			fitsContainer: false,
-			hideClose: false
+			hideClose: false,
+			compact: false,
+			hideOpenIcon: false,
 		};
 	},
 
@@ -117,9 +125,8 @@ const Search = React.createClass( {
 			this.setState( { isOpen: nextProps.isOpen } );
 		}
 
-		if ( nextProps.initialValue !== this.props.initialValue &&
-				( this.state.keyword === this.props.initialValue || this.state.keyword === '' ) ) {
-			this.setState( { keyword: nextProps.initialValue || '' } );
+		if ( this.props.value !== nextProps.value && nextProps.value && nextProps.value !== this.state.keyword ) {
+			this.setState( { keyword: nextProps.value } );
 		}
 	},
 
@@ -167,9 +174,26 @@ const Search = React.createClass( {
 	scrollOverlay: function() {
 		this.refs.overlay && window.requestAnimationFrame( () => {
 			if ( this.refs.overlay && this.refs.searchInput ) {
-				this.refs.overlay.scrollLeft = this.refs.searchInput.scrollLeft;
+				this.refs.overlay.scrollLeft = this.getScrollLeft( this.refs.searchInput );
 			}
 		} );
+	},
+
+	//This is fix for IE11. Does not work on Edge.
+	//On IE11 scrollLeft value for input is always 0.
+	//We are calculating it manually using TextRange object.
+	getScrollLeft: function( inputElement ) {
+		//TextRange is IE11 specific so this checks if we are not on IE11.
+		if ( ! inputElement.createTextRange ) {
+			return inputElement.scrollLeft;
+		}
+
+		const range = inputElement.createTextRange();
+		const inputStyle = window.getComputedStyle( inputElement, undefined );
+		const paddingLeft = parseFloat( inputStyle.paddingLeft );
+		const rangeRect = range.getBoundingClientRect();
+		const scrollLeft = inputElement.getBoundingClientRect().left + inputElement.clientLeft + paddingLeft - rangeRect.left;
+		return scrollLeft;
 	},
 
 	focus: function() {
@@ -190,9 +214,9 @@ const Search = React.createClass( {
 		this.setState( { keyword: '' } );
 	},
 
-	onBlur: function() {
+	onBlur: function( event ) {
 		if ( this.props.onBlur ) {
-			this.props.onBlur();
+			this.props.onBlur( event );
 		}
 
 		this.setState( { hasFocus: false } );
@@ -300,7 +324,9 @@ const Search = React.createClass( {
 			'is-expanded-to-container': this.props.fitsContainer,
 			'is-open': isOpenUnpinnedOrQueried,
 			'is-searching': this.props.searching,
+			'is-compact': this.props.compact,
 			'has-focus': this.state.hasFocus,
+			'has-open-icon': ! this.props.hideOpenIcon,
 			search: true
 		} );
 
@@ -313,7 +339,7 @@ const Search = React.createClass( {
 				<div
 					className="search__icon-navigation"
 					ref="openIcon"
-					onTouchTap={ enableOpenIcon ? this.openSearch : this.focus }
+					onClick={ enableOpenIcon ? this.openSearch : this.focus }
 					tabIndex={ enableOpenIcon ? '0' : null }
 					onKeyDown={ enableOpenIcon
 						? this.openListener
@@ -321,7 +347,7 @@ const Search = React.createClass( {
 					}
 					aria-controls={ 'search-component-' + this.state.instanceId }
 					aria-label={ i18n.translate( 'Open Search', { context: 'button label' } ) }>
-					<Gridicon icon="search" className="search__open-icon" />
+					{ ! this.props.hideOpenIcon && <Gridicon icon="search" className="search__open-icon" /> }
 				</div>
 				<div className={ fadeDivClass }>
 					<input
@@ -332,9 +358,10 @@ const Search = React.createClass( {
 						role="search"
 						value={ searchValue }
 						ref="searchInput"
-						onChange={ this.onChange }
+						onInput={ this.onChange /* onChange has bug IE11 React15 https://github.com/facebook/react/issues/7027 */ }
 						onKeyUp={ this.keyUp }
 						onKeyDown={ this.keyDown }
+						onMouseUp={ this.props.onClick }
 						onFocus={ this.onFocus }
 						onBlur={ this.onBlur }
 						disabled={ this.props.disabled }
@@ -364,7 +391,7 @@ const Search = React.createClass( {
 			return (
 				<div
 					className="search__icon-navigation"
-					onTouchTap={ this.closeSearch }
+					onClick={ this.closeSearch }
 					tabIndex="0"
 					onKeyDown={ this.closeListener }
 					aria-controls={ 'search-component-' + this.state.instanceId }

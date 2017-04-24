@@ -154,7 +154,7 @@ function plugin( editor ) {
 	function checkIfFinished() {
 		if ( ! editor.dom.select( 'span.hiddenSpellError, span.hiddenGrammarError, span.hiddenSuggestion' ).length ) {
 			if ( suggestionsMenu ) {
-				suggestionsMenu.hideMenu();
+				suggestionsMenu.hide();
 			}
 
 			finish();
@@ -186,7 +186,7 @@ function plugin( editor ) {
 			i = nodes.length;
 
 		while ( i-- ) { // reversed
-			node = nodes[i];
+			node = nodes[ i ];
 
 			if ( node.className && regex.test( node.className ) ) {
 				editor.dom.remove( node, true );

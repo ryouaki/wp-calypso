@@ -14,7 +14,12 @@ import useMockery from 'test/helpers/use-mockery';
 import { useSandbox } from 'test/helpers/use-sinon';
 
 describe( 'PostEditor', function() {
-	let sandbox, TestUtils, PostEditor, SitesList, PostEditStore;
+	let sandbox, TestUtils, PostEditor, PostEditStore;
+	const defaultProps = {
+		translate: string => string,
+		markSaved: () => {},
+		markChanged: () => {}
+	};
 
 	useFakeDom();
 	useSandbox( ( newSandbox ) => sandbox = newSandbox );
@@ -43,18 +48,19 @@ describe( 'PostEditor', function() {
 		mockery.registerMock( 'post-editor/editor-drawer', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-featured-image', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-ground-control', MOCK_COMPONENT );
-		mockery.registerMock( 'post-editor/editor-title/container', MOCK_COMPONENT );
+		mockery.registerMock( 'post-editor/editor-title', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-page-slug', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-media-advanced', MOCK_COMPONENT );
+		mockery.registerMock( 'post-editor/editor-mobile-navigation', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-author', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-visibility', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-word-count', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/editor-preview', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/invalid-url-dialog', MOCK_COMPONENT );
 		mockery.registerMock( 'post-editor/restore-post-dialog', MOCK_COMPONENT );
-		mockery.registerMock( 'post-editor/editor-sidebar/header', MOCK_COMPONENT );
+		mockery.registerMock( 'post-editor/editor-sidebar', MOCK_COMPONENT );
+		mockery.registerMock( 'post-editor/editor-status-label', MOCK_COMPONENT );
 		mockery.registerMock( './editor-preview', MOCK_COMPONENT );
-		mockery.registerMock( 'my-sites/drafts/draft-list', MOCK_COMPONENT );
 		mockery.registerMock( 'lib/preferences/actions', { set() {} } );
 		mockery.registerMock( 'lib/wp', {
 			me: () => ( {
@@ -67,10 +73,8 @@ describe( 'PostEditor', function() {
 			connect: () => ( component ) => component
 		} );
 
-		SitesList = require( 'lib/sites-list/list' );
 		PostEditStore = require( 'lib/posts/post-edit-store' );
-		PostEditor = require( '../post-editor' );
-		PostEditor.prototype.translate = ( string ) => string;
+		PostEditor = require( '../post-editor' ).PostEditor;
 	} );
 
 	afterEach( function() {
@@ -82,54 +86,54 @@ describe( 'PostEditor', function() {
 			const tree = TestUtils.renderIntoDocument(
 				<PostEditor
 					preferences={ {} }
-					sites={ new SitesList() }
+					{ ...defaultProps }
 				/>
 			);
 
 			const stub = sandbox.stub( PostEditStore, 'isNew' );
 			stub.returns( true );
 
-			tree.refs.editor.setEditorContent = sandbox.spy();
+			tree.editor.setEditorContent = sandbox.spy();
 			tree.onEditedPostChange();
-			expect( tree.refs.editor.setEditorContent ).to.have.been.calledWith( '' );
+			expect( tree.editor.setEditorContent ).to.have.been.calledWith( '' );
 		} );
 
 		it( 'should not clear content when store state already isNew()', function() {
 			const tree = TestUtils.renderIntoDocument(
 				<PostEditor
 					preferences={ {} }
-					sites={ new SitesList() }
+					{ ...defaultProps }
 				/>
 			);
 
 			const stub = sandbox.stub( PostEditStore, 'isNew' );
 			stub.returns( true );
-			tree.refs.editor.setEditorContent = sandbox.spy();
+			tree.editor.setEditorContent = sandbox.spy();
 			tree.setState( { isNew: true } );
 			tree.onEditedPostChange();
-			expect( tree.refs.editor.setEditorContent ).to.not.have.been.called;
+			expect( tree.editor.setEditorContent ).to.not.have.been.called;
 		} );
 
 		it( 'should clear content when loading', function() {
 			const tree = TestUtils.renderIntoDocument(
 				<PostEditor
 					preferences={ {} }
-					sites={ new SitesList() }
+					{ ...defaultProps }
 				/>
 			);
 
 			const stub = sandbox.stub( PostEditStore, 'isLoading' );
 			stub.returns( true );
-			tree.refs.editor.setEditorContent = sandbox.spy();
+			tree.editor.setEditorContent = sandbox.spy();
 			tree.onEditedPostChange();
-			expect( tree.refs.editor.setEditorContent ).to.have.been.calledWith( '' );
+			expect( tree.editor.setEditorContent ).to.have.been.calledWith( '' );
 		} );
 
 		it( 'should set content after load', function() {
 			const tree = TestUtils.renderIntoDocument(
 				<PostEditor
 					preferences={ {} }
-					sites={ new SitesList() }
+					{ ...defaultProps }
 				/>
 			);
 
@@ -138,17 +142,17 @@ describe( 'PostEditor', function() {
 			stub.returns( {
 				content: content
 			} );
-			tree.refs.editor.setEditorContent = sandbox.spy();
+			tree.editor.setEditorContent = sandbox.spy();
 			tree.setState( { isLoading: true } );
 			tree.onEditedPostChange();
-			expect( tree.refs.editor.setEditorContent ).to.have.been.calledWith( content );
+			expect( tree.editor.setEditorContent ).to.have.been.calledWith( content );
 		} );
 
 		it( 'a normal content change should not clear content', function() {
 			const tree = TestUtils.renderIntoDocument(
 				<PostEditor
 					preferences={ {} }
-					sites={ new SitesList() }
+					{ ...defaultProps }
 				/>
 			);
 
@@ -157,11 +161,57 @@ describe( 'PostEditor', function() {
 			stub.returns( {
 				content: content
 			} );
-			tree.refs.editor.setEditorContent = sandbox.spy();
+			tree.editor.setEditorContent = sandbox.spy();
 			tree.setState( { post: { content: 'old content' } } );
 			tree.onEditedPostChange();
 
-			expect( tree.refs.editor.setEditorContent ).to.not.have.been.called;
+			expect( tree.editor.setEditorContent ).to.not.have.been.called;
+		} );
+
+		it( 'is a copy and it should set the copied content', function() {
+			const tree = TestUtils.renderIntoDocument(
+				<PostEditor
+					preferences={ {} }
+					{ ...defaultProps }
+				/>
+			);
+
+			const content = 'copied content';
+			tree.setState( {
+				isNew: true,
+				hasContent: true,
+				isDirty: false,
+			} );
+
+			sandbox.stub( PostEditStore, 'get' ).returns( { content: content } );
+
+			tree.editor.setEditorContent = sandbox.spy();
+			tree.onEditedPostChange();
+
+			expect( tree.editor.setEditorContent ).to.have.been.calledWith( content );
+		} );
+
+		it( 'should not set the copied content more than once', function() {
+			const tree = TestUtils.renderIntoDocument(
+				<PostEditor
+					preferences={ {} }
+					{ ...defaultProps }
+				/>
+			);
+
+			const content = 'copied content';
+			tree.setState( {
+				isNew: true,
+				hasContent: true,
+				isDirty: true,
+			} );
+
+			sandbox.stub( PostEditStore, 'get' ).returns( { content: content } );
+
+			tree.editor.setEditorContent = sandbox.spy();
+			tree.onEditedPostChange();
+
+			expect( tree.editor.setEditorContent ).to.not.have.been.called;
 		} );
 	} );
 } );

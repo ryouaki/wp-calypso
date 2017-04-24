@@ -9,6 +9,7 @@ import page from 'page';
  */
 import billingController from 'me/billing-history/controller';
 import meController from 'me/controller';
+import sitesController from 'my-sites/controller';
 import controller from './controller';
 import paths from './paths';
 
@@ -50,6 +51,7 @@ export default function() {
 		paths.managePurchase(),
 		meController.sidebar,
 		controller.noSitesMessage,
+		sitesController.siteSelection,
 		controller.managePurchase
 	);
 
@@ -57,20 +59,23 @@ export default function() {
 		paths.cancelPurchase(),
 		meController.sidebar,
 		controller.noSitesMessage,
+		sitesController.siteSelection,
 		controller.cancelPurchase
 	);
 
 	page(
-		paths.cancelPrivateRegistration(),
+		paths.cancelPrivacyProtection(),
 		meController.sidebar,
 		controller.noSitesMessage,
-		controller.cancelPrivateRegistration
+		sitesController.siteSelection,
+		controller.cancelPrivacyProtection
 	);
 
 	page(
 		paths.confirmCancelDomain(),
 		meController.sidebar,
 		controller.noSitesMessage,
+		sitesController.siteSelection,
 		controller.confirmCancelDomain
 	);
 
@@ -78,6 +83,7 @@ export default function() {
 		paths.addCardDetails(),
 		meController.sidebar,
 		controller.noSitesMessage,
+		sitesController.siteSelection,
 		controller.addCardDetails
 	);
 
@@ -85,6 +91,7 @@ export default function() {
 		paths.editCardDetails(),
 		meController.sidebar,
 		controller.noSitesMessage,
+		sitesController.siteSelection,
 		controller.editCardDetails
 	);
 
@@ -103,7 +110,7 @@ export default function() {
 	);
 	page(
 		'/purchases/:siteName/:purchaseId/cancel-private-registration',
-		( { params: { siteName, purchaseId } } ) => page.redirect( paths.cancelPrivateRegistration( siteName, purchaseId ) )
+		( { params: { siteName, purchaseId } } ) => page.redirect( paths.cancelPrivacyProtection( siteName, purchaseId ) )
 	);
 	page(
 		'/purchases/:siteName/:purchaseId/confirm-cancel-domain',

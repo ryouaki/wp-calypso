@@ -3,11 +3,11 @@
  */
 import { expect } from 'chai';
 import deepFreeze from 'deep-freeze';
-import sinon from 'sinon';
 
 /**
  * Internal dependencies
  */
+import { useSandbox } from 'test/helpers/use-sinon';
 import {
 	DESERIALIZE,
 	PRODUCTS_LIST_RECEIVE,
@@ -21,12 +21,8 @@ import reducer, {
 } from '../reducer';
 
 describe( 'reducer', () => {
-	before( () => {
-		sinon.stub( console, 'warn' );
-	} );
-
-	after( () => {
-		console.warn.restore();
+	useSandbox( ( sandbox ) => {
+		sandbox.stub( console, 'warn' );
 	} );
 
 	it( 'should include expected keys in return value', () => {
@@ -75,7 +71,7 @@ describe( 'reducer', () => {
 						prices: { USD: 129, AUD: 169 },
 						is_domain_registration: false,
 						description: 'Guided Transfer',
-						cost: 129,
+						cost: '129',
 						cost_display: '$129',
 					}
 				} );
@@ -92,7 +88,7 @@ describe( 'reducer', () => {
 						prices: { USD: 129, AUD: 169 },
 						is_domain_registration: false,
 						description: 'Guided Transfer',
-						cost: 129,
+						cost: '129',
 						cost_display: '$129',
 					}
 				} );

@@ -1,39 +1,36 @@
 /**
  * External dependencies
  */
-var connect = require( 'react-redux' ).connect,
-	forEach = require( 'lodash/forEach' ),
-	find = require( 'lodash/find' ),
-	i18n = require( 'i18n-calypso' ),
-	isEmpty = require( 'lodash/isEmpty' ),
-	isEqual = require( 'lodash/isEqual' ),
-	page = require( 'page' ),
-	React = require( 'react' ),
-	reduce = require( 'lodash/reduce' );
+import { connect } from 'react-redux';
+import { flatten, find, isEmpty, isEqual, reduce, startsWith } from 'lodash';
+import i18n, { localize } from 'i18n-calypso';
+import page from 'page';
+import React from 'react';
 
 /**
  * Internal dependencies
  */
-var analytics = require( 'lib/analytics' ),
+const analytics = require( 'lib/analytics' ),
 	cartItems = require( 'lib/cart-values' ).cartItems,
 	clearSitePlans = require( 'state/sites/plans/actions' ).clearSitePlans,
 	clearPurchases = require( 'state/purchases/actions' ).clearPurchases,
 	DomainDetailsForm = require( './domain-details-form' ),
+	domainMapping = require( 'lib/cart-values/cart-items' ).domainMapping,
 	fetchReceiptCompleted = require( 'state/receipts/actions' ).fetchReceiptCompleted,
 	getExitCheckoutUrl = require( 'lib/checkout' ).getExitCheckoutUrl,
-	getStoredCards = require( 'state/stored-cards/selectors' ).getStoredCards,
 	hasDomainDetails = require( 'lib/store-transactions' ).hasDomainDetails,
 	notices = require( 'notices' ),
 	observe = require( 'lib/mixins/data-observe' ),
 	purchasePaths = require( 'me/purchases/paths' ),
 	QueryStoredCards = require( 'components/data/query-stored-cards' ),
+	QueryGeo = require( 'components/data/query-geo' ),
 	SecurePaymentForm = require( './secure-payment-form' ),
 	SecurePaymentFormPlaceholder = require( './secure-payment-form-placeholder' ),
 	supportPaths = require( 'lib/url/support' ),
 	themeItem = require( 'lib/cart-values/cart-items' ).themeItem,
 	transactionStepTypes = require( 'lib/store-transactions/step-types' ),
 	upgradesActions = require( 'lib/upgrades/actions' );
-
+import { getStoredCards } from 'state/stored-cards/selectors';
 import {
 	isValidFeatureKey,
 	getUpgradePlanSlugFromPath
@@ -41,6 +38,19 @@ import {
 import { planItem as getCartItemForPlan } from 'lib/cart-values/cart-items';
 import { recordViewCheckout } from 'lib/analytics/ad-tracking';
 import { recordApplePayStatus } from 'lib/apple-pay';
+import { requestSite } from 'state/sites/actions';
+import {
+	isDomainOnlySite,
+	getCurrentUserPaymentMethods
+} from 'state/selectors';
+import {
+	getSelectedSite,
+	getSelectedSiteId,
+	getSelectedSiteSlug,
+} from 'state/ui/selectors';
+import { getDomainNameFromReceiptOrCart } from 'lib/domains/utils';
+import { fetchSitesAndUser } from 'lib/signup/step-actions';
+import { loadTrackingTool } from 'state/analytics/actions';
 
 const Checkout = React.createClass( {
 	mixins: [ observe( 'sites', 'productsList' ) ],
@@ -56,7 +66,6 @@ const Checkout = React.createClass( {
 
 	componentWillMount: function() {
 		upgradesActions.resetTransaction();
-
 		this.props.recordApplePayStatus();
 	},
 
@@ -70,6 +79,7 @@ const Checkout = React.createClass( {
 		}
 
 		window.scrollTo( 0, 0 );
+		this.props.loadTrackingTool( 'Lucky Orange' );
 	},
 
 	componentWillReceiveProps: function( nextProps ) {
@@ -85,13 +95,12 @@ const Checkout = React.createClass( {
 	},
 
 	componentDidUpdate: function() {
-		var previousCart, nextCart;
 		if ( ! this.props.cart.hasLoadedFromServer ) {
 			return false;
 		}
 
-		previousCart = this.state.previousCart;
-		nextCart = this.props.cart;
+		const previousCart = this.state.previousCart,
+			nextCart = this.props.cart;
 
 		if ( ! isEqual( previousCart, nextCart ) ) {
 			this.redirectIfEmptyCart();
@@ -111,17 +120,23 @@ const Checkout = React.createClass( {
 	},
 
 	addProductToCart: function() {
-		var planSlug = getUpgradePlanSlugFromPath( this.props.product ),
-			cartItem,
+		const planSlug = getUpgradePlanSlugFromPath( this.props.product, this.props.selectedSite );
+
+		let cartItem,
 			cartMeta;
 
 		if ( planSlug ) {
 			cartItem = getCartItemForPlan( planSlug );
 		}
 
-		if ( this.props.product.indexOf( 'theme' ) === 0 ) {
-			cartMeta = this.props.product.split( ':' )[1];
+		if ( startsWith( this.props.product, 'theme' ) ) {
+			cartMeta = this.props.product.split( ':' )[ 1 ];
 			cartItem = themeItem( cartMeta );
+		}
+
+		if ( startsWith( this.props.product, 'domain-mapping' ) ) {
+			cartMeta = this.props.product.split( ':' )[ 1 ];
+			cartItem = domainMapping( { domain: cartMeta } );
 		}
 
 		if ( cartItem ) {
@@ -130,7 +145,8 @@ const Checkout = React.createClass( {
 	},
 
 	redirectIfEmptyCart: function() {
-		var redirectTo = '/plans/';
+		const { selectedSiteSlug, transaction } = this.props;
+		let redirectTo = '/plans/';
 
 		if ( ! this.state.previousCart && this.props.product ) {
 			// the plan hasn't been added to the cart yet
@@ -141,12 +157,19 @@ const Checkout = React.createClass( {
 			return false;
 		}
 
-		if ( this.props.transaction.step.name === transactionStepTypes.SUBMITTING_WPCOM_REQUEST ) {
+		if ( transactionStepTypes.SUBMITTING_WPCOM_REQUEST === transaction.step.name ) {
+			return false;
+		}
+
+		if ( transactionStepTypes.RECEIVED_WPCOM_RESPONSE === transaction.step.name && isEmpty( transaction.errors ) ) {
+			// If the cart is emptied by the server after the transaction is
+			// complete without errors, do not redirect as we're waiting for
+			// some post-transaction requests to complete.
 			return false;
 		}
 
 		if ( this.state.previousCart ) {
-			redirectTo = getExitCheckoutUrl( this.state.previousCart, this.props.sites.getSelectedSite().slug );
+			redirectTo = getExitCheckoutUrl( this.state.previousCart, selectedSiteSlug );
 		}
 
 		page.redirect( redirectTo );
@@ -154,30 +177,77 @@ const Checkout = React.createClass( {
 		return true;
 	},
 
-	getPurchasesFromReceipt: function() {
-		var purchases = this.props.transaction.step.data.purchases,
-			flatPurchases = [];
-
-		// purchases are of the format { [siteId]: [ { product_id: ... } ] },
-		// so we need to flatten them to get a list of purchases
-		forEach( purchases, sitePurchases => {
-			flatPurchases = flatPurchases.concat( sitePurchases );
-		} );
-
-		return flatPurchases;
+	/**
+	 * Purchases are of the format { [siteId]: [ { productId: ... } ] }
+	 * so we need to flatten them to get a list of purchases
+	 *
+	 * @param {Object} purchases keyed by siteId { [siteId]: [ { productId: ... } ] }
+	 * @returns {Array} of product objects [ { productId: ... }, ... ]
+	 */
+	flattenPurchases: function( purchases ) {
+		return flatten( Object.values( purchases ) );
 	},
 
 	getCheckoutCompleteRedirectPath: function() {
-		var product,
+		let renewalItem;
+		const {
+			cart,
+			selectedSiteSlug,
+			transaction: {
+				step: {
+					data: receipt
+				}
+			}
+		} = this.props;
+
+		// The `:receiptId` string is filled in by our callback page after the PayPal checkout
+		const receiptId = receipt ? receipt.receipt_id : ':receiptId';
+
+		if ( cartItems.hasRenewalItem( cart ) ) {
+			renewalItem = cartItems.getRenewalItems( cart )[ 0 ];
+
+			return purchasePaths.managePurchase( renewalItem.extra.purchaseDomain, renewalItem.extra.purchaseId );
+		} else if ( cartItems.hasFreeTrial( cart ) ) {
+			return selectedSiteSlug
+				? `/plans/${ selectedSiteSlug }/thank-you`
+				: '/checkout/thank-you/plans';
+		} else if ( cart.create_new_blog ) {
+			return `/checkout/thank-you/no-site/${ receiptId }`;
+		}
+
+		if ( ! selectedSiteSlug ) {
+			return '/checkout/thank-you/features';
+		}
+
+		return this.props.selectedFeature && isValidFeatureKey( this.props.selectedFeature )
+			? `/checkout/thank-you/features/${ this.props.selectedFeature }/${ selectedSiteSlug }/${ receiptId }`
+			: `/checkout/thank-you/${ selectedSiteSlug }/${ receiptId }`;
+	},
+
+	handleCheckoutCompleteRedirect: function() {
+		let product,
 			purchasedProducts,
-			renewalItem,
-			receipt = this.props.transaction.step.data,
-			receiptId = ':receiptId';
+			renewalItem;
+
+		const {
+			cart,
+			isDomainOnly,
+			selectedSiteId,
+			transaction: {
+				step: {
+					data: receipt
+				}
+			},
+			translate
+		} = this.props;
+		const redirectPath = this.getCheckoutCompleteRedirectPath();
 
 		this.props.clearPurchases();
 
-		if ( cartItems.hasRenewalItem( this.props.cart ) ) {
-			renewalItem = cartItems.getRenewalItems( this.props.cart )[ 0 ];
+		if ( cartItems.hasRenewalItem( cart ) ) {
+			// checkouts for renewals redirect back to `/purchases` with a notice
+
+			renewalItem = cartItems.getRenewalItems( cart )[ 0 ];
 			// group all purchases into an array
 			purchasedProducts = reduce( receipt && receipt.purchases || {}, function( result, value ) {
 				return result.concat( value );
@@ -189,53 +259,75 @@ const Checkout = React.createClass( {
 
 			if ( product && product.will_auto_renew ) {
 				notices.success(
-					this.translate( '%(productName)s has been renewed and will now auto renew in the future. {{a}}Learn more{{/a}}', {
-						args: {
-							productName: renewalItem.product_name
-						},
-						components: {
-							a: <a href={ supportPaths.AUTO_RENEWAL } target="_blank" rel="noopener noreferrer" />
+					translate( '%(productName)s has been renewed and will now auto renew in the future. ' +
+						'{{a}}Learn more{{/a}}', {
+							args: {
+								productName: renewalItem.product_name
+							},
+							components: {
+								a: <a href={ supportPaths.AUTO_RENEWAL } target="_blank" rel="noopener noreferrer" />
+							}
 						}
-					} ),
+					),
 					{ persistent: true }
 				);
 			} else if ( product ) {
 				notices.success(
-					this.translate( 'Success! You renewed %(productName)s for %(duration)s, until %(date)s. We sent your receipt to %(email)s.', {
-						args: {
-							productName: renewalItem.product_name,
-							duration: i18n.moment.duration( renewalItem.bill_period, 'days' ).humanize(),
-							date: i18n.moment( product.expiry ).format( 'MMM DD, YYYY' ),
-							email: product.user_email
+					translate( 'Success! You renewed %(productName)s for %(duration)s, until %(date)s. ' +
+						'We sent your receipt to %(email)s.', {
+							args: {
+								productName: renewalItem.product_name,
+								duration: i18n.moment.duration( renewalItem.bill_period, 'days' ).humanize(),
+								date: i18n.moment( product.expiry ).format( 'MMM DD, YYYY' ),
+								email: product.user_email
+							}
 						}
-					} ),
+					),
 					{ persistent: true }
 				);
 			}
-
-			return purchasePaths.managePurchase( renewalItem.extra.purchaseDomain, renewalItem.extra.purchaseId );
-		} else if ( cartItems.hasFreeTrial( this.props.cart ) ) {
-			this.props.clearSitePlans( this.props.sites.getSelectedSite().ID );
-
-			return `/plans/${ this.props.sites.getSelectedSite().slug }/thank-you`;
+		} else if ( cartItems.hasFreeTrial( cart ) ) {
+			this.props.clearSitePlans( selectedSiteId );
 		}
 
 		if ( receipt && receipt.receipt_id ) {
-			receiptId = receipt.receipt_id;
+			const receiptId = receipt.receipt_id;
 
 			this.props.fetchReceiptCompleted( receiptId, {
-				receiptId: receiptId,
-				purchases: this.getPurchasesFromReceipt()
+				...receipt,
+				purchases: this.flattenPurchases( this.props.transaction.step.data.purchases ),
+				failedPurchases: this.flattenPurchases( this.props.transaction.step.data.failed_purchases )
 			} );
 		}
 
-		return this.props.selectedFeature && isValidFeatureKey( this.props.selectedFeature )
-			? `/checkout/thank-you/features/${this.props.selectedFeature}/${ this.props.sites.getSelectedSite().slug }/${ receiptId }`
-			: `/checkout/thank-you/${ this.props.sites.getSelectedSite().slug }/${ receiptId }`;
+		if (
+			( cart.create_new_blog && receipt && isEmpty( receipt.failed_purchases ) ) ||
+			( isDomainOnly && cartItems.hasPlan( cart ) )
+		) {
+			notices.info(
+				translate( 'Almost done…' )
+			);
+
+			const domainName = getDomainNameFromReceiptOrCart( receipt, cart );
+
+			if ( domainName ) {
+				fetchSitesAndUser( domainName, () => {
+					page( redirectPath );
+				} );
+
+				return;
+			}
+
+			if ( selectedSiteId ) {
+				this.props.requestSite( selectedSiteId );
+			}
+		}
+
+		page( redirectPath );
 	},
 
 	content: function() {
-		var selectedSite = this.props.sites.getSelectedSite();
+		const { selectedSite } = this.props;
 
 		if ( ! this.isLoading() && this.needsDomainDetails() ) {
 			return (
@@ -256,28 +348,33 @@ const Checkout = React.createClass( {
 				cart={ this.props.cart }
 				transaction={ this.props.transaction }
 				cards={ this.props.cards }
+				paymentMethods={ this.props.paymentMethods }
 				products={ this.props.productsList.get() }
 				selectedSite={ selectedSite }
-				redirectTo={ this.getCheckoutCompleteRedirectPath } />
+				redirectTo={ this.getCheckoutCompleteRedirectPath }
+				handleCheckoutCompleteRedirect={ this.handleCheckoutCompleteRedirect }
+			/>
 		);
 	},
 
 	isLoading: function() {
-		var isLoadingCart = ! this.props.cart.hasLoadedFromServer,
+		const isLoadingCart = ! this.props.cart.hasLoadedFromServer,
 			isLoadingProducts = ! this.props.productsList.hasLoadedFromServer();
 
 		return isLoadingCart || isLoadingProducts;
 	},
 
 	needsDomainDetails: function() {
-		var cart = this.props.cart,
+		const cart = this.props.cart,
 			transaction = this.props.transaction;
 
 		if ( cart && cartItems.hasOnlyRenewalItems( cart ) ) {
 			return false;
 		}
 
-		return cart && cartItems.hasDomainRegistration( cart ) && ! hasDomainDetails( transaction );
+		return cart &&
+			! hasDomainDetails( transaction ) &&
+			( cartItems.hasDomainRegistration( cart ) || cartItems.hasGoogleApps( cart ) );
 	},
 
 	render: function() {
@@ -285,6 +382,7 @@ const Checkout = React.createClass( {
 			<div className="main main-column" role="main">
 				<div className="checkout">
 					<QueryStoredCards />
+					<QueryGeo />
 
 					{ this.content() }
 				</div>
@@ -294,15 +392,24 @@ const Checkout = React.createClass( {
 } );
 
 module.exports = connect(
-	function( state ) {
+	state => {
+		const selectedSiteId = getSelectedSiteId( state );
+
 		return {
-			cards: getStoredCards( state )
+			cards: getStoredCards( state ),
+			paymentMethods: getCurrentUserPaymentMethods( state ),
+			isDomainOnly: isDomainOnlySite( state, selectedSiteId ),
+			selectedSite: getSelectedSite( state ),
+			selectedSiteId,
+			selectedSiteSlug: getSelectedSiteSlug( state ),
 		};
 	},
 	{
 		clearPurchases,
 		clearSitePlans,
 		fetchReceiptCompleted,
-		recordApplePayStatus
+		recordApplePayStatus,
+		requestSite,
+		loadTrackingTool
 	}
-)( Checkout );
+)( localize( Checkout ) );

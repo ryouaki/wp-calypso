@@ -1,31 +1,25 @@
 /**
  * External Dependencies
  */
-import find from 'lodash/find';
-import flow from 'lodash/flow';
-import forEach from 'lodash/forEach';
-import url from 'url';
-import matches from 'lodash/matches';
+import { filter, flow } from 'lodash';
 
 /**
  * Internal Dependencies
  */
-import resizeImageUrl from 'lib/resize-image-url';
 import DISPLAY_TYPES from './display-types';
 
 /**
  * Rules
  */
 import createBetterExcerpt from 'lib/post-normalizer/rule-create-better-excerpt';
-import detectEmbeds from 'lib/post-normalizer/rule-content-detect-embeds';
+import detectMedia from 'lib/post-normalizer/rule-content-detect-media';
 import detectPolls from 'lib/post-normalizer/rule-content-detect-polls';
-import makeEmbedsSecure from 'lib/post-normalizer/rule-content-make-embeds-secure';
+import makeEmbedsSafe from 'lib/post-normalizer/rule-content-make-embeds-safe';
 import removeStyles from 'lib/post-normalizer/rule-content-remove-styles';
-import safeImages from 'lib/post-normalizer/rule-content-safe-images';
-import wordCount from 'lib/post-normalizer/rule-content-word-count';
+import makeImagesSafe from 'lib/post-normalizer/rule-content-make-images-safe';
 import { disableAutoPlayOnMedia, disableAutoPlayOnEmbeds } from 'lib/post-normalizer/rule-content-disable-autoplay';
 import decodeEntities from 'lib/post-normalizer/rule-decode-entities';
-import firstPassCanonicalImage from 'lib/post-normalizer/rule-first-pass-canonical-image';
+import pickCanonicalImage from 'lib/post-normalizer/rule-pick-canonical-image';
 import makeSiteIdSafeForApi from 'lib/post-normalizer/rule-make-site-id-safe-for-api';
 import pickPrimaryTag from 'lib/post-normalizer/rule-pick-primary-tag';
 import preventWidows from 'lib/post-normalizer/rule-prevent-widows';
@@ -33,48 +27,57 @@ import safeImageProperties from 'lib/post-normalizer/rule-safe-image-properties'
 import stripHtml from 'lib/post-normalizer/rule-strip-html';
 import withContentDom from 'lib/post-normalizer/rule-with-content-dom';
 import keepValidImages from 'lib/post-normalizer/rule-keep-valid-images';
-import pickCanonicalImage from 'lib/post-normalizer/rule-pick-canonical-image';
 import waitForImagesToLoad from 'lib/post-normalizer/rule-wait-for-images-to-load';
+import pickCanonicalMedia from 'lib/post-normalizer/rule-pick-canonical-media';
+import removeElementsBySelector from 'lib/post-normalizer/rule-content-remove-elements-by-selector';
+import addDiscoverProperties from 'lib/post-normalizer/rule-add-discover-properties';
+import linkJetpackCarousels from 'lib/post-normalizer/rule-content-link-jetpack-carousels';
 
 /**
  * Module vars
  */
-const READER_CONTENT_WIDTH = 720,
-	DISCOVER_FULL_BLEED_WIDTH = 1082,
-	PHOTO_ONLY_MIN_WIDTH = READER_CONTENT_WIDTH * 0.8,
-	DISCOVER_BLOG_ID = 53424024;
+export const
+	READER_CONTENT_WIDTH = 800,
+	PHOTO_ONLY_MIN_WIDTH = 440,
+	GALLERY_MIN_IMAGES = 4,
+	GALLERY_MIN_IMAGE_WIDTH = 350;
 
-function discoverFullBleedImages( post, dom ) {
-	if ( post.site_ID === DISCOVER_BLOG_ID ) {
-		const images = dom.querySelectorAll( '.fullbleed img, img.fullbleed' );
-		forEach( images, function( image ) {
-			const newSrc = resizeImageUrl( image.src, { w: DISCOVER_FULL_BLEED_WIDTH } );
-			const oldImageObject = find( post.content_images, { src: image.src } );
-			oldImageObject.src = newSrc;
-			image.src = newSrc;
-		} );
+function getCharacterCount( post ) {
+	if ( ! post || ! post.content_no_html ) {
+		return 0;
 	}
-	return post;
+
+	return post.content_no_html.length;
 }
+
+export function imageIsBigEnoughForGallery( image ) {
+	return image.width >= GALLERY_MIN_IMAGE_WIDTH;
+}
+
+const hasShortContent = post => getCharacterCount( post ) <= 100;
 
 /**
  * Attempt to classify the post into a display type
  * @param  {object}   post     A post to classify
  * @return {object}            The classified post
  */
-function classifyPost( post ) {
+export function classifyPost( post ) {
 	const canonicalImage = post.canonical_image;
+	const imagesForGallery = filter( post.content_images, imageIsBigEnoughForGallery );
 	let displayType = DISPLAY_TYPES.UNCLASSIFIED,
 		canonicalAspect;
 
-	if ( post.images &&
-			post.images.length >= 1 &&
-			canonicalImage && canonicalImage.width >= PHOTO_ONLY_MIN_WIDTH &&
-			post.word_count < 100 ) {
+	if ( imagesForGallery.length >= GALLERY_MIN_IMAGES ) {
+		displayType ^= DISPLAY_TYPES.GALLERY;
+	} else if ( post.canonical_media &&
+				post.canonical_media.mediaType === 'image' &&
+				post.canonical_media.width >= PHOTO_ONLY_MIN_WIDTH &&
+				hasShortContent( post ) ) {
 		displayType ^= DISPLAY_TYPES.PHOTO_ONLY;
 	}
 
 	if ( canonicalImage ) {
+		// TODO do we still need aspect logic here and any of these?
 		if ( canonicalImage.width >= 600 ) {
 			displayType ^= DISPLAY_TYPES.LARGE_BANNER;
 		}
@@ -90,30 +93,10 @@ function classifyPost( post ) {
 				displayType ^= DISPLAY_TYPES.THUMBNAIL;
 			}
 		}
-
-		const canonicalImageUrl = url.parse( canonicalImage.uri, true, true ),
-			canonicalImageUrlImportantParts = {
-				hostname: canonicalImageUrl.hostname,
-				pathname: canonicalImageUrl.pathname,
-				query: canonicalImageUrl.query
-			},
-			matcher = matches( canonicalImageUrlImportantParts );
-		if ( find( post.content_images, ( img ) => {
-			const imgUrl = url.parse( img.src, true, true );
-			return matcher( imgUrl );
-		} ) ) {
-			displayType ^= DISPLAY_TYPES.CANONICAL_IN_CONTENT;
-		}
 	}
 
-	if ( post.content_embeds && post.content_embeds.length >= 1 ) {
-		if ( ! canonicalImage || post.content_embeds.length === 1 ) {
-			displayType ^= DISPLAY_TYPES.FEATURED_VIDEO;
-		}
-	}
-
-	if ( post.content_images && post.content_images.length > 2 ) {
-		displayType ^= DISPLAY_TYPES.GALLERY;
+	if ( post.canonical_media && post.canonical_media.mediaType === 'video' ) {
+		displayType ^= DISPLAY_TYPES.FEATURED_VIDEO;
 	}
 
 	if ( post.tags && post.tags[ 'p2-xpost' ] ) {
@@ -132,20 +115,22 @@ const fastPostNormalizationRules = flow( [
 	makeSiteIdSafeForApi,
 	pickPrimaryTag,
 	safeImageProperties( READER_CONTENT_WIDTH ),
-	firstPassCanonicalImage,
 	withContentDom( [
 		removeStyles,
-		safeImages( READER_CONTENT_WIDTH ),
-		discoverFullBleedImages,
-		makeEmbedsSecure,
+		removeElementsBySelector,
+		makeImagesSafe(),
+		makeEmbedsSafe,
 		disableAutoPlayOnEmbeds,
 		disableAutoPlayOnMedia,
-		detectEmbeds,
+		detectMedia,
 		detectPolls,
-		wordCount
+		linkJetpackCarousels,
 	] ),
 	createBetterExcerpt,
-	classifyPost
+	pickCanonicalImage,
+	pickCanonicalMedia,
+	classifyPost,
+	addDiscoverProperties,
 ] );
 
 export function runFastRules( post ) {
@@ -160,6 +145,7 @@ export function runFastRules( post ) {
 const slowSyncRules = flow( [
 	keepValidImages( 144, 72 ),
 	pickCanonicalImage,
+	pickCanonicalMedia,
 	classifyPost
 ] );
 

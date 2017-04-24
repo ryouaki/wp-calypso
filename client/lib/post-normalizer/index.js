@@ -67,8 +67,8 @@ normalizePost.stripHTML = wrapSync( stripHtml );
 import preventWidows from './rule-prevent-widows';
 normalizePost.preventWidows = wrapSync( preventWidows );
 
-import firstPassCanonicalImage from './rule-first-pass-canonical-image';
-normalizePost.firstPassCanonicalImage = wrapSync( firstPassCanonicalImage );
+import pickCanonicalImage from './rule-pick-canonical-image';
+normalizePost.pickCanonicalImage = wrapSync( pickCanonicalImage );
 
 import makeSiteIDSafeForAPI from './rule-make-site-id-safe-for-api';
 normalizePost.makeSiteIDSafeForAPI = wrapSync( makeSiteIDSafeForAPI );
@@ -95,9 +95,6 @@ normalizePost.keepValidImages = function( minWidth, minHeight ) {
 	return wrapSync( keepValidImages( minWidth, minHeight ) );
 };
 
-import pickCanonicalImage from './rule-pick-canonical-image';
-normalizePost.pickCanonicalImage = wrapSync( pickCanonicalImage );
-
 import createBetterExcerpt from './rule-create-better-excerpt';
 normalizePost.createBetterExcerpt = wrapSync( createBetterExcerpt );
 
@@ -110,19 +107,19 @@ normalizePost.withContentDOM = function( transforms ) {
 };
 
 import removeStyles from './rule-content-remove-styles';
-import safeContentImages from './rule-content-safe-images';
-import makeEmbedsSecure from './rule-content-make-embeds-secure';
-import wordCountAndReadingTime from './rule-content-word-count';
-import detectEmbeds from './rule-content-detect-embeds';
+import removeElementsBySelector from './rule-content-remove-elements-by-selector';
+import makeImagesSafe from './rule-content-make-images-safe';
+import makeEmbedsSafe from './rule-content-make-embeds-safe';
+import detectMedia from './rule-content-detect-media';
 import { disableAutoPlayOnMedia, disableAutoPlayOnEmbeds } from './rule-content-disable-autoplay';
 import detectPolls from './rule-content-detect-polls';
 
 normalizePost.content = {
 	removeStyles,
-	safeContentImages,
-	makeEmbedsSecure,
-	wordCountAndReadingTime,
-	detectEmbeds,
+	removeElementsBySelector,
+	makeImagesSafe,
+	makeEmbedsSafe,
+	detectMedia,
 	disableAutoPlayOnMedia,
 	disableAutoPlayOnEmbeds,
 	detectPolls

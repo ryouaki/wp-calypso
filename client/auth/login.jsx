@@ -4,6 +4,7 @@
 import ReactDom from 'react-dom';
 import React from 'react';
 import LinkedStateMixin from 'react-addons-linked-state-mixin';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
@@ -19,7 +20,6 @@ import Notice from 'components/notice';
 import AuthStore from 'lib/oauth-store';
 import * as AuthActions from 'lib/oauth-store/actions';
 import eventRecorder from 'me/event-recorder';
-import Gridicon from 'components/gridicon';
 import WordPressLogo from 'components/wordpress-logo';
 import AuthCodeButton from './auth-code-button';
 
@@ -127,61 +127,63 @@ module.exports = React.createClass( {
 
 		return (
 			<Main className="auth">
-				<WordPressLogo />
-				<form className="auth__form" onSubmit={ this.submitForm }>
-					<FormFieldset>
-						<div className="auth__input-wrapper">
-							<Gridicon icon="user"/>
-							<FormTextInput
-								name="login"
-								ref="login"
-								disabled={ requires2fa || inProgress }
-								placeholder={ this.translate( 'Username or email address' ) }
-								onFocus={ this.recordFocusEvent( 'Username or email address' ) }
-								valueLink={ this.linkState( 'login' ) } />
-						</div>
-						<div className="auth__input-wrapper">
-							<Gridicon icon="lock" />
-							<FormPasswordInput
-								name="password"
-								ref="password"
-								disabled={ requires2fa || inProgress }
-								placeholder={ this.translate( 'Password' ) }
-								onFocus={ this.recordFocusEvent( 'Password' ) }
-								hideToggle={ requires2fa }
-								submitting={ inProgress }
-								valueLink={ this.linkState( 'password' ) } />
-						</div>
-						{ requires2fa &&
-							<FormFieldset>
+				<div className="auth__content">
+					<WordPressLogo />
+					<form className="auth__form" onSubmit={ this.submitForm }>
+						<FormFieldset>
+							<div className="auth__input-wrapper">
+								<Gridicon icon="user"/>
 								<FormTextInput
-									name="auth_code"
-									type="number"
-									ref="auth_code"
-									disabled={ inProgress }
-									placeholder={ this.translate( 'Verification code' ) }
-									onFocus={ this.recordFocusEvent( 'Verification code' ) }
-									valueLink={ this.linkState( 'auth_code' ) } />
-							</FormFieldset>
-						}
-					</FormFieldset>
-					<FormButtonsBar>
-						<FormButton disabled={ ! this.canSubmitForm() } onClick={ this.recordClickEvent( 'Sign in' ) } >
-							{ requires2fa ? this.translate( 'Verify' ) : this.translate( 'Sign in' ) }
-						</FormButton>
-					</FormButtonsBar>
-					{ ! requires2fa && <LostPassword /> }
-					{ errorMessage && <Notice text={ errorMessage } status={ errorLevel } showDismiss={ false } /> }
-					{ requires2fa && <AuthCodeButton username={ this.state.login } password={ this.state.password } /> }
-				</form>
-				<a className="auth__help" target="_blank" rel="noopener noreferrer" title={ this.translate( 'Visit the WordPress.com support site for help' ) } href="https://en.support.wordpress.com/">
-					<Gridicon icon="help" />
-				</a>
-				<div className="auth__links">
-					<a href="#" onClick={ this.toggleSelfHostedInstructions }>{ this.translate( 'Add self-hosted site' ) }</a>
-					<a href={ config( 'signup_url' ) }>{ this.translate( 'Create account' ) }</a>
+									name="login"
+									ref="login"
+									disabled={ requires2fa || inProgress }
+									placeholder={ this.translate( 'Username or email address' ) }
+									onFocus={ this.recordFocusEvent( 'Username or email address' ) }
+									valueLink={ this.linkState( 'login' ) } />
+							</div>
+							<div className="auth__input-wrapper">
+								<Gridicon icon="lock" />
+								<FormPasswordInput
+									name="password"
+									ref="password"
+									disabled={ requires2fa || inProgress }
+									placeholder={ this.translate( 'Password' ) }
+									onFocus={ this.recordFocusEvent( 'Password' ) }
+									hideToggle={ requires2fa }
+									submitting={ inProgress }
+									valueLink={ this.linkState( 'password' ) } />
+							</div>
+							{ requires2fa &&
+								<FormFieldset>
+									<FormTextInput
+										name="auth_code"
+										type="number"
+										ref="auth_code"
+										disabled={ inProgress }
+										placeholder={ this.translate( 'Verification code' ) }
+										onFocus={ this.recordFocusEvent( 'Verification code' ) }
+										valueLink={ this.linkState( 'auth_code' ) } />
+								</FormFieldset>
+							}
+						</FormFieldset>
+						<FormButtonsBar>
+							<FormButton disabled={ ! this.canSubmitForm() } onClick={ this.recordClickEvent( 'Sign in' ) } >
+								{ requires2fa ? this.translate( 'Verify' ) : this.translate( 'Sign in' ) }
+							</FormButton>
+						</FormButtonsBar>
+						{ ! requires2fa && <LostPassword /> }
+						{ errorMessage && <Notice text={ errorMessage } status={ errorLevel } showDismiss={ false } /> }
+						{ requires2fa && <AuthCodeButton username={ this.state.login } password={ this.state.password } /> }
+					</form>
+					<a className="auth__help" target="_blank" rel="noopener noreferrer" title={ this.translate( 'Visit the WordPress.com support site for help' ) } href="https://en.support.wordpress.com/">
+						<Gridicon icon="help" />
+					</a>
+					<div className="auth__links">
+						<a href="#" onClick={ this.toggleSelfHostedInstructions }>{ this.translate( 'Add self-hosted site' ) }</a>
+						<a href={ config( 'signup_url' ) }>{ this.translate( 'Create account' ) }</a>
+					</div>
+					{ showInstructions && <SelfHostedInstructions onClickClose={ this.toggleSelfHostedInstructions } /> }
 				</div>
-				{ showInstructions && <SelfHostedInstructions onClickClose={ this.toggleSelfHostedInstructions } /> }
 			</Main>
 		);
 	}

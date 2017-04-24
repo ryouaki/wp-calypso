@@ -2,7 +2,7 @@
  * External dependencies
  */
 var React = require( 'react' ),
-	ReactInjection = require( 'react/lib/ReactInjection' ),
+	ReactClass = require( 'react/lib/ReactClass' ),
 	TestUtils = require( 'react-addons-test-utils' ),
 	expect = require( 'chai' ).expect,
 	i18n = require( 'i18n-calypso' );
@@ -11,7 +11,7 @@ describe( 'index', function() {
 	var CountedTextarea, renderer;
 
 	before( function() {
-		ReactInjection.Class.injectMixin( i18n.mixin );
+		ReactClass.injection.injectMixin( i18n.mixin );
 		CountedTextarea = require( '../' );
 	} );
 
@@ -27,7 +27,7 @@ describe( 'index', function() {
 
 		expect( result.props.className ).to.equal( 'counted-textarea' );
 		expect( result.props.children ).to.have.length( 2 );
-		expect( result.props.children[1].props.children[0] ).to.equal( '12 characters' );
+		expect( result.props.children[ 1 ].props.children[ 0 ] ).to.equal( '12 characters' );
 	} );
 
 	it( 'should render warning styles when the acceptable length is exceeded', function() {
@@ -57,9 +57,9 @@ describe( 'index', function() {
 		result = renderer.getRenderOutput();
 
 		expect( result.props.children ).to.have.length( 2 );
-		expect( result.props.children[0].props.value ).to.equal( value );
-		expect( result.props.children[0].props.placeholder ).to.equal( placeholder );
-		expect( result.props.children[0].props.className ).to.equal( 'counted-textarea__input' );
+		expect( result.props.children[ 0 ].props.value ).to.equal( value );
+		expect( result.props.children[ 0 ].props.placeholder ).to.equal( placeholder );
+		expect( result.props.children[ 0 ].props.className ).to.equal( 'counted-textarea__input' );
 	} );
 
 	it( 'should not use the placeholder as the counted item if value is empty and countPlaceholderLength is not set', function() {
@@ -70,7 +70,7 @@ describe( 'index', function() {
 		renderer.render( <CountedTextarea value={ value } className="custom-class" placeholder={ placeholder } /> );
 		result = renderer.getRenderOutput();
 
-		expect( result.props.children[1].props.children[0] ).to.equal( '0 characters' );
+		expect( result.props.children[ 1 ].props.children[ 0 ] ).to.equal( '0 characters' );
 	} );
 
 	it( 'should use the placeholder as the counted item if value is empty and countPlaceholderLength is true', function() {
@@ -81,7 +81,7 @@ describe( 'index', function() {
 		renderer.render( <CountedTextarea value={ value } className="custom-class" placeholder={ placeholder } countPlaceholderLength={ true } /> );
 		result = renderer.getRenderOutput();
 
-		expect( result.props.children[1].props.children[0] ).to.equal( '16 characters' );
+		expect( result.props.children[ 1 ].props.children[ 0 ] ).to.equal( '16 characters' );
 	} );
 
 	it( 'should use the value as the counted item if value is set', function() {
@@ -92,7 +92,7 @@ describe( 'index', function() {
 		renderer.render( <CountedTextarea value={ value } className="custom-class" placeholder={ placeholder }/> );
 		result = renderer.getRenderOutput();
 
-		expect( result.props.children[1].props.children[0] ).to.equal( '12 characters' );
+		expect( result.props.children[ 1 ].props.children[ 0 ] ).to.equal( '12 characters' );
 	} );
 
 	it( 'should not pass acceptableLength prop to the child textarea', function() {
@@ -104,9 +104,9 @@ describe( 'index', function() {
 		result = renderer.getRenderOutput();
 
 		expect( result.props.children ).to.have.length( 2 );
-		expect( result.props.children[0].props.value ).to.equal( value );
-		expect( result.props.children[0].props.acceptableLength ).to.be.undefined;
-		expect( result.props.children[0].props.className ).to.equal( 'counted-textarea__input' );
+		expect( result.props.children[ 0 ].props.value ).to.equal( value );
+		expect( result.props.children[ 0 ].props.acceptableLength ).to.be.undefined;
+		expect( result.props.children[ 0 ].props.className ).to.equal( 'counted-textarea__input' );
 	} );
 
 	it( 'should render a reversed count when set to showRemainingCount', function() {
@@ -119,7 +119,7 @@ describe( 'index', function() {
 
 		expect( result.props.className ).to.equal( 'counted-textarea' );
 		expect( result.props.children ).to.have.length( 2 );
-		expect( result.props.children[1].props.children[0] ).to.equal( '128 characters remaining' );
+		expect( result.props.children[ 1 ].props.children[ 0 ] ).to.equal( '128 characters remaining' );
 	} );
 
 	it( 'should render additional panel content when set', function() {
@@ -133,7 +133,7 @@ describe( 'index', function() {
 
 		expect( result.props.className ).to.equal( 'counted-textarea' );
 		expect( result.props.children ).to.have.length( 2 );
-		expect( result.props.children[1].props.children[0] ).to.equal( '128 characters remaining' );
-		expect( result.props.children[1].props.children[1][1] ).to.equal( 'Extra stuff' );
+		expect( result.props.children[ 1 ].props.children[ 0 ] ).to.equal( '128 characters remaining' );
+		expect( result.props.children[ 1 ].props.children[ 1 ][ 1 ] ).to.equal( 'Extra stuff' );
 	} );
 } );

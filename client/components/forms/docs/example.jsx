@@ -27,8 +27,10 @@ var countriesList = require( 'lib/countries-list' ).forSms(),
 	FormTelInput = require( 'components/forms/form-tel-input' ),
 	FormTextarea = require( 'components/forms/form-textarea' ),
 	FormTextInput = require( 'components/forms/form-text-input' ),
+	FormTextInputWithAction = require( 'components/forms/form-text-input-with-action' ),
 	FormTextInputWithAffixes = require( 'components/forms/form-text-input-with-affixes' ),
 	FormToggle = require( 'components/forms/form-toggle' ),
+	PhoneInput = require( 'components/phone-input' ),
 	CompactFormToggle = require( 'components/forms/form-toggle/compact' );
 
 var FormFields = React.createClass( {
@@ -40,7 +42,8 @@ var FormFields = React.createClass( {
 		return {
 			checkedRadio: 'first',
 			toggled: false,
-			compactToggled: false
+			compactToggled: false,
+			phoneInput: { countryCode: 'US', value: '' }
 		};
 	},
 
@@ -54,6 +57,14 @@ var FormFields = React.createClass( {
 
 	handleCompactToggle: function() {
 		this.setState( { compactToggled: ! this.state.compactToggled } );
+	},
+
+	handleAction: function() {
+		alert( 'Thank you.' );
+	},
+
+	handlePhoneInputChange( data ) {
+		this.setState( { phoneInput: data } );
 	},
 
 	render: function() {
@@ -121,6 +132,16 @@ var FormFields = React.createClass( {
 							placeholder="Placeholder text..."
 						/>
 						<FormInputValidation isError text="Your text is too short." />
+					</FormFieldset>
+
+					<FormFieldset>
+						<FormLabel htmlFor="text_with_affixes">Form Text Input With Action</FormLabel>
+						<FormTextInputWithAction
+							placeholder="Enter a name for your site"
+							action="Continue"
+							onAction={ this.handleAction }
+							/>
+						<FormSettingExplanation>Action becomes avaliable when filled. Can be triggered by clicking button or pressing enter.</FormSettingExplanation>
 					</FormFieldset>
 
 					<FormFieldset>
@@ -226,6 +247,11 @@ var FormFields = React.createClass( {
 							initialPhoneNumber="8772733049"
 							countriesList={ countriesList }
 							/>
+					</FormFieldset>
+
+					<FormFieldset>
+						<FormLabel>Form Media Phone Input</FormLabel>
+						<PhoneInput countryCode={ this.state.phoneInput.countryCode } value={ this.state.phoneInput.value } countriesList={ countriesList } onChange={ this.handlePhoneInputChange } />
 					</FormFieldset>
 
 					<FormFieldset>

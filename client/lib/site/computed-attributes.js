@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -49,12 +47,6 @@ export default function( site ) {
 		attributes.options.unmapped_url &&
 		! site.is_vip &&
 		isHttps( attributes.options.unmapped_url )
-	);
-
-	//TODO:(ehg) Replace instances with canCurrentUser selector when my-sites/sidebar is connected
-	attributes.is_customizable = !! (
-		site.capabilities &&
-		site.capabilities.edit_theme_options
 	);
 
 	return attributes;

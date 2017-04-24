@@ -3,23 +3,25 @@
  */
 import { expect } from 'chai';
 import deepFreeze from 'deep-freeze';
-import sinon from 'sinon';
 
 /**
  * Internal dependencies
  */
+import { useSandbox } from 'test/helpers/use-sinon';
 import {
+	EDITOR_START,
+	EDITOR_STOP,
 	POST_DELETE,
 	POST_DELETE_SUCCESS,
 	POST_DELETE_FAILURE,
 	POST_EDIT,
-	POST_EDITS_RESET,
 	POST_REQUEST,
 	POST_REQUEST_SUCCESS,
 	POST_REQUEST_FAILURE,
 	POST_RESTORE,
 	POST_RESTORE_FAILURE,
 	POST_SAVE,
+	POST_SAVE_SUCCESS,
 	POSTS_RECEIVE,
 	POSTS_REQUEST,
 	POSTS_REQUEST_FAILURE,
@@ -37,12 +39,8 @@ import reducer, {
 import PostQueryManager from 'lib/query-manager/post';
 
 describe( 'reducer', () => {
-	before( () => {
-		sinon.stub( console, 'warn' );
-	} );
-
-	after( () => {
-		console.warn.restore();
+	useSandbox( ( sandbox ) => {
+		sandbox.stub( console, 'warn' );
 	} );
 
 	it( 'should include expected keys in return value', () => {
@@ -52,7 +50,8 @@ describe( 'reducer', () => {
 			'siteRequests',
 			'queryRequests',
 			'queries',
-			'edits'
+			'edits',
+			'likes',
 		] );
 	} );
 
@@ -865,7 +864,7 @@ describe( 'reducer', () => {
 			} );
 		} );
 
-		it( 'should should eliminate redundant data on posts received', () => {
+		it( 'should eliminate redundant data on posts received', () => {
 			const state = edits( deepFreeze( {
 				2916284: {
 					841: {
@@ -893,10 +892,128 @@ describe( 'reducer', () => {
 			} );
 		} );
 
+		it( 'should handle term shape differences on posts received', () => {
+			const state = edits( deepFreeze( {
+				2916284: {
+					841: {
+						title: 'Hello World',
+						type: 'post',
+						terms: {
+							post_tag: [ 'chicken', 'ribs' ],
+							category: [ {
+								ID: 1,
+								name: 'uncategorized'
+							} ]
+						}
+					},
+					'': {
+						title: 'Unrelated'
+					}
+				}
+			} ), {
+				type: POSTS_RECEIVE,
+				posts: [ {
+					ID: 841,
+					site_ID: 2916284,
+					type: 'post',
+					title: 'Hello',
+					terms: {
+						post_tag: {
+							chicken: {
+								ID: 111,
+								name: 'chicken'
+							},
+							ribs: {
+								ID: 112,
+								name: 'ribs'
+							}
+						},
+						category: {
+							uncategorized: {
+								ID: 1,
+								name: 'uncategorized'
+							}
+						}
+					}
+				} ]
+			} );
+
+			expect( state ).to.eql( {
+				2916284: {
+					841: {
+						title: 'Hello World'
+					},
+					'': {
+						title: 'Unrelated'
+					}
+				}
+			} );
+		} );
+
+		it( 'should preserve term edit differences on posts received', () => {
+			const state = edits( deepFreeze( {
+				2916284: {
+					841: {
+						title: 'Hello World',
+						type: 'post',
+						terms: {
+							post_tag: [ 'ribs' ],
+							category: [ {
+								ID: 1,
+								name: 'uncategorized'
+							} ]
+						}
+					},
+					'': {
+						title: 'Unrelated'
+					}
+				}
+			} ), {
+				type: POSTS_RECEIVE,
+				posts: [ {
+					ID: 841,
+					site_ID: 2916284,
+					type: 'post',
+					title: 'Hello World',
+					terms: {
+						post_tag: {
+							chicken: {
+								ID: 111,
+								name: 'chicken'
+							}
+						},
+						category: {
+							uncategorized: {
+								ID: 1,
+								name: 'uncategorized'
+							}
+						}
+					}
+				} ]
+			} );
+
+			expect( state ).to.eql( {
+				2916284: {
+					841: {
+						terms: {
+							post_tag: [ 'ribs' ],
+							category: [ {
+								ID: 1,
+								name: 'uncategorized'
+							} ]
+						}
+					},
+					'': {
+						title: 'Unrelated'
+					}
+				}
+			} );
+		} );
+
 		it( 'should ignore reset edits action when discarded site doesn\'t exist', () => {
 			const original = deepFreeze( {} );
 			const state = edits( original, {
-				type: POST_EDITS_RESET,
+				type: POST_SAVE_SUCCESS,
 				siteId: 2916284,
 				postId: 841
 			} );
@@ -904,7 +1021,50 @@ describe( 'reducer', () => {
 			expect( state ).to.equal( original );
 		} );
 
-		it( 'should discard edits when reset edits action dispatched', () => {
+		it( 'should copy edits when the post is saved and prior postId was null', () => {
+			const state = edits( deepFreeze( {
+				2916284: {
+					'': {
+						title: 'Ribs & Chicken'
+					},
+					842: {
+						title: 'I like turtles'
+					}
+				}
+			} ), {
+				type: POST_SAVE_SUCCESS,
+				siteId: 2916284,
+				postId: null,
+				savedPost: {
+					ID: 841,
+					title: 'Ribs'
+				}
+			} );
+
+			expect( state ).to.eql( {
+				2916284: {
+					841: {
+						title: 'Ribs & Chicken'
+					},
+					842: {
+						title: 'I like turtles'
+					}
+				}
+			} );
+		} );
+
+		it( 'should ignore stop editor action when site doesn\'t exist', () => {
+			const original = deepFreeze( {} );
+			const state = edits( original, {
+				type: EDITOR_STOP,
+				siteId: 2916284,
+				postId: 841
+			} );
+
+			expect( state ).to.equal( original );
+		} );
+
+		it( 'should discard edits when we stop editing the post', () => {
 			const state = edits( deepFreeze( {
 				2916284: {
 					841: {
@@ -915,13 +1075,42 @@ describe( 'reducer', () => {
 					}
 				}
 			} ), {
-				type: POST_EDITS_RESET,
+				type: EDITOR_STOP,
 				siteId: 2916284,
 				postId: 841
 			} );
 
 			expect( state ).to.eql( {
 				2916284: {
+					'': {
+						title: 'Ribs & Chicken'
+					}
+				}
+			} );
+		} );
+
+		it( 'should reset edits when we start editing a post', () => {
+			const state = edits( deepFreeze( {
+				2916284: {
+					841: {
+						title: 'Hello World'
+					},
+					'': {
+						title: 'Ribs & Chicken'
+					}
+				}
+			} ), {
+				type: EDITOR_START,
+				siteId: 2916284,
+				postId: 841,
+				postType: 'jetpack-testimonial',
+			} );
+
+			expect( state ).to.eql( {
+				2916284: {
+					841: {
+						type: 'jetpack-testimonial'
+					},
 					'': {
 						title: 'Ribs & Chicken'
 					}

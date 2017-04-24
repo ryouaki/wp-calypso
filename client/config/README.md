@@ -1,7 +1,7 @@
 client/config
 =============
 
-The `index.js` file is generated on startup by `regenerate-client.js`. Based on the environment, data is read from the appropriate .json file in the root config directory, for example, `/config/development.json`. The data is then compared against a whitelist in `/config/client.json`, and whitelisted items are added to the data object in `/client/config/index.js`. You can read more about how to use `config` in the [main documentation](https://github.com/Automattic/wp-calypso#config).
+The `index.js` file is generated on startup by `regenerate-client.js`. Based on the environment, data is read from the appropriate .json file in the root config directory, for example, `/config/development.json`. The data is then compared against a whitelist in `/config/client.json`, and whitelisted items are added to the data object in `/client/config/index.js`. You can read more about how to use `config` in the [config documentation](../config).
 
 Feature Flags API
 -----------------
@@ -16,16 +16,6 @@ var config = require( 'config' );
 
 if ( config.isEnabled( 'myFeature') ) {
 	// do something only when myFeature is enabled
-}
-```
-
-### config.anyEnabled( key, [...key] )
-Is one or more features enabled?
-
-```js
-// Returns true if any passed feature is enabled
-if ( config.anyEnabled( 'myFeature1', 'myFeature2', 'myFeature3' ) ) {
-	// do something when any of the three features are enabled
 }
 ```
 

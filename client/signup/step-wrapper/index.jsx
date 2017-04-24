@@ -1,7 +1,8 @@
 /**
  * External dependencies
  */
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
+import { localize } from 'i18n-calypso';
 import classNames from 'classnames';
 
 /**
@@ -9,12 +10,17 @@ import classNames from 'classnames';
  */
 import StepHeader from 'signup/step-header';
 import NavigationLink from 'signup/navigation-link';
-import config from 'config';
 
-export default React.createClass( {
-	displayName: 'StepWrapper',
+class StepWrapper extends Component {
+	static propTypes = {
+		shouldHideNavButtons: PropTypes.bool,
+		translate: PropTypes.func.isRequired,
+	};
 
-	renderBack: function() {
+	renderBack() {
+		if ( this.props.shouldHideNavButtons ) {
+			return null;
+		}
 		return (
 			<NavigationLink
 				direction="back"
@@ -23,12 +29,12 @@ export default React.createClass( {
 				stepName={ this.props.stepName }
 				stepSectionName={ this.props.stepSectionName }
 				backUrl={ this.props.backUrl }
-				signupProgressStore={ this.props.signupProgressStore } />
+				signupProgress={ this.props.signupProgress } />
 		);
-	},
+	}
 
-	renderSkip: function() {
-		if ( this.props.goToNextStep ) {
+	renderSkip() {
+		if ( ! this.props.shouldHideNavButtons && this.props.goToNextStep ) {
 			return (
 				<NavigationLink
 					direction="forward"
@@ -38,38 +44,40 @@ export default React.createClass( {
 					stepName={ this.props.stepName } />
 			);
 		}
-	},
+	}
 
-	headerText: function() {
+	headerText() {
 		if ( this.props.positionInFlow === 0 ) {
-			if ( this.props.headerText ) {
+			if ( this.props.headerText !== undefined ) {
 				return this.props.headerText;
 			}
-			return this.translate( 'Let\'s get started.' );
+
+			return this.props.translate( "Let's get started." );
 		}
 
-		if ( this.props.fallbackHeaderText ) {
+		if ( this.props.fallbackHeaderText !== undefined ) {
 			return this.props.fallbackHeaderText;
 		}
-	},
+	}
 
-	subHeaderText: function() {
+	subHeaderText() {
 		if ( this.props.positionInFlow === 0 ) {
-			if ( this.props.subHeaderText ) {
+			if ( this.props.subHeaderText !== undefined ) {
 				return this.props.subHeaderText;
 			}
-			return this.translate( 'Welcome to the best place for your WordPress website.' );
+
+			return this.props.translate( 'Welcome to the best place for your WordPress website.' );
 		}
 
-		if ( this.props.fallbackSubHeaderText ) {
+		if ( this.props.fallbackSubHeaderText !== undefined ) {
 			return this.props.fallbackSubHeaderText;
 		}
-	},
+	}
 
-	render: function() {
+	render() {
 		const { stepContent, headerButton } = this.props;
 		const classes = classNames( 'step-wrapper', {
-			'is-wide-layout': this.props.isWideLayout
+			'is-wide-layout': this.props.isWideLayout,
 		} );
 
 		return (
@@ -77,12 +85,12 @@ export default React.createClass( {
 				<StepHeader
 					headerText={ this.headerText() }
 					subHeaderText={ this.subHeaderText() }>
-					{ config.isEnabled( 'jetpack/connect' )
-						? ( headerButton )
-						: null }
+					{ ( headerButton ) }
 				</StepHeader>
+
 				<div className="step-wrapper__content is-animated-content">
 					{ stepContent }
+
 					<div className="step-wrapper__buttons">
 						{ this.renderBack() }
 						{ this.renderSkip() }
@@ -91,4 +99,6 @@ export default React.createClass( {
 			</div>
 		);
 	}
-} );
+}
+
+export default localize( StepWrapper );

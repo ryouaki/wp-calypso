@@ -1,96 +1,58 @@
-/**
- * External dependencies
+/** IMPORTANT NOTE BEFORE EDITING THIS FILE **
+ *
+ * We're in the process of moving the side-effecting logic (anything to do with connection)
+ * into Redux middleware. If you're implementing something new or changing something,
+ * please consider moving any related side-effects into middleware.js.
  */
-import isEmpty from 'lodash/isEmpty';
-import throttle from 'lodash/throttle';
 
 /**
  * Internal dependencies
  */
-import wpcom from 'lib/wp';
-import buildConnection from 'lib/happychat/connection';
 import {
+	HAPPYCHAT_BLUR,
+	HAPPYCHAT_CONNECT,
 	HAPPYCHAT_CONNECTING,
 	HAPPYCHAT_CONNECTED,
-	HAPPYCHAT_SET_MESSAGE,
+	HAPPYCHAT_DISCONNECTED,
+	HAPPYCHAT_INITIALIZE,
+	HAPPYCHAT_FOCUS,
 	HAPPYCHAT_RECEIVE_EVENT,
+	HAPPYCHAT_RECONNECTING,
+	HAPPYCHAT_SEND_BROWSER_INFO,
+	HAPPYCHAT_SEND_MESSAGE,
+	HAPPYCHAT_SET_AVAILABLE,
+	HAPPYCHAT_SET_CHAT_STATUS,
+	HAPPYCHAT_SET_MESSAGE,
+	HAPPYCHAT_TRANSCRIPT_RECEIVE,
+	HAPPYCHAT_TRANSCRIPT_REQUEST,
 } from 'state/action-types';
 
-const debug = require( 'debug' )( 'calypso:happychat:actions' );
-
-// Promise based interface for wpcom.request
-const request = ( ... args ) => new Promise( ( resolve, reject ) => {
-	wpcom.request( ... args, ( error, response ) => {
-		if ( error ) {
-			return reject( error );
-		}
-		resolve( response );
-	} );
+export const setHappychatChatStatus = status => ( {
+	type: HAPPYCHAT_SET_CHAT_STATUS, status
+} );
+export const requestChatTranscript = () => ( { type: HAPPYCHAT_TRANSCRIPT_REQUEST } );
+export const receiveChatTranscript = ( messages, timestamp ) => ( {
+	type: HAPPYCHAT_TRANSCRIPT_RECEIVE, messages, timestamp
 } );
 
-const sign = ( payload ) => request( {
-	method: 'POST',
-	path: '/jwt/sign',
-	body: { payload: JSON.stringify( payload ) }
-} );
+export const initialize = () => ( { type: HAPPYCHAT_INITIALIZE } );
 
-const startSession = () => request( {
-	method: 'POST',
-	path: '/happychat/session' }
-);
+export const blur = () => ( { type: HAPPYCHAT_BLUR } );
+export const focus = () => ( { type: HAPPYCHAT_FOCUS } );
 
-const connection = buildConnection();
+export const connectChat = () => ( { type: HAPPYCHAT_CONNECT } );
+export const setConnected = () => ( { type: HAPPYCHAT_CONNECTED } );
+export const setConnecting = () => ( { type: HAPPYCHAT_CONNECTING } );
+export const setDisconnected = errorStatus => ( { type: HAPPYCHAT_DISCONNECTED, errorStatus } );
+export const setReconnecting = () => ( { type: HAPPYCHAT_RECONNECTING } );
 
-const setChatConnecting = () => ( { type: HAPPYCHAT_CONNECTING } );
-const setChatConnected = () => ( { type: HAPPYCHAT_CONNECTED } );
-const setChatMessage = message => {
-	if ( isEmpty( message ) ) {
-		connection.notTyping();
-	}
-	return { type: HAPPYCHAT_SET_MESSAGE, message };
-};
+export const setHappychatAvailable = isAvailable => ( { type: HAPPYCHAT_SET_AVAILABLE, isAvailable } );
 
-const clearChatMessage = () => setChatMessage( '' );
+export const setChatMessage = message => ( { type: HAPPYCHAT_SET_MESSAGE, message } );
+export const clearChatMessage = () => setChatMessage( '' );
 
-const receiveChatEvent = event => ( { type: HAPPYCHAT_RECEIVE_EVENT, event } );
+export const receiveChatEvent = event => ( { type: HAPPYCHAT_RECEIVE_EVENT, event } );
 
-const sendTyping = throttle( message => {
-	connection.typing( message );
-}, 1000, { leading: true, trailing: false } );
+export const sendBrowserInfo = siteUrl => ( { type: HAPPYCHAT_SEND_BROWSER_INFO, siteUrl } );
 
-/**
- * Opens Happychat Socket.IO client connection.
- * @return {Thunk} Action thunk
- */
-export const connectChat = () => ( dispatch, getState ) => {
-	const { users, currentUser } = getState();
-	const { id: user_id } = currentUser;
-	const user = users.items[ user_id ];
-	dispatch( setChatConnecting() );
-	// create new session id and get signed identity data for authenticating
-	startSession()
-	.then( ( { session_id } ) => sign( { user, session_id } ) )
-	.then( ( { jwt } ) => connection.open( user_id, jwt ) )
-	.then(
-		() => {
-			dispatch( setChatConnected() );
-			connection.on( 'message', ( event ) => {
-				dispatch( receiveChatEvent( event ) );
-			} );
-		},
-		e => debug( 'failed to start happychat session', e, e.stack )
-	);
-};
-
-export const updateChatMessage = message => dispatch => {
-	dispatch( setChatMessage( message ) );
-	if ( ! isEmpty( message ) ) {
-		sendTyping( message );
-	}
-};
-
-export const sendChatMessage = message => dispatch => {
-	debug( 'sending message', message );
-	dispatch( clearChatMessage() );
-	connection.send( message );
-};
+export const sendChatMessage = message => ( { type: HAPPYCHAT_SEND_MESSAGE, message } );

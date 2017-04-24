@@ -1,23 +1,26 @@
 /**
  * External dependencies
  */
-var debug = require( 'debug' )( 'calypso:sites-list' ),
-	store = require( 'store' ),
-	assign = require( 'lodash/assign' ),
-	find = require( 'lodash/find' ),
-	isEmpty = require( 'lodash/isEmpty' ),
-	some = require( 'lodash/some' );
+import debugModule from 'debug';
+import store from 'store';
+import assign from 'lodash/assign';
+import find from 'lodash/find';
+import isEmpty from 'lodash/isEmpty';
+import some from 'lodash/some';
 
 /**
  * Internal dependencies
  */
-var wpcom = require( 'lib/wp' ),
-	Site = require( 'lib/site' ),
-	JetpackSite = require( 'lib/site/jetpack' ),
-	Searchable = require( 'lib/mixins/searchable' ),
-	Emitter = require( 'lib/mixins/emitter' ),
-	isPlan = require( 'lib/products-values' ).isPlan,
-	userUtils = require( 'lib/user/utils' );
+import wpcom from 'lib/wp';
+import Site from 'lib/site';
+import JetpackSite from 'lib/site/jetpack';
+import Searchable from 'lib/mixins/searchable';
+import Emitter from 'lib/mixins/emitter';
+import { isPlan } from 'lib/products-values';
+import userUtils from 'lib/user/utils';
+import { withoutHttp } from 'lib/url';
+
+const debug = debugModule( 'calypso:sites-list' );
 
 /**
  * SitesList component
@@ -33,7 +36,6 @@ function SitesList() {
 	this.fetched = false; // false until data comes from api
 	this.fetching = false;
 	this.selected = null;
-	this.lastSelected = null;
 	this.propagateChange = this.propagateChange.bind( this );
 }
 
@@ -68,7 +70,7 @@ SitesList.prototype.get = function() {
  * @api public
  */
 SitesList.prototype.fetch = function() {
-	if ( ! userUtils.isLoggedIn() || this.fetching ) {
+	if ( ! userUtils.isLoggedIn() || this.fetching || this.ignoreUpdates ) {
 		return;
 	}
 
@@ -76,7 +78,7 @@ SitesList.prototype.fetch = function() {
 
 	debug( 'getting SitesList from api' );
 
-	wpcom.me().sites( { site_visibility: 'all' }, function( error, data ) {
+	wpcom.me().sites( { site_visibility: 'all', include_domain_only: true }, function( error, data ) {
 		if ( error ) {
 			debug( 'error fetching SitesList from api', error );
 			this.fetching = false;
@@ -84,9 +86,23 @@ SitesList.prototype.fetch = function() {
 			return;
 		}
 
+		if ( this.ignoreUpdates ) {
+			this.fetching = false;
+			return;
+		}
+
 		this.sync( data );
 		this.fetching = false;
 	}.bind( this ) );
+};
+
+// FOR NUCLEAR AUTOMATED TRANSFER OPTION
+// See: https://github.com/Automattic/wp-calypso/pull/10986
+SitesList.prototype.pauseFetching = function() {
+	this.ignoreUpdates = true;
+};
+SitesList.prototype.resumeFetching = function() {
+	this.ignoreUpdates = false;
 };
 
 SitesList.prototype.sync = function( data ) {
@@ -154,7 +170,7 @@ SitesList.prototype.markCollisions = function( sites ) {
 
 		if ( ! site.jetpack ) {
 			hasCollision = some( collisions, function( someSite ) {
-				return ( someSite.jetpack && site.ID !== someSite.ID && site.URL === someSite.URL );
+				return ( someSite.jetpack && site.ID !== someSite.ID && withoutHttp( site.URL ) === withoutHttp( someSite.URL ) );
 			} );
 			if ( hasCollision ) {
 				site.hasConflict = true;
@@ -197,9 +213,39 @@ SitesList.prototype.update = function( sites ) {
 		var siteObj, result;
 
 		if ( sitesMap[ site.ID ] ) {
+			// Since updates are applied as a patch, ensure key is present for
+			// properties which can be intentionally omitted from site payload.
+			if ( ! site.hasOwnProperty( 'icon' ) ) {
+				site.icon = undefined;
+			}
+
 			// Update existing Site object
 			siteObj = sitesMap[ site.ID ];
-			result = siteObj.set( site );
+
+			//Assign old URL because new url is broken because the site response caches domains
+			//and we have trouble getting over it.
+			if ( site.options.is_automated_transfer && site.URL.match( '.wordpress.com' ) ) {
+				return siteObj;
+			}
+
+			// When we set a new front page, we clear out SitesList. On accounts with a large
+			// number of sites, the resulting fetch can take time resulting in incorrect data
+			// being displayed. This uses the correct siteObj as the source of truth in case
+			// of a mismatch. See #13143.
+			if ( siteObj.options.page_on_front !== site.options.page_on_front ) {
+				return siteObj;
+			}
+
+			if ( site.options.is_automated_transfer && ! siteObj.jetpack && site.jetpack ) {
+				//We have a site that was not jetpack and now is.
+				siteObj.off( 'change', this.propagateChange );
+				siteObj = this.createSiteObject( site );
+				siteObj.on( 'change', this.propagateChange );
+				changed = true;
+			} else {
+				result = siteObj.set( site );
+			}
+
 			if ( result ) {
 				changed = true;
 			}
@@ -328,30 +374,6 @@ SitesList.prototype.getSelectedOrAll = function() {
  */
 SitesList.prototype.getSelectedSite = function() {
 	return this.getSite( this.selected );
-};
-
-/**
- * Return the last selected site or false
- *
- * @api public
- */
-SitesList.prototype.getLastSelectedSite = function() {
-	return this.getSite( this.lastSelected );
-};
-
-/**
- * Resets the selected site
- *
- * @api public
- */
-SitesList.prototype.resetSelectedSite = function() {
-	if ( ! this.selected ) {
-		return;
-	}
-
-	this.lastSelected = this.selected;
-	this.selected = null;
-	this.emit( 'change' );
 };
 
 /**
@@ -492,12 +514,6 @@ SitesList.prototype.hasSiteWithPlugins = function() {
 	return ! isEmpty( this.getSelectedOrAllWithPlugins() );
 };
 
-SitesList.prototype.fetchAvailableUpdates = function() {
-	this.getJetpack().forEach( function( site ) {
-		site.fetchAvailableUpdates();
-	}, this );
-};
-
 SitesList.prototype.removeSite = function( site ) {
 	var sites, changed;
 	if ( this.isSelected( site ) ) {
@@ -567,15 +583,11 @@ SitesList.prototype.onUpdatedPlugin = function( site ) {
 	}
 	site = this.getSite( site.slug );
 
-	if ( site.update && site.update.plugins ) {
-		let siteUpdateInfo = assign( {}, site.update );
+	if ( site.updates && site.updates.plugins ) {
+		let siteUpdateInfo = assign( {}, site.updates );
 		siteUpdateInfo.plugins--;
 		siteUpdateInfo.total--;
-		site.set( { update: siteUpdateInfo } );
-
-		if ( site.update.plugins <= 0 ) {
-			site.fetchAvailableUpdates();
-		}
+		site.set( { updates: siteUpdateInfo } );
 	}
 };
 

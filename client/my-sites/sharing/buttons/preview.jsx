@@ -19,7 +19,7 @@ module.exports = React.createClass( {
 	displayName: 'SharingButtonsPreview',
 
 	propTypes: {
-		site: React.PropTypes.object.isRequired,
+		isPrivateSite: React.PropTypes.bool,
 		style: React.PropTypes.oneOf( [ 'icon-text', 'icon', 'text', 'official' ] ),
 		label: React.PropTypes.string,
 		buttons: React.PropTypes.array,
@@ -86,13 +86,11 @@ module.exports = React.createClass( {
 			} else {
 				return this.translate( 'Add sharing buttons', { context: 'Sharing: Buttons edit label' } );
 			}
-		} else {
-			if ( enabledButtonsExist ) {
-				return this.translate( 'Edit “More” buttons', { context: 'Sharing: Buttons edit label' } );
-			} else {
-				return this.translate( 'Add “More” button', { context: 'Sharing: Buttons edit label' } );
-			}
+		} else if ( enabledButtonsExist ) {
+			return this.translate( 'Edit “More” buttons', { context: 'Sharing: Buttons edit label' } );
 		}
+
+		return this.translate( 'Add “More” button', { context: 'Sharing: Buttons edit label' } );
 	},
 
 	getButtonsTrayToggleButtonElement: function( visibility ) {
@@ -105,7 +103,7 @@ module.exports = React.createClass( {
 			<ButtonsPreviewAction
 				active={ null === this.state.buttonsTrayVisibility }
 				onClick={ this.showButtonsTray.bind( null, visibility ) }
-				icon={ enabledButtonsExist ? 'edit' : 'plus' }
+				icon={ enabledButtonsExist ? 'pencil' : 'plus' }
 				position="bottom-left">
 					{ this.getButtonsTrayToggleButtonLabel( visibility, enabledButtonsExist ) }
 			</ButtonsPreviewAction>
@@ -156,7 +154,7 @@ module.exports = React.createClass( {
 	render: function() {
 		return (
 			<div className="sharing-buttons-preview">
-				<ButtonsPreviewAction active={ ! this.state.isEditingLabel } onClick={ this.toggleEditLabel } icon="edit" position="top-left">
+				<ButtonsPreviewAction active={ ! this.state.isEditingLabel } onClick={ this.toggleEditLabel } icon="pencil" position="top-left">
 					{ this.translate( 'Edit label text', { context: 'Sharing: Buttons edit label' } ) }
 				</ButtonsPreviewAction>
 				<ButtonsLabelEditor
@@ -191,7 +189,7 @@ module.exports = React.createClass( {
 					onButtonsChange={ this.props.onButtonsChange }
 					onClose={ this.hideButtonsTray }
 					active={ null !== this.state.buttonsTrayVisibility }
-					limited={ this.props.site.is_private } />
+					limited={ this.props.isPrivateSite } />
 			</div>
 		);
 	}

@@ -1,154 +1,81 @@
-var React = require( 'react' ),
-	url = require( 'url' );
+/**
+ * External dependencies
+ */
+import React from 'react';
+import { localize } from 'i18n-calypso';
+import { connect } from 'react-redux';
 
-var EmptyContent = require( './empty' ),
-	DocumentHead = require( 'components/data/document-head' ),
-	Stream = require( 'reader/stream' ),
-	FeedHeader = require( 'reader/feed-header' ),
-	FeedStore = require( 'lib/feed-store' ),
-	FeedStoreActions = require( 'lib/feed-store/actions' ),
-	FeedStoreState = require( 'lib/feed-store/constants' ).state,
-	FeedError = require( 'reader/feed-error' ),
-	HeaderBack = require( 'reader/header-back' ),
-	SiteStore = require( 'lib/reader-site-store' ),
-	SiteState = require( 'lib/reader-site-store/constants' ).state;
+/**
+ * Internal dependencies
+ */
+import EmptyContent from './empty';
+import DocumentHead from 'components/data/document-head';
+import Stream from 'reader/stream';
+import FeedError from 'reader/feed-error';
+import RefreshFeedHeader from 'blocks/reader-feed-header';
+import QueryReaderSite from 'components/data/query-reader-site';
+import QueryReaderFeed from 'components/data/query-reader-feed';
+import { getSite } from 'state/reader/sites/selectors';
+import { getFeed } from 'state/reader/feeds/selectors';
+import { getSiteName } from 'reader/get-helpers';
 
-var FeedStream = React.createClass( {
+// If the blog_ID of a reader feed is 0, that means no site exists for it.
+const getReaderSiteId = feed => feed && feed.blog_ID === 0
+		? null
+		: feed && feed.blog_ID;
 
-	getDefaultProps: function() {
-		return { showBack: true };
-	},
+class FeedStream extends React.Component {
 
-	getInitialState: function() {
-		var feed = this.getFeed(),
-			site = this.getSite( feed ),
-			title = this.getTitle( feed, site );
+	static propTypes = {
+		feedId: React.PropTypes.number.isRequired,
+		className: React.PropTypes.string,
+		showBack: React.PropTypes.bool
+	};
 
-		return {
-			title,
-			feed,
-			site
-		};
-	},
+	static defaultProps = {
+		showBack: true,
+		className: 'is-site-stream',
+	};
 
-	componentDidMount: function() {
-		FeedStore.on( 'change', this.updateState );
-		SiteStore.on( 'change', this.updateState );
-	},
+	render() {
+		const { feed, site, siteId } = this.props;
+		const emptyContent = ( <EmptyContent /> );
+		const title = (
+			getSiteName( { feed, site } ) || this.props.translate( 'Loading Feed' )
+		);
 
-	componentWillUnmount: function() {
-		FeedStore.off( 'change', this.updateState );
-		SiteStore.off( 'change', this.updateState );
-	},
-
-	componentWillReceiveProps: function( nextProps ) {
-		if ( nextProps.feedId !== this.props.feedId ) {
-			this.updateState();
-		}
-	},
-
-	getTitle: function( feed, site ) {
-		var title;
-
-		if ( ! feed && ! site ) {
-			return this.translate( 'Loading Feed' );
-		}
-
-		if ( feed.state === FeedStoreState.ERROR ) {
-			title = this.translate( 'Error fetching feed' );
-		} else if ( feed.state === FeedStoreState.COMPLETE ) {
-			title = feed.name;
-		}
-
-		if ( ! title && site ) {
-			title = site.get( 'name' );
-		}
-
-		if ( ! title && feed ) {
-			title = feed.URL || feed.feed_URL;
-			if ( title ) {
-				title = url.parse( title ).hostname;
-			}
-		}
-
-		if ( ! title && site ) {
-			title = site.get( 'URL' );
-			if ( title ) {
-				title = url.parse( title ).hostname;
-			}
-		}
-
-		if ( ! title ) {
-			title = this.translate( 'Loading Feed' );
-		}
-
-		return title;
-	},
-
-	getFeed: function() {
-		var feed = FeedStore.get( this.props.feedId );
-
-		if ( ! feed ) {
-			FeedStoreActions.fetch( this.props.feedId );
-		}
-
-		return feed;
-	},
-
-	getSite: function() {
-		var feed = FeedStore.get( this.props.feedId ),
-			site;
-		if ( feed && feed.blog_ID ) {
-			// this comes in via a meta request, so don't bother querying it
-			site = SiteStore.get( feed.blog_ID );
-			if ( site && site.get( 'state' ) !== SiteState.COMPLETE ) {
-				site = null; // don't accept an incomplete or error site
-			}
-		}
-
-		return site;
-	},
-
-	updateState: function() {
-		var feed = this.getFeed(),
-			site = this.getSite(),
-			title = this.getTitle( feed, site ),
-			newState = {};
-
-		if ( feed !== this.state.feed ) {
-			newState.feed = feed;
-		}
-
-		if ( title !== this.state.title ) {
-			newState.title = title;
-		}
-
-		if ( site && site !== this.state.site ) {
-			newState.site = site;
-		}
-
-		if ( Object.keys( newState ).length > 0 ) {
-			this.setState( newState );
-		}
-	},
-
-	render: function() {
-		var feed = FeedStore.get( this.props.feedId ),
-			emptyContent = ( <EmptyContent /> );
-
-		if ( feed && feed.state === FeedStoreState.ERROR ) {
-			return <FeedError sidebarTitle={ this.state.title } />;
+		if ( feed && feed.is_error ) {
+			return <FeedError sidebarTitle={ title } />;
 		}
 
 		return (
-			<Stream { ...this.props } listName={ this.state.title } emptyContent={ emptyContent } showPostHeader={ false }>
-				<DocumentHead title={ this.translate( '%s ‹ Reader', { args: this.state.title } ) } />
-				{ this.props.showBack && <HeaderBack /> }
-				<FeedHeader feed={ feed } site={ this.state.site } />
+			<Stream
+				{ ...this.props }
+				listName={ title }
+				emptyContent={ emptyContent }
+				showPostHeader={ false }
+				showSiteNameOnCards={ false }
+				shouldCombineCards={ false }
+			>
+				<DocumentHead title={ this.props.translate( '%s ‹ Reader', { args: title } ) } />
+				<RefreshFeedHeader feed={ feed } site={ site } showBack={ this.props.showBack } />
+				{ ! feed && <QueryReaderFeed feedId={ this.props.feedId } /> }
+				{ siteId && <QueryReaderSite siteId={ siteId } /> }
 			</Stream>
 		);
 	}
+}
 
-} );
+export default connect(
+	( state, ownProps ) => {
+		const feed = getFeed( state, ownProps.feedId );
+		const siteId = getReaderSiteId( feed );
 
-module.exports = FeedStream;
+		return {
+			feed,
+			siteId,
+			site: siteId && getSite( state, siteId ),
+		};
+	}
+)( localize( FeedStream ) );
+

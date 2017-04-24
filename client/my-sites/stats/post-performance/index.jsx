@@ -1,14 +1,15 @@
 /**
  * External dependencies
  */
-import React, { PropTypes } from 'react';
+import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import { localize } from 'i18n-calypso';
+import { flowRight } from 'lodash';
 
 /**
  * Internal dependencies
  */
-import analytics from 'lib/analytics';
 import Button from 'components/button';
 import Card from 'components/card';
 import StatsTabs from '../stats-tabs';
@@ -23,74 +24,72 @@ import {
 	getSitePostsForQuery
 } from 'state/posts/selectors';
 import { getPostStat } from 'state/stats/posts/selectors';
+import { recordTracksEvent } from 'state/analytics/actions';
+import { getSelectedSiteId, getSelectedSiteSlug } from 'state/ui/selectors';
 
-const StatsPostPerformance = React.createClass( {
-
-	displayName: 'StatsPostPerformance',
-
-	propTypes: {
+class StatsPostPerformance extends Component {
+	static propTypes = {
 		viewCount: PropTypes.number,
-		site: PropTypes.oneOfType( [
-			PropTypes.bool,
-			PropTypes.object
-		] ),
-		siteID: PropTypes.number,
+		siteId: PropTypes.number,
 		query: PropTypes.object,
 		post: PropTypes.object,
-		isRequesting: PropTypes.bool
-	},
+		isRequesting: PropTypes.bool,
+		translate: PropTypes.func,
+	};
 
-	buildTabs( summaryUrl ) {
-		const { viewCount, post, loading } = this.props;
+	buildTabs() {
+		const { viewCount, post, loading, translate } = this.props;
 		const tabClassName = 'is-post-summary';
 
 		const tabs = [
 			{
-				label: this.translate( 'Views' ),
+				label: translate( 'Views' ),
 				gridicon: 'visible',
 				value: viewCount,
-				href: summaryUrl,
 				className: tabClassName,
-				loading: loading
+				loading: loading,
+				compact: true,
 			},
 			{
-				label: this.translate( 'Likes' ),
+				label: translate( 'Likes' ),
 				gridicon: 'star',
 				value: post ? post.like_count : null,
 				className: tabClassName,
-				loading: loading
+				loading: loading,
+				compact: true,
 			},
 			{
-				label: this.translate( 'Comments' ),
+				label: translate( 'Comments' ),
 				gridicon: 'comment',
 				value: post ? post.discussion.comment_count : null,
 				className: tabClassName,
-				loading: loading
+				loading: loading,
+				compact: true,
 			}
 		];
 
 		return tabs.map( function( tabOptions ) {
 			return <StatsTab { ...tabOptions } key={ tabOptions.gridicon } />;
 		} );
-	},
+	}
 
-	recordClickOnNewPostButton() {
-		analytics.tracks.recordEvent( 'calypso_stats_new_post_click' );
-	},
+	recordClickOnNewPostButton = () => {
+		this.props.recordTracksEvent( 'calypso_stats_new_post_click' );
+	};
 
 	render() {
-		const { site, query, post, isRequesting } = this.props;
-		const loading = ! site || isRequesting;
-		const postTime = post ? this.moment( post.date ) : this.moment();
+		const { query, post, isRequesting, translate, moment, slug, siteId } = this.props;
+		const loading = ! siteId || isRequesting;
+		const postTime = post ? moment( post.date ) : moment();
 		const cardClass = classNames( 'stats-module', 'stats-post-performance', 'is-site-overview' );
 
-		const newPostUrl = site ? '/post/' + site.slug : '/post';
-		const summaryUrl = post ? '/stats/post/' + post.ID + '/' + this.props.site.slug : undefined;
+		const newPostUrl = slug ? '/post/' + slug : '/post';
+		const summaryUrl = slug && post ? '/stats/post/' + post.ID + '/' + slug : undefined;
 		let postTitle;
 
 		if ( post ) {
 			if ( ! post.title ) {
-				postTitle = this.translate( '(no title)' );
+				postTitle = translate( '(no title)' );
 			} else {
 				postTitle = post.title;
 			}
@@ -98,16 +97,16 @@ const StatsPostPerformance = React.createClass( {
 
 		return (
 			<div>
-				{ site ? <QueryPosts siteId={ site.ID } query={ query } /> : null }
-				{ site && post ? <QueryPostStats siteId= { site.ID } postId={ post.ID } stat="views" /> : null }
-				<SectionHeader label={ this.translate( 'Latest Post Summary' ) } href={ summaryUrl } />
+				{ siteId && <QueryPosts siteId={ siteId } query={ query } /> }
+				{ siteId && post && <QueryPostStats siteId= { siteId } postId={ post.ID } fields={ [ 'views' ] } /> }
+				<SectionHeader label={ translate( 'Latest Post Summary' ) } href={ summaryUrl } />
 				<Card className={ cardClass }>
 					<StatsModulePlaceholder isLoading={ loading && ! post } />
 					{ post
 						? (
 							<div className="module-content-text">
 								<p>
-									{ this.translate(
+									{ translate(
 										'It\'s been %(timeLapsed)s since {{href}}{{postTitle/}}{{/href}} was published. Here\'s how the post has performed so far\u2026',
 										{
 											args: {
@@ -128,11 +127,11 @@ const StatsPostPerformance = React.createClass( {
 						? (
 							<div className="module-content-text is-empty-message is-error">
 								<p className="stats-post-performance__no-posts-message">
-									{ this.translate( 'You haven\'t published any posts yet.' ) }
+									{ translate( 'You haven\'t published any posts yet.' ) }
 								</p>
 								<div className="stats-post-performance__start-post">
 									<Button primary href={ newPostUrl } onClick={ this.recordClickOnNewPostButton }>
-										{ this.translate( 'Start a Post' ) }
+										{ translate( 'Start a Post' ) }
 									</Button>
 								</div>
 							</div>
@@ -140,8 +139,8 @@ const StatsPostPerformance = React.createClass( {
 					}
 					{ post
 						? (
-							<StatsTabs>
-								{ this.buildTabs( summaryUrl ) }
+							<StatsTabs compact>
+								{ this.buildTabs() }
 							</StatsTabs>
 						)
 						: null
@@ -150,20 +149,27 @@ const StatsPostPerformance = React.createClass( {
 			</div>
 		);
 	}
-} );
+}
 
-export default connect( ( state, ownProps ) => {
-	const { site } = ownProps;
+const connectComponent = connect( ( state ) => {
+	const siteId = getSelectedSiteId( state );
 	const query = { status: 'publish', number: 1 };
-	const posts = site ? getSitePostsForQuery( state, site.ID, query ) : null;
+	const posts = siteId ? getSitePostsForQuery( state, siteId, query ) : null;
 	const post = posts && posts.length ? posts[ 0 ] : null;
-	const viewCount = post && site ? getPostStat( state, 'views', site.ID, post.ID ) : null;
-	const isRequesting = isRequestingSitePostsForQuery( state, site.ID, query );
+	const viewCount = post && siteId ? getPostStat( state, siteId, post.ID, 'views' ) : null;
+	const isRequesting = isRequestingSitePostsForQuery( state, siteId, query );
 
 	return {
-		viewCount,
-		query,
+		slug: getSelectedSiteSlug( state ),
+		isRequesting,
 		post,
-		isRequesting
+		query,
+		siteId,
+		viewCount,
 	};
-} )( StatsPostPerformance );
+}, { recordTracksEvent } );
+
+export default flowRight(
+	connectComponent,
+	localize,
+)( StatsPostPerformance );

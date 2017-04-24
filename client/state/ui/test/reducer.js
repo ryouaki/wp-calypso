@@ -25,11 +25,15 @@ describe( 'reducer', () => {
 			'selectedSiteId',
 			'guidedTour',
 			'editor',
+			'dropZone',
 			'reader',
 			'olark',
 			'preview',
 			'actionLog',
-			'happychat'
+			'happychat',
+			'mediaModal',
+			'themeSetup',
+			'npsSurveyNotice',
 		] );
 	} );
 

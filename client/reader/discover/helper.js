@@ -13,6 +13,21 @@ const debug = Debug( 'calypso:reader:discover' ); // eslint-disable-line
 import userUtils from 'lib/user/utils';
 import { getSiteUrl as readerRouteGetSiteUrl } from 'reader/route';
 
+function hasDiscoverSlug( post, searchSlug ) {
+	const metaData = get( post, 'discover_metadata.discover_fp_post_formats' );
+	return !! ( metaData && find( metaData, { slug: searchSlug } ) );
+}
+
+export const discoverBlogId = config( 'discover_blog_id' );
+
+export function isDiscoverBlog( blogId ) {
+	return +blogId === config( 'discover_blog_id' );
+}
+
+export function isDiscoverFeed( feedId ) {
+	return +feedId === config( 'discover_feed_id' );
+}
+
 export function isDiscoverEnabled() {
 	return userUtils.getLocaleSlug() === 'en';
 }
@@ -22,8 +37,7 @@ export function isDiscoverPost( post ) {
 }
 
 export function isDiscoverSitePick( post ) {
-	const metaData = get( post, 'discover_metadata.discover_fp_post_formats' );
-	return !! ( metaData && find( metaData, { slug: 'site-pick' } ) );
+	return hasDiscoverSlug( post, 'site-pick' );
 }
 
 export function isInternalDiscoverPost( post ) {
@@ -36,20 +50,23 @@ export function getSiteUrl( post ) {
 	return blogId ? readerRouteGetSiteUrl( blogId ) : get( post, 'discover_metadata.permalink' );
 }
 
+export function getDiscoverBlogName( post ) {
+	return get( post, 'discover_metadata.attribution.blog_name' );
+}
 export function hasSource( post ) {
-	return this.isDiscoverPost( post ) && ! this.isDiscoverSitePick( post );
+	return isDiscoverPost( post ) && ! isDiscoverSitePick( post );
 }
 
 export function getSourceData( post ) {
 	const sourceData = get( post, 'discover_metadata.featured_post_wpcom_data' );
 
-	if ( sourceData && ! this.isDiscoverSitePick( post ) ) {
+	if ( sourceData ) {
 		return {
 			blogId: get( sourceData, 'blog_id' ),
 			postId: get( sourceData, 'post_id' )
 		};
 	}
-	return null;
+	return {};
 }
 
 export function getLinkProps( linkUrl ) {
@@ -70,8 +87,12 @@ export function getSourceFollowUrl( post ) {
 		return;
 	}
 
-	if ( isInternalDiscoverPost( post ) ) {
-		followUrl = get( post, 'discover_metadata.attribution.blog_url' );
+	followUrl = get( post, 'discover_metadata.attribution.blog_url' );
+
+	// If it's a site pick, try the permalink
+	if ( ! followUrl && isDiscoverSitePick( post ) ) {
+		followUrl = get( post, 'discover_metadata.permalink' );
 	}
+
 	return followUrl || '';
 }

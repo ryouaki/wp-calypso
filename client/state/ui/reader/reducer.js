@@ -7,9 +7,9 @@ import { combineReducers } from 'redux';
  * Internal dependencies
  */
 import sidebar from './sidebar/reducer';
-import fullpost from './fullpost/reducer';
+import cardExpansions from './card-expansions/reducer';
 
 export default combineReducers( {
 	sidebar,
-	fullpost
+	cardExpansions,
 } );

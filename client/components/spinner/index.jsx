@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -12,10 +10,8 @@ import classNames from 'classnames';
 
 /**
  * Defines whether the current browser supports CSS animations for SVG
- * elements. Specifically, this returns false for Internet Explorer versions
- * 11 and below.
+ * elements. Specifically, this returns false for Internet Explorer and Edge.
  *
- * @see http://dev.modern.ie/platform/status/csstransitionsanimationsforsvgelements/
  * @type {Boolean} True if the browser supports CSS animations for SVG
  *                 elements, or false otherwise.
  */
@@ -24,7 +20,7 @@ const isSVGCSSAnimationSupported = ( () => {
 		return false;
 	}
 
-	return ! /(MSIE |Trident\/)/.test( global.window.navigator.userAgent );
+	return ! /(MSIE |Trident\/|Edge\/)/.test( global.window.navigator.userAgent );
 } )();
 
 export default class Spinner extends PureComponent {
@@ -41,15 +37,36 @@ export default class Spinner extends PureComponent {
 		duration: 3000
 	};
 
+	constructor() {
+		super();
+		this.state = {
+			// We won't always have access to user-agent in server-side context, so
+			// initialize the spinner with fallback animations and check for support
+			// in componentDidMount()
+			isSVGCSSAnimationSupported: false
+		};
+	}
+
 	componentWillMount() {
 		this.setState( {
 			instanceId: ++Spinner.instances
 		} );
 	}
 
+	componentDidMount() {
+		if ( isSVGCSSAnimationSupported ) {
+			// Turning off eslint rule on this line as an exception — we want to trigger
+			// a re-render if we're progressively enhancing with SVG animations.
+			// eslint-disable-next-line react/no-did-mount-set-state
+			this.setState( {
+				isSVGCSSAnimationSupported: isSVGCSSAnimationSupported
+			} );
+		}
+	}
+
 	getClassName() {
 		return classNames( 'spinner', this.props.className, {
-			'is-fallback': ! isSVGCSSAnimationSupported
+			'is-fallback': ! this.state.isSVGCSSAnimationSupported
 		} );
 	}
 
@@ -68,7 +85,7 @@ export default class Spinner extends PureComponent {
 	}
 
 	render() {
-		if ( ! isSVGCSSAnimationSupported ) {
+		if ( ! this.state.isSVGCSSAnimationSupported ) {
 			return this.renderFallback();
 		}
 

@@ -4,8 +4,10 @@
 import React, { Component, PropTypes } from 'react';
 import classNames from 'classnames';
 import { noop } from 'lodash';
-import debugFactory from 'debug';
 import { localize } from 'i18n-calypso';
+import url from 'url';
+import Gridicon from 'gridicons';
+import { get } from 'lodash';
 
 /**
  * Internal dependencies
@@ -17,12 +19,45 @@ import EditorMediaModalDetailPreviewVideo from './detail-preview-video';
 import EditorMediaModalDetailPreviewAudio from './detail-preview-audio';
 import EditorMediaModalDetailPreviewDocument from './detail-preview-document';
 import Button from 'components/button';
-import Gridicon from 'components/gridicon';
-import { userCan, isJetpack } from 'lib/site/utils';
+import { userCan } from 'lib/site/utils';
+import versionCompare from 'lib/version-compare';
 import MediaUtils, { isItemBeingUploaded } from 'lib/media/utils';
 import config from 'config';
 
-const debug = debugFactory( 'calypso:post-editor:media:detail-item' );
+/**
+ * This function return true if the image editor can be
+ * enabled/shown
+ *
+ * @param  {object} item - media item
+ * @param  {object} site - current site
+ * @return {boolean} `true` is the image-editor can be enabled.
+ */
+const enableImageEditing = ( item, site ) => {
+	// do not allow if, for some reason, there isn't a valid item yet
+	if ( ! item ) {
+		return false;
+	}
+
+	// do not show if the feature flag isn't set
+	if ( ! config.isEnabled( 'post-editor/image-editor' ) ) {
+		return false;
+	}
+
+	// do not allow for private sites
+	if ( get( site, 'is_private' ) ) {
+		return false;
+	}
+
+	// do not allow for Jetpack site with a non-valid version
+	if (
+		get( site, 'jetpack', false ) &&
+		versionCompare( get( site, 'options.jetpack_version', '0.0' ), '4.7-alpha', '<' )
+	) {
+		return false;
+	}
+
+	return true;
+};
 
 class EditorMediaModalDetailItem extends Component {
 	static propTypes = {
@@ -32,7 +67,8 @@ class EditorMediaModalDetailItem extends Component {
 		hasNextItem: PropTypes.bool,
 		onShowPreviousItem: PropTypes.func,
 		onShowNextItem: PropTypes.func,
-		onEdit: PropTypes.func
+		onEdit: PropTypes.func,
+		onRestore: PropTypes.func,
 	};
 
 	static defaultProps = {
@@ -40,10 +76,11 @@ class EditorMediaModalDetailItem extends Component {
 		hasNextItem: false,
 		onShowPreviousItem: noop,
 		onShowNextItem: noop,
-		onEdit: noop
+		onEdit: noop,
+		onRestore: noop,
 	};
 
-	renderEditButton( className ) {
+	renderEditButton() {
 		const {
 			item,
 			onEdit,
@@ -51,19 +88,7 @@ class EditorMediaModalDetailItem extends Component {
 			translate
 		} = this.props;
 
-		// Do not render edit button for private sites
-		if ( site.is_private ) {
-			debug( 'Do not show `Edit button` for private sites' );
-
-			return null;
-		}
-
-		if (
-			! config.isEnabled( 'post-editor/image-editor' ) ||
-			! userCan( 'upload_files', site ) ||
-			isJetpack( site ) ||
-			! item
-		) {
+		if ( ! userCan( 'upload_files', site ) ) {
 			return null;
 		}
 
@@ -75,12 +100,64 @@ class EditorMediaModalDetailItem extends Component {
 
 		return (
 			<Button
-				className={ classNames( 'editor-media-modal-detail__edit', className ) }
+				className="editor-media-modal-detail__edit"
 				onClick={ onEdit }
 				disabled={ isItemBeingUploaded( item ) }
 			>
 				<Gridicon icon="pencil" size={ 36 } /> { translate( 'Edit Image' ) }
 			</Button>
+		);
+	}
+
+	handleOnRestoreClick = () => {
+		const { site, item, onRestore } = this.props;
+		onRestore( site && site.ID, item );
+	};
+
+	renderRestoreButton() {
+		const {
+			item,
+			translate
+		} = this.props;
+
+		//do a simple guid vs url check
+		const guidParts = url.parse( item.guid );
+		const URLParts = url.parse( item.URL );
+
+		if ( guidParts.pathname === URLParts.pathname ) {
+			return false;
+		}
+
+		return (
+			<Button
+				className={ classNames(
+					'editor-media-modal-detail__restore',
+				) }
+				onClick={ this.handleOnRestoreClick }
+				disabled={ isItemBeingUploaded( item ) }
+			>
+				<Gridicon
+					icon="refresh"
+					size={ 36 } />
+					{ translate( 'Restore Original' ) }
+			</Button>
+		);
+	}
+
+	renderImageEditorButtons( item, classname = 'is-desktop' ) {
+		const { site } = this.props;
+
+		if ( ! enableImageEditing( item, site ) ) {
+			return null;
+		}
+
+		const classes = classNames( 'editor-media-modal-detail__edition-bar', classname );
+
+		return (
+			<div className={ classes }>
+				{ this.renderRestoreButton( classname ) }
+				{ this.renderEditButton() }
+			</div>
 		);
 	}
 
@@ -166,6 +243,7 @@ class EditorMediaModalDetailItem extends Component {
 		}
 
 		return React.createElement( Item, {
+			className: 'editor-media-modal-detail__preview',
 			site: site,
 			item: item
 		} );
@@ -181,18 +259,21 @@ class EditorMediaModalDetailItem extends Component {
 		return (
 			<figure className={ classes }>
 				<div className="editor-media-modal-detail__content editor-media-modal__content">
+
 					<div className="editor-media-modal-detail__preview-wrapper">
 						{ this.renderItem() }
-						{ this.renderEditButton( 'is-desktop' ) }
+						{ this.renderImageEditorButtons( item ) }
 						{ this.renderPreviousItemButton() }
 						{ this.renderNextItemButton() }
 					</div>
+
 					<div className="editor-media-modal-detail__sidebar">
-						{ this.renderEditButton( 'is-mobile' ) }
+						{ this.renderImageEditorButtons( item, 'is-mobile' ) }
 						{ this.renderFields() }
 						<EditorMediaModalDetailFileInfo
 							item={ item } />
 					</div>
+
 				</div>
 			</figure>
 		);

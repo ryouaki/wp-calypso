@@ -12,22 +12,24 @@ import EmptyComponent from 'test/helpers/react/empty-component';
 describe( 'MySitesSidebar', () => {
 	let MySitesSidebar;
 	useMockery( ( mockery ) => {
+		mockery.registerMock( 'lib/abtest', {
+			abtest: () => ''
+		} );
 		mockery.registerMock( 'page', function() {} );
 		mockery.registerMock( 'lib/analytics', {} );
 		mockery.registerMock( 'lib/products-values', {} );
 		mockery.registerMock( 'my-sites/current-site', EmptyComponent );
 		mockery.registerMock( './publish-menu', EmptyComponent );
 		mockery.registerMock( 'layout/sidebar', EmptyComponent );
-		mockery.registerMock( 'post-editor/drafts-button', EmptyComponent );
 		mockery.registerMock( 'components/tooltip', EmptyComponent );
-		mockery.registerMock( 'components/site-stats-sticky-link', EmptyComponent );
 
 		MySitesSidebar = require( '../sidebar' ).MySitesSidebar;
 	} );
 
 	describe( '#isItemLinkSelected()', () => {
 		it( 'should return false if none of the paths are a prefix', () => {
-			const isSelected = MySitesSidebar.prototype.isItemLinkSelected.call( {
+			const instance = new MySitesSidebar();
+			const isSelected = instance.isItemLinkSelected.call( {
 				props: {
 					path: '/posts/example.wordpress.com'
 				}
@@ -37,7 +39,8 @@ describe( 'MySitesSidebar', () => {
 		} );
 
 		it( 'should return false if one of the paths is a prefix, but not at end or separated by slash', () => {
-			const isSelected = MySitesSidebar.prototype.isItemLinkSelected.call( {
+			const instance = new MySitesSidebar();
+			const isSelected = instance.isItemLinkSelected.call( {
 				props: {
 					path: '/types/jetpack-testimonial-jk'
 				}
@@ -47,7 +50,8 @@ describe( 'MySitesSidebar', () => {
 		} );
 
 		it( 'should return true if one of the paths is a prefix of the current path and separated by slash', () => {
-			const isSelected = MySitesSidebar.prototype.isItemLinkSelected.call( {
+			const instance = new MySitesSidebar();
+			const isSelected = instance.isItemLinkSelected.call( {
 				props: {
 					path: '/types/jetpack-testimonial/example.wordpress.com'
 				}
@@ -57,7 +61,8 @@ describe( 'MySitesSidebar', () => {
 		} );
 
 		it( 'should return true if one of the paths is a prefix of the current path and at end', () => {
-			const isSelected = MySitesSidebar.prototype.isItemLinkSelected.call( {
+			const instance = new MySitesSidebar();
+			const isSelected = instance.isItemLinkSelected.call( {
 				props: {
 					path: '/types/jetpack-testimonial'
 				}
@@ -67,7 +72,8 @@ describe( 'MySitesSidebar', () => {
 		} );
 
 		it( 'should accept a path string', () => {
-			const isSelected = MySitesSidebar.prototype.isItemLinkSelected.call( {
+			const instance = new MySitesSidebar();
+			const isSelected = instance.isItemLinkSelected.call( {
 				props: {
 					path: '/types/jetpack-testimonial'
 				}

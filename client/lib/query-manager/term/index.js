@@ -43,16 +43,16 @@ export default class TermQueryManager extends PaginatedQueryManager {
 	 * @return {Number}       0 if equal, less than 0 if termA is first,
 	 *                        greater than 0 if termB is first.
 	 */
-	sort( query, termA, termB ) {
+	compare( query, termA, termB ) {
 		let order;
 
 		switch ( query.order_by ) {
-			case 'name':
-				order = termA.name.localeCompare( termB.name );
-				break;
-
 			case 'count':
 				order = termA.post_count - termB.post_count;
+				break;
+			case 'name':
+			default:
+				order = termA.name.localeCompare( termB.name );
 				break;
 		}
 

@@ -4,8 +4,7 @@
 import url from 'url';
 import path from 'path';
 import photon from 'photon';
-import includes from 'lodash/includes';
-import omitBy from 'lodash/omitBy';
+import { includes, omitBy, startsWith, uniqueId } from 'lodash';
 import { isUri } from 'valid-url';
 
 /**
@@ -21,6 +20,7 @@ import {
 	GalleryDefaultAttrs
 } from './constants';
 import Shortcode from 'lib/shortcode';
+import versionCompare from 'lib/version-compare';
 
 /**
  * Module variables
@@ -141,7 +141,7 @@ const MediaUtils = {
 		mimePrefixMatch = mimeType.match( /^([^\/]+)\// );
 
 		if ( mimePrefixMatch ) {
-			return mimePrefixMatch[1];
+			return mimePrefixMatch[ 1 ];
 		}
 	},
 
@@ -235,7 +235,7 @@ const MediaUtils = {
 	 * @return {Boolean}      Site allowed file types are accurate
 	 */
 	isSiteAllowedFileTypesToBeTrusted: function( site ) {
-		return ! site || ! site.jetpack || site.versionCompare( '3.8.1', '>=' );
+		return ! site || ! site.jetpack || versionCompare( site.options.jetpack_version, '3.8.1', '>=' );
 	},
 
 	/**
@@ -299,15 +299,27 @@ const MediaUtils = {
 
 	/**
 	 * Returns true if the specified item exceeds the maximum upload size for
-	 * the given site. Returns null if the bytes are invalid or the max upload
-	 * size for the site is unknown. Otherwise, returns true.
+	 * the given site. Returns null if the bytes are invalid, the max upload
+	 * size for the site is unknown or a video is being uploaded for a Jetpack
+	 * site with VideoPress enabled. Otherwise, returns true.
 	 *
-	 * @param  {Number}   bytes A file size to check, as bytes
+	 * @param  {Object}   item  Media object
 	 * @param  {Object}   site  Site object
 	 * @return {?Boolean}       Whether the size exceeds the site maximum
 	 */
-	isExceedingSiteMaxUploadSize: function( bytes, site ) {
-		if ( ! isFinite( bytes ) || ! site || ! site.options || ! site.options.max_upload_size ) {
+	isExceedingSiteMaxUploadSize: function( item, site ) {
+		const bytes = item.size;
+
+		if ( ! site || ! site.options ) {
+			return null;
+		}
+
+		if ( ! isFinite( bytes ) || ! site.options.max_upload_size ) {
+			return null;
+		}
+
+		if ( site.jetpack && site.isModuleActive( 'videopress' ) && site.versionCompare( '4.5', '>=' ) &&
+				startsWith( MediaUtils.getMimeType( item ), 'video/' ) ) {
 			return null;
 		}
 
@@ -466,15 +478,15 @@ const MediaUtils = {
 		if ( ! HTMLCanvasElement.prototype.toBlob ) {
 			Object.defineProperty( HTMLCanvasElement.prototype, 'toBlob', {
 				value: function( polyfillCallback, polyfillType, polyfillQuality ) {
-					const binStr = atob( this.toDataURL( polyfillType, polyfillQuality ).split( ',' )[1] ),
+					const binStr = atob( this.toDataURL( polyfillType, polyfillQuality ).split( ',' )[ 1 ] ),
 						len = binStr.length,
 						arr = new Uint8Array( len );
 
 					for ( let i = 0; i < len; i++ ) {
-						arr[i] = binStr.charCodeAt( i );
+						arr[ i ] = binStr.charCodeAt( i );
 					}
 
-					polyfillCallback( new Blob( [arr], {
+					polyfillCallback( new Blob( [ arr ], {
 						type: polyfillType || 'image/png'
 					} ) );
 				}
@@ -496,6 +508,56 @@ const MediaUtils = {
 		}
 
 		return !! item.transient;
+	},
+
+	isTransientPreviewable( item ) {
+		return !! ( item && item.URL );
+	},
+
+	/**
+	 * Returns an object describing a transient media item which can be used in
+	 * optimistic rendering prior to media persistence to server.
+	 *
+	 * @param  {(String|Object|Blob|File)} file URL or File object
+	 * @return {Object}                         Transient media object
+	 */
+	createTransientMedia( file ) {
+		const transientMedia = {
+			'transient': true,
+			ID: uniqueId( 'media-' )
+		};
+
+		if ( 'string' === typeof file ) {
+			// Generate from string
+			Object.assign( transientMedia, {
+				file: file,
+				title: path.basename( file ),
+				extension: MediaUtils.getFileExtension( file ),
+				mime_type: MediaUtils.getMimeType( file )
+			} );
+		} else {
+			// Handle the case where a an object has been passed that wraps a
+			// Blob and contains a fileName
+			const fileContents = file.fileContents || file;
+			const fileName = file.fileName || file.name;
+
+			// Generate from window.File object
+			const fileUrl = window.URL.createObjectURL( fileContents );
+
+			Object.assign( transientMedia, {
+				URL: fileUrl,
+				guid: fileUrl,
+				file: fileName,
+				title: file.title || path.basename( fileName ),
+				extension: MediaUtils.getFileExtension( file.fileName || fileContents ),
+				mime_type: MediaUtils.getMimeType( file.fileName || fileContents ),
+				// Size is not an API media property, though can be useful for
+				// validation purposes if known
+				size: fileContents.size
+			} );
+		}
+
+		return transientMedia;
 	}
 };
 

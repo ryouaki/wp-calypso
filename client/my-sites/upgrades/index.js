@@ -108,6 +108,18 @@ module.exports = function() {
 	);
 
 	page(
+		paths.domainManagementTransferOut( ':site', ':domain' ),
+		...getCommonHandlers(),
+		domainManagementController.domainManagementTransferOut
+	);
+
+	page(
+		paths.domainManagementTransferToAnotherUser( ':site', ':domain' ),
+		...getCommonHandlers(),
+		domainManagementController.domainManagementTransferToOtherUser
+	);
+
+	page(
 		paths.domainManagementRoot(),
 		controller.siteSelection,
 		controller.sites
@@ -222,6 +234,12 @@ module.exports = function() {
 
 	if ( config.isEnabled( 'upgrades/checkout' ) ) {
 		page(
+			'/checkout/thank-you/no-site/:receiptId?',
+			controller.noSite,
+			upgradesController.checkoutThankYou
+		);
+
+		page(
 			'/checkout/thank-you/:site/:receiptId?',
 			controller.siteSelection,
 			upgradesController.checkoutThankYou
@@ -240,9 +258,18 @@ module.exports = function() {
 		);
 
 		page(
+			'/checkout/no-site',
+			controller.noSite,
+			upgradesController.sitelessCheckout
+		);
+
+		page(
 			'/checkout/:domain/:product?',
 			controller.siteSelection,
 			upgradesController.checkout
 		);
+
+		// Visting /checkout without a plan or product should be redirected to /plans
+		page( '/checkout', '/plans' );
 	}
 };

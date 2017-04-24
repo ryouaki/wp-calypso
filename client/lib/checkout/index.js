@@ -8,7 +8,7 @@ export function getExitCheckoutUrl( cart, siteSlug ) {
 	let url = '/plans/';
 
 	if ( cartItems.hasRenewalItem( cart ) ) {
-		let renewalItem = cartItems.getRenewalItems( cart )[ 0 ];
+		const renewalItem = cartItems.getRenewalItems( cart )[ 0 ];
 
 		return managePurchase( renewalItem.extra.purchaseDomain, renewalItem.extra.purchaseId );
 	}
@@ -20,8 +20,8 @@ export function getExitCheckoutUrl( cart, siteSlug ) {
 	} else if ( cartItems.hasProduct( cart, 'offsite_redirect' ) ) {
 		url = '/domains/add/site-redirect/';
 	} else if ( cartItems.hasProduct( cart, 'premium_theme' ) ) {
-		url = '/design/';
+		url = '/themes/';
 	}
 
-	return url + siteSlug;
+	return siteSlug ? url + siteSlug : url;
 }

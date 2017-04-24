@@ -2,12 +2,20 @@
  * External dependencies
  */
 import page from 'page';
+import { get } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import analytics from 'lib/analytics';
+import config from 'config';
 import paths from './paths';
+import {
+	isExpired,
+	isIncludedWithPlan,
+	isOneTimePurchase,
+	isPaidWithCreditCard
+} from 'lib/purchases';
 
 // TODO: Remove these property-masking functions in favor of accessing the props directly
 function getPurchase( props ) {
@@ -62,6 +70,43 @@ function recordPageView( trackingSlug, props, nextProps = null ) {
 	analytics.tracks.recordEvent( `calypso_${ trackingSlug }_purchase_view`, { product_slug: productSlug } );
 }
 
+function enrichedSurveyData( surveyData, moment, site, purchase ) {
+	const purchaseStartDate = get( purchase, 'subscribedDate', null );
+	const siteStartDate = get( site, 'options.created_at', null );
+	const purchaseId = get( purchase, 'id', null );
+	const productSlug = get( purchase, 'productSlug', null );
+
+	return Object.assign(
+		{
+			purchase: productSlug,
+			purchaseId,
+		},
+		purchaseStartDate && {
+			daysSincePurchase: moment.diff( purchaseStartDate, 'days', true ),
+		},
+		siteStartDate && {
+			daysSinceSiteCreation: moment.diff( siteStartDate, 'days', true ),
+		},
+		surveyData,
+	);
+}
+
+function canEditPaymentDetails( purchase ) {
+	if ( ! config.isEnabled( 'upgrades/credit-cards' ) ) {
+		return false;
+	}
+	return ! isExpired( purchase ) && ! isOneTimePurchase( purchase ) && ! isIncludedWithPlan( purchase );
+}
+
+function getEditCardDetailsPath( site, purchase ) {
+	if ( isPaidWithCreditCard( purchase ) ) {
+		const { payment: { creditCard } } = purchase;
+
+		return paths.editCardDetails( site.slug, purchase.id, creditCard.id );
+	}
+	return paths.addCardDetails( site.slug, purchase.id );
+}
+
 export {
 	getPurchase,
 	getSelectedSite,
@@ -69,5 +114,8 @@ export {
 	goToList,
 	goToManagePurchase,
 	isDataLoading,
-	recordPageView
+	recordPageView,
+	enrichedSurveyData,
+	canEditPaymentDetails,
+	getEditCardDetailsPath,
 };

@@ -1,30 +1,35 @@
 /**
  * External dependencies
  */
-var ReactDom = require( 'react-dom' ),
-	ReactDomServer = require( 'react-dom/server' ),
-	React = require( 'react' ),
-	i18n = require( 'i18n-calypso' ),
-	page = require( 'page' ),
-	ReduxProvider = require( 'react-redux' ).Provider,
-	startsWith = require( 'lodash/startsWith' ),
-	qs = require( 'querystring' ),
-	isValidUrl = require( 'valid-url' ).isWebUri;
+import ReactDom from 'react-dom';
+import ReactDomServer from 'react-dom/server';
+import React from 'react';
+import i18n from 'i18n-calypso';
+import page from 'page';
+import { Provider as ReduxProvider } from 'react-redux';
+import qs from 'querystring';
+import { isWebUri as isValidUrl } from 'valid-url';
+import { map, pick, startsWith } from 'lodash';
 
 /**
  * Internal dependencies
  */
-var actions = require( 'lib/posts/actions' ),
-	PostEditor = require( './post-editor' ),
-	route = require( 'lib/route' ),
-	sites = require( 'lib/sites-list' )(),
-	user = require( 'lib/user' )(),
-	userUtils = require( 'lib/user/utils' ),
-	analytics = require( 'lib/analytics' );
-import { setEditorPostId } from 'state/ui/editor/actions';
+import actions from 'lib/posts/actions';
+import route from 'lib/route';
+import User from 'lib/user';
+import userUtils from 'lib/user/utils';
+import analytics from 'lib/analytics';
+import { decodeEntities } from 'lib/formatting';
+import PostEditor from './post-editor';
+import { startEditingPost, stopEditingPost } from 'state/ui/editor/actions';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { getEditorPostId, getEditorPath } from 'state/ui/editor/selectors';
 import { editPost } from 'state/posts/actions';
+import wpcom from 'lib/wp';
+import Dispatcher from 'dispatcher';
+import { getFeaturedImageId } from 'lib/posts/utils';
+
+const user = User();
 
 function getPostID( context ) {
 	if ( ! context.params.post || 'new' === context.params.post ) {
@@ -54,7 +59,6 @@ function renderEditor( context, postType ) {
 			React.createElement( PostEditor, {
 				user: user,
 				userUtils: userUtils,
-				sites: sites,
 				type: postType
 			} )
 		),
@@ -107,15 +111,55 @@ function getPressThisContent( query ) {
 	return pieces.join( '\n\n' );
 }
 
+// TODO: REDUX - remove flux actions when whole post-editor is reduxified
+// Until the full migration, the Copy Post functionality needs to dispatch both Flux and Redux actions:
+// - (Flux) startEditingNew: to set the editor content;
+// - (Redux) editPost: to set every other attribute (in particular, to update the Category Selector, terms can only be set via Redux);
+// - (Flux) edit: to reliably show the updated post attributes before (auto)saving.
+function startEditingPostCopy( siteId, postToCopyId, context ) {
+	wpcom.site( siteId ).post( postToCopyId ).get().then( postToCopy => {
+		const postAttributes = pick(
+			postToCopy,
+			'canonical_image',
+			'content',
+			'excerpt',
+			'featured_image',
+			'format',
+			'metadata',
+			'post_thumbnail',
+			'terms',
+			'title',
+			'type'
+		);
+		postAttributes.tags = map( postToCopy.tags, 'name' );
+		postAttributes.title = decodeEntities( postAttributes.title );
+		postAttributes.featured_image = getFeaturedImageId( postToCopy );
+
+		actions.startEditingNew( siteId, {
+			content: postToCopy.content,
+			title: postToCopy.title,
+			type: postToCopy.type,
+		} );
+		context.store.dispatch( editPost( siteId, null, postAttributes ) );
+		actions.edit( postAttributes );
+	} ).catch( error => {
+		Dispatcher.handleServerAction( {
+			type: 'SET_POST_LOADING_ERROR',
+			error: error
+		} );
+	} );
+}
+
 module.exports = {
 
 	post: function( context ) {
 		const postType = determinePostType( context );
 		const postID = getPostID( context );
+		const postToCopyId = context.query.copy;
 
 		function startEditing( siteId ) {
-			context.store.dispatch( setEditorPostId( postID ) );
-			context.store.dispatch( editPost( siteId, postID, { type: postType } ) );
+			const isCopy = context.query.copy ? true : false;
+			context.store.dispatch( startEditingPost( siteId, ( isCopy ? null : postID ), postType ) );
 
 			if ( maybeRedirect( context ) ) {
 				return;
@@ -131,12 +175,15 @@ module.exports = {
 			// We have everything we need to start loading the post for editing,
 			// so kick it off here to minimize time spent waiting for it to load
 			// in the view components
-			if ( postID ) {
+			if ( postToCopyId ) {
+				startEditingPostCopy( siteId, postToCopyId, context );
+				analytics.pageView.record( '/' + postType, gaTitle + ' > New' );
+			} else if ( postID ) {
 				// TODO: REDUX - remove flux actions when whole post-editor is reduxified
 				actions.startEditingExisting( siteId, postID );
 				analytics.pageView.record( '/' + postType + '/:blogid/:postid', gaTitle + ' > Edit' );
 			} else {
-				let postOptions = { type: postType };
+				const postOptions = { type: postType };
 
 				// handle press-this params if applicable
 				if ( context.query.url ) {
@@ -163,18 +210,35 @@ module.exports = {
 		//    have permission to view the site)
 		//  - Sites are initialized _and_ fetched, but the selected site has
 		//    not yet been selected, so is not available in global state yet
+		let unsubscribe;
 		function startEditingOnSiteSelected() {
 			const siteId = getSelectedSiteId( context.store.getState() );
-
-			if ( siteId ) {
-				startEditing( siteId );
-			} else {
-				sites.once( 'change', startEditingOnSiteSelected );
+			if ( ! siteId ) {
+				return false;
 			}
+
+			if ( unsubscribe ) {
+				unsubscribe();
+			}
+
+			startEditing( siteId );
+			return true;
 		}
-		startEditingOnSiteSelected();
+
+		if ( ! startEditingOnSiteSelected() ) {
+			unsubscribe = context.store.subscribe( startEditingOnSiteSelected );
+		}
 
 		renderEditor( context, postType );
+	},
+
+	exitPost: function( context, next ) {
+		const postId = getPostID( context );
+		const siteId = getSelectedSiteId( context.store.getState() );
+		if ( siteId ) {
+			context.store.dispatch( stopEditingPost( siteId, postId ) );
+		}
+		next();
 	},
 
 	pressThis: function( context, next ) {
@@ -199,5 +263,6 @@ module.exports = {
 
 		page.redirect( redirectWithParams );
 		return false;
-	}
+	},
+
 };

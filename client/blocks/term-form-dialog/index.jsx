@@ -2,10 +2,9 @@
  * External dependencies
  */
 import React, { PropTypes, Component } from 'react';
-import ReactDom from 'react-dom';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
-import { get, find, noop } from 'lodash';
+import { get, find, noop, assign } from 'lodash';
 
 /**
  * Internal dependencies
@@ -24,14 +23,18 @@ import viewport from 'lib/viewport';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { getPostTypeTaxonomy } from 'state/post-types/taxonomies/selectors';
 import { getTerms } from 'state/terms/selectors';
-import { addTerm } from 'state/terms/actions';
+import { addTerm, updateTerm } from 'state/terms/actions';
+import { recordGoogleEvent, bumpStat } from 'state/analytics/actions';
 
 class TermFormDialog extends Component {
 	static initialState = {
+		description: '',
+		name: '',
 		selectedParent: [],
 		isTopLevel: true,
 		isValid: false,
-		error: null
+		errors: {},
+		saving: false
 	};
 
 	static propTypes = {
@@ -42,9 +45,12 @@ class TermFormDialog extends Component {
 		showDescriptionInput: PropTypes.bool,
 		showDialog: PropTypes.bool,
 		siteId: PropTypes.number,
-		terms: PropTypes.array,
 		taxonomy: PropTypes.string,
-		translate: PropTypes.func
+		term: PropTypes.object,
+		terms: PropTypes.array,
+		translate: PropTypes.func,
+		recordGoogleEvent: PropTypes.func,
+		bumpStat: PropTypes.func,
 	};
 
 	static defaultProps = {
@@ -54,94 +60,44 @@ class TermFormDialog extends Component {
 		showDialog: false
 	};
 
-	constructor( props ) {
-		super( props );
-		this.state = this.constructor.initialState;
-		this.boundCloseDialog = this.closeDialog.bind( this );
-		this.boundOnParentChange = this.onParentChange.bind( this );
-		this.boundOnSearch = this.onSearch.bind( this );
-		this.boundSaveTerm = this.saveTerm.bind( this );
-		this.boundOnTopLevelChange = this.onTopLevelChange.bind( this );
-		this.boundValidateInput = this.validateInput.bind( this );
-	}
-
-	onSearch( searchTerm ) {
+	onSearch = searchTerm => {
 		this.setState( { searchTerm: searchTerm } );
-	}
+	};
 
-	componentWillReceiveProps( newProps ) {
-		if ( newProps.showDialog !== this.props.showDialog ) {
-			this.setState( {
-				selectedParent: []
-			} );
+	closeDialog = () => {
+		if ( this.state.saving ) {
+			return;
 		}
-	}
-
-	closeDialog() {
-		this.setState( this.constructor.initialState );
 		this.props.onClose();
-	}
+	};
 
-	onParentChange( item ) {
+	onParentChange = item => {
 		this.setState( {
 			selectedParent: [ item.ID ],
 			isTopLevel: false
 		}, this.isValid );
-	}
+	};
 
-	onTopLevelChange() {
+	onTopLevelChange = () => {
 		this.setState( {
 			isTopLevel: ! this.state.isTopLevel,
 			selectedParent: []
 		}, this.isValid );
-	}
+	};
 
-	getFormValues() {
-		const name = ReactDom.findDOMNode( this.refs.termName ).value.trim();
-		const formValues = { name };
-		if ( this.props.isHierarchical ) {
-			formValues.parent = this.state.selectedParent.length ? this.state.selectedParent[ 0 ] : 0;
-		}
-		if ( this.props.showDescriptionInput ) {
-			formValues.description = ReactDom.findDOMNode( this.refs.termDescription ).value.trim();
-		}
-
-		return formValues;
-	}
-
-	isValid() {
-		let error;
-
-		const values = this.getFormValues();
-
-		if ( ! values.name.length ) {
-			error = true;
-		}
-
-		const lowerCasedTermName = values.name.toLowerCase();
-		const matchingTerm = find( this.props.terms, ( term ) => {
-			return ( term.name.toLowerCase() === lowerCasedTermName ) &&
-				( ! this.props.isHierarchical || ( term.parent === values.parent ) );
+	onNameChange = event => {
+		this.setState( {
+			name: event.target.value
 		} );
+	};
 
-		if ( matchingTerm ) {
-			error = this.props.translate( 'Name already exists', {
-				context: 'Terms: Add term error message - duplicate term name exists',
-				textOnly: true
-			} );
-		}
+	onDescriptionChange = event => {
+		this.setState( {
+			description: event.target.value
+		} );
+	};
 
-		if ( error !== this.state.error ) {
-			this.setState( {
-				error: error,
-				isValid: ! error
-			} );
-		}
-
-		return ! error;
-	}
-
-	validateInput( event ) {
+	validateInput = event => {
 		if ( 13 === event.keyCode ) {
 			this.saveTerm();
 		} else {
@@ -149,26 +105,139 @@ class TermFormDialog extends Component {
 		}
 	}
 
-	saveTerm() {
+	saveTerm = () => {
 		const term = this.getFormValues();
-		if ( ! this.isValid() ) {
+		if ( ! this.isValid() || this.state.saving ) {
 			return;
 		}
 
+		this.setState( { saving: true } );
 		const { siteId, taxonomy } = this.props;
+		const statLabels = {
+			mc: `edited_${ taxonomy }`,
+			ga: `Edited ${ taxonomy }`
+		};
 
-		this.props
-			.addTerm( siteId, taxonomy, term )
-			.then( this.props.onSuccess );
-		this.closeDialog();
+		const isNew = ! this.props.term;
+		const savePromise = isNew
+			? this.props.addTerm( siteId, taxonomy, term )
+			: this.props.updateTerm( siteId, taxonomy, this.props.term.ID, this.props.term.slug, term );
+
+		if ( isNew ) {
+			statLabels.mc = `created_${ taxonomy }`;
+			statLabels.ga = `Created New ${ taxonomy }`;
+		}
+		this.props.bumpStat( 'taxonomy_manager', statLabels.mc );
+		this.props.recordGoogleEvent( 'Taxonomy Manager', statLabels.ga );
+
+		savePromise
+			.then( savedTerm => {
+				this.setState( { saving: false } );
+				this.props.onSuccess( savedTerm );
+				this.closeDialog();
+			} );
+	};
+
+	constructor( props ) {
+		super( props );
+		this.state = this.constructor.initialState;
+	}
+
+	init( props ) {
+		if ( ! props.term ) {
+			this.setState( this.constructor.initialState );
+			return;
+		}
+
+		const { name, description, parent = false } = props.term;
+		this.setState( assign( {}, this.constructor.initialState, {
+			name,
+			description,
+			isTopLevel: parent ? false : true,
+			selectedParent: parent ? [ parent ] : []
+		} ) );
+	}
+
+	componentWillReceiveProps( newProps ) {
+		if (
+			this.props.term !== newProps.term ||
+			this.props.showDialog !== newProps.showDialog && newProps.showDialog
+		) {
+			this.init( newProps );
+		}
+	}
+
+	componentDidMount() {
+		this.init( this.props );
+	}
+
+	getFormValues() {
+		const name = this.state.name.trim();
+		const formValues = { name };
+		if ( this.props.isHierarchical ) {
+			formValues.parent = this.state.selectedParent.length ? this.state.selectedParent[ 0 ] : 0;
+		}
+		if ( this.props.showDescriptionInput ) {
+			const description = this.state.description.trim();
+			formValues.description = description;
+		}
+
+		return formValues;
+	}
+
+	isValid() {
+		const errors = {};
+		const values = this.getFormValues();
+
+		// Validating the name
+		if ( ! values.name.length ) {
+			errors.name = this.props.translate( 'Name required', { textOnly: true } );
+		}
+		const lowerCasedTermName = values.name.toLowerCase();
+		const matchingTerm = find( this.props.terms, ( term ) => {
+			return (
+				term.name.toLowerCase() === lowerCasedTermName &&
+				( ! this.props.term || term.ID !== this.props.term.ID )
+			);
+		} );
+		if ( matchingTerm ) {
+			errors.name = this.props.translate( 'Name already exists', {
+				context: 'Terms: Add term error message - duplicate term name exists',
+				textOnly: true
+			} );
+		}
+
+		// Validating the parent
+		if ( this.props.isHierarchical && ! this.state.isTopLevel && ! values.parent ) {
+			errors.parent = this.props.translate( 'Parent item required when "Top level" is unchecked', {
+				context: 'Terms: Add term error message',
+				textOnly: true
+			} );
+		}
+
+		const isValid = ! Object.keys( errors ).length;
+		this.setState( {
+			errors,
+			isValid
+		} );
+
+		return isValid;
 	}
 
 	renderParentSelector() {
-		const { labels, siteId, taxonomy, translate } = this.props;
+		const { labels, siteId, taxonomy, translate, terms } = this.props;
 		const { searchTerm, selectedParent } = this.state;
 		const query = {};
 		if ( searchTerm && searchTerm.length ) {
 			query.search = searchTerm;
+		}
+		const hideTermAndChildren = get( this.props.term, 'ID' );
+		const isError = !! this.state.errors.parent;
+
+		// if there is only one term for the site, and we are editing that term
+		// do not show the parent selector
+		if ( hideTermAndChildren && terms && terms.length === 1 ) {
+			return null;
 		}
 
 		return (
@@ -177,52 +246,61 @@ class TermFormDialog extends Component {
 					{ labels.parent_item }
 				</FormLegend>
 				<FormLabel>
-					<FormCheckbox ref="topLevel" checked={ this.state.isTopLevel } onChange={ this.boundOnTopLevelChange } />
+					<FormCheckbox ref="topLevel" checked={ this.state.isTopLevel } onChange={ this.onTopLevelChange } />
 					<span>{ translate( 'Top level', { context: 'Terms: New term being created is top level' } ) }</span>
 				</FormLabel>
 				<TermTreeSelectorTerms
 					siteId={ siteId }
 					taxonomy={ taxonomy }
-					onSearch={ this.boundOnSearch }
-					onChange={ this.boundOnParentChange }
+					isError={ isError }
+					onSearch={ this.onSearch }
+					onChange={ this.onParentChange }
 					query={ query }
 					selected={ selectedParent }
+					hideTermAndChildren={ hideTermAndChildren }
 				/>
+				{ isError && <FormInputValidation isError text={ this.state.errors.parent } /> }
 			</FormFieldset>
 		);
 	}
 
 	render() {
-		const { isHierarchical, labels, translate, showDescriptionInput, showDialog } = this.props;
+		const { isHierarchical, labels, term, translate, showDescriptionInput, showDialog } = this.props;
+		const { name, description } = this.state;
+		const isNew = ! term;
+		const submitLabel = isNew ? translate( 'Add' ) : translate( 'Update' );
 		const buttons = [ {
 			action: 'cancel',
 			label: translate( 'Cancel' )
 		}, {
-			action: 'add',
-			label: translate( 'Add' ),
+			action: isNew ? 'add' : 'update',
+			label: this.state.saving ? translate( 'Saving…' ) : submitLabel,
 			isPrimary: true,
-			disabled: ! this.state.isValid,
-			onClick: this.boundSaveTerm
+			disabled: ! this.state.isValid || this.state.saving,
+			onClick: this.saveTerm
 		} ];
 
-		const isError = this.state.error && !! this.state.error.length;
+		const isError = !! this.state.errors.name;
 
 		return (
 			<Dialog
 				autoFocus={ false }
 				isVisible={ showDialog }
 				buttons={ buttons }
-				onClose={ this.boundCloseDialog }
+				onClose={ this.closeDialog }
 				additionalClassNames="term-form-dialog">
-				<FormSectionHeading>{ labels.add_new_item }</FormSectionHeading>
+				<FormSectionHeading>{ isNew ? labels.add_new_item : labels.edit_item }</FormSectionHeading>
 				<FormFieldset>
 					<FormTextInput
 						autoFocus={ showDialog && ! viewport.isMobile() }
 						placeholder={ labels.new_item_name }
 						ref="termName"
 						isError={ isError }
-						onKeyUp={ this.boundValidateInput } />
-					{ isError && <FormInputValidation isError text={ this.state.error } /> }
+						onKeyUp={ this.validateInput }
+						value={ name }
+						onChange={ this.onNameChange }
+					/>
+					{ isError && <FormInputValidation isError text={ this.state.errors.name } /> }
 				</FormFieldset>
 				{ showDescriptionInput && <FormFieldset>
 						<FormLegend>
@@ -230,7 +308,10 @@ class TermFormDialog extends Component {
 						</FormLegend>
 						<FormTextarea
 							ref="termDescription"
-							onKeyUp={ this.boundValidateInput } />
+							onKeyUp={ this.validateInput }
+							value={ description }
+							onChange={ this.onDescriptionChange }
+						/>
 					</FormFieldset>
 				}
 				{ isHierarchical && this.renderParentSelector() }
@@ -254,5 +335,5 @@ export default connect(
 			siteId
 		};
 	},
-	{ addTerm }
+	{ addTerm, updateTerm, recordGoogleEvent, bumpStat }
 )( localize( TermFormDialog ) );

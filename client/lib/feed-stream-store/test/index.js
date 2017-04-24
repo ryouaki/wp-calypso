@@ -1,15 +1,24 @@
 /**
  * External Dependencies
  */
-var expect = require( 'chai' ).expect,
-	useFilesystemMocks = require( 'test/helpers/use-filesystem-mocks' ),
-	sinon = require( 'sinon' ),
-	set = require( 'lodash/set' );
+import { expect } from 'chai';
+import sinon from 'sinon';
+import set from 'lodash/set';
 
-var PostListStore, FeedPostStore, FeedSubscriptionStore;
+/**
+ * Internal Dependencies
+ */
+import useFilesystemMocks from 'test/helpers/use-filesystem-mocks';
+import useMockery from 'test/helpers/use-mockery';
+
+let PostListStore, FeedPostStore, FeedSubscriptionStore;
 
 describe( 'FeedPostList', function() {
 	useFilesystemMocks( __dirname );
+
+	useMockery( mockery => {
+		mockery.registerMock( 'reader/stats', { recordTrack: sinon.spy() } );
+	} );
 
 	before( function() {
 		PostListStore = require( '../feed-stream' );
@@ -125,7 +134,7 @@ describe( 'FeedPostList', function() {
 	} );
 
 	describe( 'Selected index', function() {
-		var fetcherStub, store, feedPostStoreStub;
+		var fetcherStub, store, feedPostStoreStub, fakePosts;
 		beforeEach( function() {
 			fetcherStub = sinon.stub();
 			feedPostStoreStub = sinon.stub( FeedPostStore, 'get' );
@@ -136,60 +145,58 @@ describe( 'FeedPostList', function() {
 					return post;
 				}
 			} );
-			store.receivePage( 'test', null, { posts: [
+			fakePosts = [
 				{ feed_ID: 1, ID: 1 },
 				{ feed_ID: 1, ID: 2 },
 				{ feed_ID: 1, ID: 3 },
-				{ feed_ID: 1, ID: 4 } ]
-			} );
+				{ feed_ID: 1, ID: 4 }
+			];
+			store.receivePage( 'test', null, { posts: fakePosts } );
 		} );
 		afterEach( function() {
 			FeedPostStore.get.restore();
 		} );
 
 		it( 'should initially have nothing selected', function() {
-			expect( store.getSelectedIndex() ).to.equal( -1 );
-			expect( store.getSelectedPost() ).to.equal( null );
+			expect( store.getSelectedPostKey() ).to.equal( null );
 		} );
 
 		it( 'should select the next item', function() {
 			feedPostStoreStub.returns( {} );
-			store.selectNextItem( -1 );
-			expect( store.getSelectedIndex() ).to.equal( 0 );
+			store.selectItem( { feed_ID: 1, ID: 1 } );
+			store.selectNextItem();
+			expect( store.getSelectedPostKey() ).to.eql( fakePosts[ 1 ] );
 		} );
 
 		it( 'should select the next valid post', function() {
 			feedPostStoreStub
-				.onCall( 0 ).returns( { _state: 'error'} )
-				.onCall( 1 ).returns( { _state: 'minimal' } )
-				.onCall( 2 ).returns( {} )
-				.onCall( 3 ).returns( {} );
-			store.selectNextItem( -1 );
-			expect( store.getSelectedIndex() ).to.equal( 2 );
-		} );
-
-		it( 'should be able to select a gap', function() {
-			feedPostStoreStub
-				.onCall( 0 ).returns( { _state: 'error'} )
-				.onCall( 1 ).returns( { isGap: true } )
-				.onCall( 2 ).returns( {} )
-				.onCall( 3 ).returns( {} );
-			store.selectNextItem( -1 );
-			expect( store.getSelectedIndex() ).to.equal( 1 );
+				.onCall( 0 ).returns( {} )
+				.onCall( 1 ).returns( { _state: 'error'} )
+				.onCall( 2 ).returns( { _state: 'minimal' } )
+				.onCall( 3 ).returns( {} )
+				.onCall( 4 ).returns( {} );
+			store.selectItem( { feed_ID: 1, ID: 1 } );
+			store.selectNextItem();
+			expect( store.getSelectedPostKey() ).to.eql( { feed_ID: 1, ID: 4 } );
 		} );
 
 		it( 'should select the prev item', function() {
 			feedPostStoreStub.returns( {} );
-			store.selectPrevItem( 3 );
-			expect( store.getSelectedIndex() ).to.equal( 2 );
+			store.selectItem( { feed_ID: 1, ID: 3 } );
+			expect( store.getSelectedPostKey() ).to.eql( { feed_ID: 1, ID: 3 } );
+			store.selectPrevItem();
+			expect( store.getSelectedPostKey() ).to.eql( { feed_ID: 1, ID: 2 } );
 		} );
 
 		it( 'should select the prev valid post', function() {
 			feedPostStoreStub
-				.onCall( 0 ).returns( { _state: 'error' } )
-				.onCall( 1 ).returns( {} );
-			store.selectPrevItem( 3 );
-			expect( store.getSelectedIndex() ).to.equal( 1 );
+				.onCall( 0 ).returns( {} )
+				.onCall( 1 ).returns( { _state: 'error' } )
+				.onCall( 2 ).returns( {} );
+			store.selectItem( { feed_ID: 1, ID: 3 } );
+			expect( store.getSelectedPostKey() ).to.eql( { feed_ID: 1, ID: 3 } );
+			store.selectPrevItem();
+			expect( store.getSelectedPostKey() ).to.eql( { feed_ID: 1, ID: 1 } );
 		} );
 	} );
 

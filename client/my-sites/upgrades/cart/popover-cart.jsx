@@ -4,6 +4,8 @@
 import React from 'react';
 import reject from 'lodash/reject';
 import classNames from 'classnames';
+import { localize } from 'i18n-calypso';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
@@ -15,18 +17,15 @@ import CartButtons from './cart-buttons';
 import Popover from 'components/popover';
 import CartEmpty from './cart-empty';
 import CartPlanAd from './cart-plan-ad';
-import CartTrialAd from './cart-trial-ad';
 import { isCredits } from 'lib/products-values';
-import Gridicon from 'components/gridicon';
 
-var PopoverCart = React.createClass( {
+const PopoverCart = React.createClass( {
 	propTypes: {
 		cart: React.PropTypes.object.isRequired,
 		selectedSite: React.PropTypes.oneOfType( [
 			React.PropTypes.object,
 			React.PropTypes.bool
 		] ).isRequired,
-		sitePlans: React.PropTypes.object.isRequired,
 		onToggle: React.PropTypes.func.isRequired,
 		closeSectionNavMobilePanel: React.PropTypes.func,
 		visible: React.PropTypes.bool.isRequired,
@@ -62,7 +61,7 @@ var PopoverCart = React.createClass( {
 					<button className="cart-toggle-button"
 							ref="toggleButton"
 							onClick={ this.onToggle }>
-						<div className="popover-cart__label">{ this.translate( 'Cart' ) }</div>
+						<div className="popover-cart__label">{ this.props.translate( 'Cart' ) }</div>
 						<Gridicon icon='cart' size={ 24 } />
 						{ countBadge }
 					</button>
@@ -113,11 +112,6 @@ var PopoverCart = React.createClass( {
 
 		return (
 			<div>
-				<CartTrialAd
-					cart={ this.props.cart }
-					selectedSite={ this.props.selectedSite }
-					sitePlans={ this.props.sitePlans } />
-
 				<CartPlanAd
 					cart={ this.props.cart }
 					selectedSite={ this.props.selectedSite } />
@@ -152,4 +146,4 @@ var PopoverCart = React.createClass( {
 	}
 } );
 
-module.exports = PopoverCart;
+export default localize( PopoverCart );

@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -25,7 +23,7 @@ function createPurchaseObject( purchase ) {
 		expiryDate: purchase.expiry_date,
 		expiryMoment: purchase.expiry_date ? i18n.moment( purchase.expiry_date ) : null,
 		expiryStatus: camelCase( purchase.expiry_status ),
-		hasPrivateRegistration: Boolean( purchase.has_private_registration ),
+		hasPrivacyProtection: Boolean( purchase.has_private_registration ),
 		includedDomain: purchase.included_domain,
 		isCancelable: Boolean( purchase.is_cancelable ),
 		isDomainRegistration: Boolean( purchase.is_domain_registration ),
@@ -41,6 +39,7 @@ function createPurchaseObject( purchase ) {
 			countryCode: purchase.payment_country_code,
 			countryName: purchase.payment_country_name
 		},
+		pendingTransfer: Boolean( purchase.pending_transfer ),
 		productId: Number( purchase.product_id ),
 		productName: purchase.product_name,
 		productSlug: purchase.product_slug,
@@ -71,6 +70,10 @@ function createPurchaseObject( purchase ) {
 		} );
 
 		return Object.assign( {}, object, { payment } );
+	}
+
+	if ( 'paypal_direct' === purchase.payment_type ) {
+		object.payment.expiryMoment = purchase.payment_expiry ? i18n.moment( purchase.payment_expiry, 'MM/YY' ) : null;
 	}
 
 	return object;

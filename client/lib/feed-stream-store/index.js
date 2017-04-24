@@ -1,31 +1,35 @@
 /**
  * External dependencies
  */
-import { startsWith } from 'lodash';
+import { forEach, startsWith, random } from 'lodash';
+import moment from 'moment';
 
 /**
  * Internal dependencies
  */
-var config = require( 'config' ),
-	Dispatcher = require( 'dispatcher' ),
-	FeedStream = require( './feed-stream' ),
-	PagedStream = require( './paged-stream' ),
-	FeedStreamCache = require( './feed-stream-cache' ),
-	analytics = require( 'lib/analytics' ),
-	forEach = require( 'lodash/forEach' ),
-	wpcomUndoc = require( 'lib/wp' ).undocumented();
+import config from 'config';
+import Dispatcher from 'dispatcher';
+import FeedStream from './feed-stream';
+import PagedStream from './paged-stream';
+import FeedStreamCache from './feed-stream-cache';
+import analytics from 'lib/analytics';
+import wpcom from 'lib/wp';
+
+const wpcomUndoc = wpcom.undocumented();
 
 function feedKeyMaker( post ) {
 	return {
 		feedId: post.feed_ID,
-		postId: post.ID
+		postId: post.ID,
+		localMoment: moment( post.date ),
 	};
 }
 
 function siteKeyMaker( post ) {
 	return {
 		blogId: post.site_ID,
-		postId: post.ID
+		postId: post.ID,
+		localMoment: moment( post.date ),
 	};
 }
 
@@ -33,7 +37,8 @@ function mixedKeyMaker( post ) {
 	if ( post.feed_ID && post.feed_item_ID ) {
 		return {
 			feedId: post.feed_ID,
-			postId: post.feed_item_ID
+			postId: post.feed_item_ID,
+			localMoment: moment( post.date ),
 		};
 	}
 
@@ -53,6 +58,11 @@ function limitSiteParamsForLikes( params ) {
 	params.fields += ',date_liked';
 }
 
+function limitSiteParamsForTags( params ) {
+	limitSiteParams( params );
+	params.fields += ',tagged_on';
+}
+
 function trainTracksProxyForStream( stream, callback ) {
 	return function( err, response ) {
 		const eventName = 'calypso_traintracks_render';
@@ -61,6 +71,9 @@ function trainTracksProxyForStream( stream, callback ) {
 		}
 		forEach( response && response.posts, ( post ) => {
 			if ( post.railcar ) {
+				if ( stream.isQuerySuggestion ) {
+					post.railcar.rec_result = 'suggestion';
+				}
 				analytics.tracks.recordEvent( eventName, post.railcar );
 			}
 		} );
@@ -69,7 +82,7 @@ function trainTracksProxyForStream( stream, callback ) {
 }
 
 function getStoreForFeed( storeId ) {
-	var feedId = storeId.split( ':' )[ 1 ],
+	const feedId = storeId.split( ':' )[ 1 ],
 		fetcher = function fetchFeedById( query, callback ) {
 			query.ID = feedId;
 			wpcomUndoc.readFeedPosts( query, callback );
@@ -96,30 +109,50 @@ function getStoreForTag( storeId ) {
 			keyMaker: siteKeyMaker,
 			perPage: 5
 		} );
-	} else {
-		return new FeedStream( {
-			id: storeId,
-			fetcher: fetcher,
-			keyMaker: mixedKeyMaker,
-			onGapFetch: limitSiteParams,
-			onUpdateFetch: limitSiteParams,
-			dateProperty: 'tagged_on'
-		} );
 	}
+	return new FeedStream( {
+		id: storeId,
+		fetcher: fetcher,
+		keyMaker: mixedKeyMaker,
+		onGapFetch: limitSiteParamsForTags,
+		onUpdateFetch: limitSiteParamsForTags,
+		dateProperty: 'tagged_on'
+	} );
+}
+
+function validateSearchSort( sort ) {
+	if ( sort !== 'relevance' && sort !== 'date' ) {
+		return 'relevance';
+	}
+	return sort;
 }
 
 function getStoreForSearch( storeId ) {
-	const slug = storeId.split( ':' )[ 1 ];
-	const stream = new PagedStream( {
+	const idParts = storeId.split( ':' );
+	const sort = validateSearchSort( idParts[ 1 ] );
+	const slug = idParts.slice( 2 ).join( ':' );
+	// We can use a feed stream when it's a strict date sort.
+	// This lets us go deeper than 20 pages and let's the results auto-update
+	const stream = sort === 'date' ? new FeedStream( {
+		id: storeId,
+		fetcher: fetcher,
+		keyMaker: siteKeyMaker,
+		perPage: 5,
+		onGapFetch: limitSiteParams,
+		onUpdateFetch: limitSiteParams,
+		maxUpdates: 20,
+	} ) : new PagedStream( {
 		id: storeId,
 		fetcher: fetcher,
 		keyMaker: siteKeyMaker,
 		perPage: 5
 	} );
+	stream.sortOrder = sort;
 
 	function fetcher( query, callback ) {
 		query.q = slug;
 		query.meta = 'site';
+		query.sort = sort;
 		wpcomUndoc.readSearch( query, trainTracksProxyForStream( stream, callback ) );
 	}
 
@@ -127,7 +160,7 @@ function getStoreForSearch( storeId ) {
 }
 
 function getStoreForList( storeId ) {
-	var listKey = storeId.split( ':' )[ 1 ],
+	const listKey = storeId.split( ':' )[ 1 ],
 		[ listOwner, ...listSlug ] = listKey.split( '-' ),
 		fetcher = function( query, callback ) {
 			query.owner = listOwner;
@@ -145,7 +178,7 @@ function getStoreForList( storeId ) {
 }
 
 function getStoreForSite( storeId ) {
-	var siteId = storeId.split( ':' )[ 1 ],
+	const siteId = storeId.split( ':' )[ 1 ],
 		fetcher = function( query, callback ) {
 			query.site = siteId;
 			wpcomUndoc.readSitePosts( query, callback );
@@ -161,7 +194,7 @@ function getStoreForSite( storeId ) {
 }
 
 function getStoreForFeatured( storeId ) {
-	var siteId = storeId.split( ':' )[ 1 ],
+	const siteId = storeId.split( ':' )[ 1 ],
 		fetcher = function( query, callback ) {
 			wpcomUndoc.readSiteFeatured( siteId, query, callback );
 		};
@@ -180,11 +213,11 @@ function getStoreForRecommendedPosts( storeId ) {
 		id: storeId,
 		fetcher: fetcher,
 		keyMaker: siteKeyMaker,
-		perPage: 5
+		perPage: 6,
 	} );
 
 	function fetcher( query, callback ) {
-		switch( storeId ) {
+		switch ( storeId ) {
 			case 'cold_posts':
 				query.algorithm = 'read:recommendations:posts/es/2';
 				break;
@@ -199,6 +232,25 @@ function getStoreForRecommendedPosts( storeId ) {
 				break;
 			case 'cold_posts_topics':
 				query.algorithm = 'read:recommendations:posts/es/6';
+				break;
+			case 'custom_recs_posts_with_images':
+				query.alg_prefix = 'read:recommendations:posts';
+
+				/* Seed FAQ:
+				 * Q: What does it do?
+				 * A: It throws a little randomness into the Elasticsearch query so that users
+				 * don't see the same recommendations every time:
+				 * https://www.elastic.co/guide/en/elasticsearch/guide/current/random-scoring.html
+				 *
+				 * Q: How did we pick this range?
+				 * A: It's big enough that the same user probably won't get repeats too frequently
+				 * and small enough that we aren't going cause overflows anywhere.
+				 *
+				 * Q: How often do we change the seed?
+				 * A: We change the seed each time the store is generated. Practically speaking
+				 * that means each time the page is refreshed.
+				 */
+				query.seed = random( 0, 10000 );
 				break;
 			default:
 				query.algorithm = 'read:recommendations:posts/es/1';
@@ -215,8 +267,8 @@ function getStoreForRecommendedPosts( storeId ) {
 	return stream;
 }
 
-function feedStoreFactory( storeId ) {
-	var store = FeedStreamCache.get( storeId );
+export default function feedStoreFactory( storeId ) {
+	let store = FeedStreamCache.get( storeId );
 
 	if ( store ) {
 		return store;
@@ -249,6 +301,8 @@ function feedStoreFactory( storeId ) {
 		store = getStoreForRecommendedPosts( storeId );
 	} else if ( startsWith( storeId, 'cold_posts' ) ) {
 		store = getStoreForRecommendedPosts( storeId );
+	} else if ( startsWith( storeId, 'custom_recs' ) ) {
+		store = getStoreForRecommendedPosts( storeId );
 	} else if ( storeId.indexOf( 'feed:' ) === 0 ) {
 		store = getStoreForFeed( storeId );
 	} else if ( storeId.indexOf( 'tag:' ) === 0 ) {
@@ -270,5 +324,3 @@ function feedStoreFactory( storeId ) {
 	FeedStreamCache.set( storeId, store );
 	return store;
 }
-
-module.exports = feedStoreFactory;

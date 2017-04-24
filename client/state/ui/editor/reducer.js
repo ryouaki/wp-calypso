@@ -6,8 +6,9 @@ import { combineReducers } from 'redux';
 /**
  * Internal dependencies
  */
-import { EDITOR_POST_ID_SET, EDITOR_SHOW_DRAFTS_TOGGLE } from 'state/action-types';
+import { EDITOR_START, POST_SAVE_SUCCESS } from 'state/action-types';
 import imageEditor from './image-editor/reducer';
+import videoEditor from './video-editor/reducer';
 import lastDraft from './last-draft/reducer';
 import contactForm from './contact-form/reducer';
 
@@ -21,25 +22,10 @@ import contactForm from './contact-form/reducer';
  */
 export function postId( state = null, action ) {
 	switch ( action.type ) {
-		case EDITOR_POST_ID_SET:
+		case EDITOR_START:
 			return action.postId;
-	}
-
-	return state;
-}
-
-/**
- * Returns the updated editor draft drawer visibility state after an action
- * has been dispatched.
- *
- * @param  {Object} state  Current state
- * @param  {Object} action Action payload
- * @return {Object}        Updated state
- */
-export function showDrafts( state = false, action ) {
-	switch ( action.type ) {
-		case EDITOR_SHOW_DRAFTS_TOGGLE:
-			return ! state;
+		case POST_SAVE_SUCCESS:
+			return state === action.postId ? action.savedPost.ID : state;
 	}
 
 	return state;
@@ -47,8 +33,8 @@ export function showDrafts( state = false, action ) {
 
 export default combineReducers( {
 	postId,
-	showDrafts,
 	imageEditor,
+	videoEditor,
 	lastDraft,
 	contactForm
 } );

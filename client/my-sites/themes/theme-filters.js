@@ -1,9 +1,6 @@
-/** @ssr-ready **/
-
 /**
 * Functions for working with theme search filters. The filter syntax is
 * {taxonomy}:{term}
-* allowing whitespace after the :
 *
 * Valid values for {taxonomy} and {term} are contained in the
 * `taxonomies` object.
@@ -17,7 +14,7 @@ import omitBy from 'lodash/omitBy';
 import includes from 'lodash/includes';
 
 // Regular expressions for matching "taxonomy:term" search-box syntax
-const FILTER_REGEX_STRING = '(\\w+)\\:\\s*([\\w-]+)';
+const FILTER_REGEX_STRING = '(\\w+)\\:([\\w-]*)';
 const FILTER_REGEX_GLOBAL = new RegExp( FILTER_REGEX_STRING, 'g' );
 const FILTER_REGEX_SINGLE = new RegExp( '^' + FILTER_REGEX_STRING + '$' );
 const FILTER_TAXONOMY_GROUP = 1;
@@ -73,6 +70,7 @@ const taxonomies = {
         "microformats",
         "multiple-menus",
         "one-page",
+        "portfolio",
         "post-formats",
         "post-slider",
         "rtl-language-support",
@@ -88,6 +86,7 @@ const taxonomies = {
     "layout": [
         "fixed-layout",
         "fluid-layout",
+        "grid-layout",
         "responsive-layout"
     ],
     "picks": [
@@ -114,8 +113,6 @@ const taxonomies = {
         "journal",
         "lifestream",
         "magazine",
-        "major-league-baseball",
-        "mlb",
         "music",
         "nature",
         "news",
@@ -180,6 +177,13 @@ const taxonomies = {
     ]
 };
 /* eslint-enable */
+
+/**
+ * @return {Object} [taxonomies][terms]
+ */
+export function getTaxonomies( ) {
+	return taxonomies;
+}
 
 let termTable;
 let ambiguousTerms;
@@ -261,6 +265,20 @@ export function getFilter( term ) {
 	const terms = getTermTable();
 	if ( terms[ term ] ) {
 		return `${ terms[ term ] }:${ stripTermPrefix( term ) }`;
+	}
+	return '';
+}
+
+/**
+ * For array of terms recreate full search string in
+ * "taxonomy:term taxonomy:term" search-box format.
+ *
+ * @param {Array} terms - the terms slugs
+ * @return {string}     - complete taxonomy:term filter string, or empty string if term is not valid
+ */
+export function prependFilterKeys( terms ) {
+	if ( terms ) {
+		return terms.split( ',' ).map( getFilter ).join( ' ' ) + ' ';
 	}
 	return '';
 }

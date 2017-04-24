@@ -1,26 +1,15 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
 import React, { PropTypes } from 'react';
 import classNames from 'classnames';
-import { connect } from 'react-redux';
-import {
-	overSome,
-	partial
-} from 'lodash';
+import { partial } from 'lodash';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
-import { isEnabled } from 'config';
-import Gridicon from 'components/gridicon';
-import { isBusiness, isEnterprise } from 'lib/products-values';
 import { localize } from 'i18n-calypso';
-import { getSelectedSite } from 'state/ui/selectors';
-
-const hasBusinessPlan = overSome( isBusiness, isEnterprise );
 
 const possibleDevices = [
 	'computer',
@@ -81,15 +70,15 @@ export const PreviewToolbar = props => {
 					) ) }
 				</div>
 			}
-			{ showSEO &&
+			{ showDeviceSwitcher &&
 			<button
 				aria-hidden={ true }
 				key={ 'back-to-preview' }
 				className={ classNames(
 					'web-preview__device-button',
-					'web-preview__back-to-preview-button', {
-					'is-active': currentDevice !== 'seo'
-				} ) }
+					'web-preview__back-to-preview-button',
+					{ 'is-active': 'seo' !== currentDevice }
+				) }
 				onClick={ partial( setDeviceViewport, 'phone' ) }
 			>
 				<Gridicon icon="phone" />
@@ -99,11 +88,11 @@ export const PreviewToolbar = props => {
 				<button
 					aria-label={ translate( 'Show SEO and search previews' ) }
 					className={ classNames(
-						'web-preview__seo-button',
-						'web-preview__device-button', {
-						'is-active': 'seo' === currentDevice,
-						'is-showing-device-switcher': showDeviceSwitcher
-					} ) }
+						'web-preview__seo-button', {
+							'is-active': 'seo' === currentDevice,
+							'is-showing-device-switcher': showDeviceSwitcher
+						}
+					) }
 					onClick={ selectSeoPreview }
 				>
 					<Gridicon icon="globe" />
@@ -142,14 +131,4 @@ PreviewToolbar.defaultProps = {
 	showSEO: true
 };
 
-const mapStateToProps = ( state, ownProps ) => {
-	const site = getSelectedSite( state );
-	const showSEO = ownProps.showSEO && (
-		( site && site.plan && hasBusinessPlan( site.plan ) && isEnabled( 'manage/advanced-seo' ) ) ||
-		( isEnabled( 'manage/advanced-seo' ) && isEnabled( 'manage/advanced-seo/preview-nudge' ) )
-	);
-
-	return { showSEO };
-};
-
-export default connect( mapStateToProps )( localize( PreviewToolbar ) );
+export default localize( PreviewToolbar );

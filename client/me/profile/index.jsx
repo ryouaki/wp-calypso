@@ -9,13 +9,14 @@ import debugFactory from 'debug';
  * Internal dependencies
  */
 import MeSidebarNavigation from 'me/sidebar-navigation';
-import protectForm from 'lib/mixins/protect-form';
+import { protectForm } from 'lib/protect-form';
 import formBase from 'me/form-base';
 import FormButton from 'components/forms/form-button';
 import FormFieldset from 'components/forms/form-fieldset';
 import FormLabel from 'components/forms/form-label';
 import FormTextInput from 'components/forms/form-text-input';
 import FormTextarea from 'components/forms/form-textarea';
+import EditGravatar from 'blocks/edit-gravatar';
 import ProfileLinks from 'me/profile-links';
 import userProfileLinks from 'lib/user-profile-links';
 import ReauthRequired from 'me/reauth-required';
@@ -24,14 +25,16 @@ import Card from 'components/card';
 import observe from 'lib/mixins/data-observe';
 import eventRecorder from 'me/event-recorder';
 import Main from 'components/main';
+import { isEnabled } from 'config';
+import SectionHeader from 'components/section-header';
 
 const debug = debugFactory( 'calypso:me:profile' );
 
-export default React.createClass( {
+export default protectForm( React.createClass( {
 
 	displayName: 'Profile',
 
-	mixins: [ formBase, LinkedStateMixin, protectForm.mixin, observe( 'userSettings' ), eventRecorder ],
+	mixins: [ formBase, LinkedStateMixin, observe( 'userSettings' ), eventRecorder ],
 
 	componentDidMount() {
 		debug( this.displayName + ' component is mounted.' );
@@ -48,35 +51,11 @@ export default React.createClass( {
 			<Main className="profile">
 				<MeSidebarNavigation />
 				<ReauthRequired twoStepAuthorization={ twoStepAuthorization } />
+				<SectionHeader label={ this.translate( 'Profile' ) } />
 				<Card className="me-profile-settings">
-					<p>
-						{ this.translate(
-							'This information will be displayed publicly on {{profilelink}}your profile{{/profilelink}} and in ' +
-							'{{hovercardslink}}Gravatar Hovercards{{/hovercardslink}}.',
-							{
-								components: {
-									profilelink: (
-										<a
-											onClick={ this.recordClickEvent( 'My Profile Link' ) }
-											href={ gravatarProfileLink }
-											target="_blank"
-											rel="noopener noreferrer"
-										/>
-									),
-									hovercardslink: (
-										<a
-											onClick={ this.recordClickEvent( 'Gravatar Hovercards Link' ) }
-											href="https://support.wordpress.com/gravatar-hovercards/"
-											target="_blank"
-											rel="noopener noreferrer"
-										/>
-									)
-								}
-							}
-						) }
-					</p>
+					{ isEnabled( 'me/edit-gravatar' ) && <EditGravatar /> }
 
-					<form onSubmit={ this.submitForm } onChange={ this.markChanged }>
+					<form onSubmit={ this.submitForm } onChange={ this.props.markChanged }>
 						<FormFieldset>
 							<FormLabel htmlFor="first_name">{ this.translate( 'First Name' ) }</FormLabel>
 							<FormTextInput
@@ -126,6 +105,32 @@ export default React.createClass( {
 							</FormButton>
 						</p>
 					</form>
+					<p className="me-profile-settings__info-text">
+						{ this.translate(
+							'This information will be displayed publicly on {{profilelink}}your profile{{/profilelink}} and in ' +
+							'{{hovercardslink}}Gravatar Hovercards{{/hovercardslink}}.',
+							{
+								components: {
+									profilelink: (
+										<a
+											onClick={ this.recordClickEvent( 'My Profile Link' ) }
+											href={ gravatarProfileLink }
+											target="_blank"
+											rel="noopener noreferrer"
+										/>
+									),
+									hovercardslink: (
+										<a
+											onClick={ this.recordClickEvent( 'Gravatar Hovercards Link' ) }
+											href="https://support.wordpress.com/gravatar-hovercards/"
+											target="_blank"
+											rel="noopener noreferrer"
+										/>
+									)
+								}
+							}
+						) }
+					</p>
 				</Card>
 
 				<ProfileLinks userProfileLinks={ userProfileLinks } />
@@ -133,4 +138,4 @@ export default React.createClass( {
 			</Main>
 		);
 	}
-} );
+} ) );

@@ -4,24 +4,26 @@
 import React from 'react';
 import { keys, trim } from 'lodash';
 import classNames from 'classnames';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
+import AutoDirection from 'components/auto-direction';
 import ExternalLink from 'components/external-link';
-import { recordPermalinkClick, recordGaEvent } from 'reader/stats';
+import { recordPermalinkClick } from 'reader/stats';
 import PostTime from 'reader/post-time';
 import ReaderFullPostHeaderTags from './header-tags';
-import Gridicon from 'components/gridicon';
+import { isDiscoverPost } from 'reader/discover/helper';
+import ReaderFullPostHeaderPlaceholder from './placeholders/header';
 
-const ReaderFullPostHeader = ( { post } ) => {
+const ReaderFullPostHeader = ( { post, referralPost } ) => {
 	const handlePermalinkClick = ( { } ) => {
-		recordPermalinkClick( 'full_post_title' );
+		recordPermalinkClick( 'full_post_title', post );
 	};
 
-	const recordDateClick = ( { } ) => {
-		recordPermalinkClick( 'timestamp' );
-		recordGaEvent( 'Clicked Post Permalink', 'timestamp' );
+	const recordDateClick = () => {
+		recordPermalinkClick( 'timestamp_full_post', post );
 	};
 
 	const classes = { 'reader-full-post__header': true };
@@ -29,22 +31,30 @@ const ReaderFullPostHeader = ( { post } ) => {
 		classes[ 'is-missing-title' ] = true;
 	}
 
+	const externalHref = isDiscoverPost( referralPost ) ? referralPost.URL : post.URL;
+
+	if ( ! post || post._state === 'pending' ) {
+		return <ReaderFullPostHeaderPlaceholder />;
+	}
+
 	/* eslint-disable react/jsx-no-target-blank */
 	return (
 		<div className={ classNames( classes ) }>
 			{ post.title
-				? <h1 className="reader-full-post__header-title" onClick={ handlePermalinkClick }>
-					<ExternalLink className="reader-full-post__header-title-link" href={ post.URL } target="_blank" icon={ false }>
-						{ post.title }
-					</ExternalLink>
-				</h1>
+				? <AutoDirection>
+					<h1 className="reader-full-post__header-title" onClick={ handlePermalinkClick }>
+						<ExternalLink className="reader-full-post__header-title-link" href={ externalHref } target="_blank" icon={ false }>
+							{ post.title }
+						</ExternalLink>
+					</h1>
+				</AutoDirection>
 				: null }
 			<div className="reader-full-post__header-meta">
 				{ post.date
 					? <span className="reader-full-post__header-date">
 						<a className="reader-full-post__header-date-link"
 							onClick={ recordDateClick }
-							href={ post.URL }
+							href={ externalHref }
 							target="_blank"
 							rel="noopener noreferrer">
 							<PostTime date={ post.date } />
@@ -63,7 +73,8 @@ const ReaderFullPostHeader = ( { post } ) => {
 };
 
 ReaderFullPostHeader.propTypes = {
-	post: React.PropTypes.object.isRequired
+	post: React.PropTypes.object.isRequired,
+	referralPost: React.PropTypes.object
 };
 
 export default ReaderFullPostHeader;

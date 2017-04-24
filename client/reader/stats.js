@@ -1,9 +1,13 @@
-import assign from 'lodash/assign';
+/**
+ * External Dependencies
+ */
+import { assign, partial, pick } from 'lodash';
 import debugFactory from 'debug';
-import partial from 'lodash/partial';
 
+/**
+ * Internal Dependencies
+ */
 import { mc, ga, tracks } from 'lib/analytics';
-
 import SubscriptionStore from 'lib/reader-feed-subscriptions';
 
 const debug = debugFactory( 'calypso:reader:stats' );
@@ -18,14 +22,21 @@ export function recordGaEvent( action, label, value ) {
 	ga.recordEvent( 'Reader', action, label, value );
 }
 
-export function recordPermalinkClick( where ) {
+export function recordPermalinkClick( where, post ) {
 	mc.bumpStat( {
 		reader_actions: 'visited_post_permalink',
 		reader_permalink_source: where
 	} );
-	recordTrack( 'calypso_reader_permalink_click', {
+	recordGaEvent( 'Clicked Post Permalink', where );
+	const trackEvent = 'calypso_reader_permalink_click';
+	const args = {
 		source: where
-	} );
+	};
+	if ( post ) {
+		recordTrackForPost( trackEvent, post, args );
+	} else {
+		recordTrack( trackEvent, args );
+	}
 }
 
 function getLocation() {
@@ -54,9 +65,6 @@ function getLocation() {
 	}
 	if ( path.indexOf( '/recommendations/mine' ) === 0 ) {
 		return 'recommended_foryou';
-	}
-	if ( path.indexOf( '/recommendations/start' ) === 0 ) {
-		return 'recommended_cold_start';
 	}
 	if ( path.indexOf( '/recommendations' ) === 0 ) {
 		return 'recommended_topics';
@@ -105,16 +113,19 @@ tracksRailcarEventWhitelist
 	.add( 'calypso_reader_article_liked' )
 	.add( 'calypso_reader_article_commented_on' )
 	.add( 'calypso_reader_article_opened' )
-	.add( 'calypso_reader_startcard_clicked' )
 	.add( 'calypso_reader_searchcard_clicked' )
 	.add( 'calypso_reader_author_link_clicked' )
+	.add( 'calypso_reader_permalink_click' )
+	.add( 'calypso_reader_recommended_post_clicked' )
+	.add( 'calypso_reader_recommended_site_clicked' )
+	.add( 'calypso_reader_recommended_post_dismissed' )
 ;
 
-export function recordTracksRailcar( action, eventName, railcar ) {
+export function recordTracksRailcar( action, eventName, railcar, overrides = {} ) {
 	// flatten the railcar down into the event props
 	recordTrack( action, Object.assign( {
 		action: eventName.replace( 'calypso_reader_', '' )
-	}, railcar ) );
+	}, railcar, overrides ) );
 }
 
 export const recordTracksRailcarRender = partial( recordTracksRailcar, 'calypso_traintracks_render' );
@@ -129,7 +140,8 @@ export function recordTrackForPost( eventName, post = {}, additionalProps = {} )
 		is_jetpack: post.is_jetpack
 	}, additionalProps ) );
 	if ( post.railcar && tracksRailcarEventWhitelist.has( eventName ) ) {
-		recordTracksRailcarInteract( eventName, post.railcar );
+		// check for overrides for the railcar
+		recordTracksRailcarInteract( eventName, post.railcar, pick( additionalProps, [ 'ui_position', 'ui_algo' ] ) );
 	} else if ( process.env.NODE_ENV !== 'production' && post.railcar ) {
 		console.warn( 'Consider whitelisting reader track', eventName ); //eslint-disable-line no-console
 	}
@@ -150,28 +162,30 @@ export function pageViewForPost( blogId, blogUrl, postId, isPrivate ) {
 	mc.bumpStatWithPageView( params );
 }
 
-export function recordFollow( url, railcar ) {
+export function recordFollow( url, railcar, additionalProps = {} ) {
 	const source = getLocation();
 	mc.bumpStat( 'reader_follows', source );
 	recordAction( 'followed_blog' );
 	recordGaEvent( 'Clicked Follow Blog', source );
 	recordTrack( 'calypso_reader_site_followed', {
 		url,
-		source
+		source,
+		...additionalProps,
 	} );
 	if ( railcar ) {
 		recordTracksRailcarInteract( 'site_followed', railcar );
 	}
 }
 
-export function recordUnfollow( url, railcar ) {
+export function recordUnfollow( url, railcar, additionalProps = {} ) {
 	const source = getLocation();
 	mc.bumpStat( 'reader_unfollows', source );
 	recordAction( 'unfollowed_blog' );
 	recordGaEvent( 'Clicked Unfollow Blog', source );
 	recordTrack( 'calypso_reader_site_unfollowed', {
 		url,
-		source
+		source,
+		...additionalProps,
 	} );
 	if ( railcar ) {
 		recordTracksRailcarInteract( 'site_unfollowed', railcar );

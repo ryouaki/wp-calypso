@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { find, filter, some } from 'lodash';
+import { find, filter, some, every } from 'lodash';
 
 const isRequesting = function( state, siteId ) {
 	// if the `isRequesting` attribute doesn't exist yet,
@@ -24,6 +24,12 @@ const getPluginsForSite = function( state, siteId, whitelist = false ) {
 	if ( typeof pluginList === 'undefined' ) {
 		return [];
 	}
+
+	// patch to solve a bug in jp 4.3 ( https://github.com/Automattic/jetpack/issues/5498 )
+	if ( whitelist === 'backups' || whitelist === 'scan' ) {
+		whitelist = 'vaultpress';
+	}
+
 	return filter( pluginList, ( plugin ) => {
 		if ( !! whitelist ) {
 			return ( whitelist === plugin.slug );
@@ -32,8 +38,15 @@ const getPluginsForSite = function( state, siteId, whitelist = false ) {
 	} );
 };
 
+const isStarted = function( state, siteId, whitelist = false ) {
+	const pluginList = getPluginsForSite( state, siteId, whitelist );
+	return ! every( pluginList, ( item ) => {
+		return ( 'wait' === item.status );
+	} );
+};
+
 const isFinished = function( state, siteId, whitelist = false ) {
-	let pluginList = getPluginsForSite( state, siteId, whitelist );
+	const pluginList = getPluginsForSite( state, siteId, whitelist );
 	if ( pluginList.length === 0 ) {
 		return true;
 	}
@@ -44,7 +57,7 @@ const isFinished = function( state, siteId, whitelist = false ) {
 };
 
 const isInstalling = function( state, siteId, whitelist = false ) {
-	let pluginList = getPluginsForSite( state, siteId, whitelist );
+	const pluginList = getPluginsForSite( state, siteId, whitelist );
 	if ( pluginList.length === 0 ) {
 		return false;
 	}
@@ -77,4 +90,4 @@ const getNextPlugin = function( state, siteId, whitelist = false ) {
 	return plugin;
 };
 
-export default { isRequesting, hasRequested, isFinished, isInstalling, getPluginsForSite, getActivePlugin, getNextPlugin };
+export default { isRequesting, hasRequested, isStarted, isFinished, isInstalling, getPluginsForSite, getActivePlugin, getNextPlugin };

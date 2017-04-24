@@ -4,16 +4,15 @@
 import React from 'react';
 import classNames from 'classnames';
 import noop from 'lodash/noop';
-import isEmpty from 'lodash/isEmpty';
-import isEqual from 'lodash/isEqual';
+import { isEmpty, isEqual } from 'lodash';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
 import Card from 'components/card';
 import ThemeMoreButton from './more-button';
-import Gridicon from 'components/gridicon';
-import TrackInteractions from 'components/track-interactions';
+import PulsingDot from 'components/pulsing-dot';
 
 /**
  * Component
@@ -30,15 +29,17 @@ const Theme = React.createClass( {
 			screenshot: React.PropTypes.string,
 			// Theme price (pre-formatted string) -- empty string indicates free theme
 			price: React.PropTypes.string,
-			// If true, the user has 'purchased' the theme
-			purchased: React.PropTypes.bool,
-			// If true, highlight this theme as active
-			active: React.PropTypes.bool,
 			author: React.PropTypes.string,
 			author_uri: React.PropTypes.string,
 			demo_uri: React.PropTypes.string,
 			stylesheet: React.PropTypes.string
 		} ),
+		// If true, highlight this theme as active
+		active: React.PropTypes.bool,
+		// If true, the user has 'purchased' the theme
+		purchased: React.PropTypes.bool,
+		// If true, the theme is being installed
+		installing: React.PropTypes.bool,
 		// If true, render a placeholder
 		isPlaceholder: React.PropTypes.bool,
 		// URL the screenshot link points to
@@ -63,7 +64,14 @@ const Theme = React.createClass( {
 	},
 
 	shouldComponentUpdate( nextProps ) {
-		return ! isEqual( nextProps.theme, this.props.theme );
+		return nextProps.theme.id !== this.props.theme.id ||
+			( nextProps.active !== this.props.active ) ||
+			( nextProps.purchased !== this.props.purchased ) ||
+			( nextProps.installing !== this.props.installing ) ||
+			! isEqual( Object.keys( nextProps.buttonContents ), Object.keys( this.props.buttonContents ) ) ||
+			( nextProps.screenshotClickUrl !== this.props.screenshotClickUrl ) ||
+			( nextProps.onScreenshotClick !== this.props.onScreenshotClick ) ||
+			( nextProps.onMoreButtonClick !== this.props.onMoreButtonClick );
 	},
 
 	getDefaultProps() {
@@ -71,12 +79,13 @@ const Theme = React.createClass( {
 			isPlaceholder: false,
 			buttonContents: {},
 			onMoreButtonClick: noop,
-			actionLabel: ''
+			actionLabel: '',
+			active: false
 		} );
 	},
 
 	onScreenshotClick() {
-		this.props.onScreenshotClick( this.props.theme, this.props.index );
+		this.props.onScreenshotClick( this.props.theme.id, this.props.index );
 	},
 
 	renderPlaceholder() {
@@ -101,14 +110,26 @@ const Theme = React.createClass( {
 		}
 	},
 
+	renderInstalling() {
+		if ( this.props.installing ) {
+			return (
+				<div className="theme__installing" >
+					<PulsingDot active={ true } />
+				</div>
+			);
+		}
+	},
+
 	render() {
 		const {
 			name,
-			active,
 			price,
-			purchased,
 			screenshot
 		} = this.props.theme;
+		const {
+			active,
+			purchased
+		} = this.props;
 		const themeClass = classNames( 'theme', {
 			'is-active': active,
 			'is-actionable': !! ( this.props.screenshotClickUrl || this.props.onScreenshotClick )
@@ -121,41 +142,50 @@ const Theme = React.createClass( {
 			return this.renderPlaceholder();
 		}
 
-		const screenshotWidth = window && window.devicePixelRatio > 1 ? 680 : 340;
 		return (
 			<Card className={ themeClass }>
 				<div className="theme__content">
+
 					{ this.renderHover() }
+
 					<a href={ this.props.screenshotClickUrl }>
+						{ this.renderInstalling() }
 						{ screenshot
 							? <img className="theme__img"
-								src={ screenshot + '?w=' + screenshotWidth }
+								src={ screenshot + '?w=340' }
+								srcSet={
+									screenshot + '?w=340 1x, ' +
+									screenshot + '?w=680 2x'
+								}
 								onClick={ this.onScreenshotClick }
-								id={ screenshotID }/>
+								id={ screenshotID } />
 							: <div className="theme__no-screenshot" >
 								<Gridicon icon="themes" size={ 48 } />
 							</div>
 						}
 					</a>
+
 					<div className="theme__info" >
-						<h2>{ name }</h2>
+						<h2 className="theme__info-title">{ name }</h2>
 						{ active &&
-							<span className="theme__active-label">{ this.translate( 'Active', {
+							<span className="theme-badge__active">{ this.translate( 'Active', {
 								context: 'singular noun, the currently active theme'
 							} ) }</span>
 						}
 						{ price && ! purchased &&
-							<span className="price">{ price }</span>
+							<span className="theme-badge__price">{ price }</span>
 						}
 						{ ! isEmpty( this.props.buttonContents )
-							? <TrackInteractions fields="theme.id" >
-								<ThemeMoreButton
-									index={ this.props.index }
-									theme={ this.props.theme }
-									onClick={ this.props.onMoreButtonClick }
-									options={ this.props.buttonContents } />
-							</TrackInteractions> : null }
+							? <ThemeMoreButton
+								index={ this.props.index }
+								theme={ this.props.theme }
+								active={ this.props.active }
+								onMoreButtonClick={ this.props.onMoreButtonClick }
+								options={ this.props.buttonContents } />
+							: null
+						}
 					</div>
+
 				</div>
 			</Card>
 		);

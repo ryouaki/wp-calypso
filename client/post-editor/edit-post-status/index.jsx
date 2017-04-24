@@ -5,19 +5,19 @@ import React, { PropTypes, Component } from 'react';
 import { noop } from 'lodash';
 import { localize } from 'i18n-calypso';
 import { connect } from 'react-redux';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
+import AsyncLoad from 'components/async-load';
 import Button from 'components/button';
 import FormToggle from 'components/forms/form-toggle/compact';
 import Revisions from 'post-editor/editor-revisions';
-import Gridicon from 'components/gridicon';
 import postUtils from 'lib/posts/utils';
 import Popover from 'components/popover';
 import InfoPopover from 'components/info-popover';
 import Tooltip from 'components/tooltip';
-import PostSchedule from 'components/post-schedule';
 import postScheduleUtils from 'components/post-schedule/utils';
 import siteUtils from 'lib/site/utils';
 import { recordStat, recordEvent } from 'lib/posts/stats';
@@ -25,26 +25,29 @@ import { editPost } from 'state/posts/actions';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { getEditorPostId } from 'state/ui/editor/selectors';
 import { getEditedPost } from 'state/posts/selectors';
+import EditorVisibility from 'post-editor/editor-visibility';
 
 class EditPostStatus extends Component {
 
 	static propTypes = {
 		moment: PropTypes.func,
-		onDateChange: PropTypes.func,
+		setPostDate: PropTypes.func,
 		onSave: PropTypes.func,
 		post: PropTypes.object,
 		savedPost: PropTypes.object,
 		site: PropTypes.object,
 		translate: PropTypes.func,
-		type: PropTypes.string
+		type: PropTypes.string,
+		postDate: PropTypes.string,
+		onPrivatePublish: PropTypes.func,
+		status: PropTypes.string,
 	};
 
 	constructor( props ) {
 		super( props );
 		this.state = {
 			showTZTooltip: false,
-			showPostSchedulePopover: false,
-			onDateChange: noop
+			showPostSchedulePopover: false
 		};
 	}
 
@@ -104,7 +107,7 @@ class EditPostStatus extends Component {
 			isSticky = this.props.post.sticky;
 			isPending = postUtils.isPending( this.props.post );
 			isPublished = postUtils.isPublished( this.props.savedPost );
-			isScheduled = this.props.savedPost.status === 'future';
+			isScheduled = this.props.savedPost && this.props.savedPost.status === 'future';
 			canPublish = siteUtils.userCan( 'publish_posts', this.props.site );
 		}
 
@@ -113,7 +116,7 @@ class EditPostStatus extends Component {
 			this.props.site.options.admin_url;
 
 		const fullDate = postScheduleUtils.convertDateToUserLocation(
-			( postUtils.getEditedTime( this.props.post ) || new Date() ),
+			( this.props.postDate || new Date() ),
 			siteUtils.timezone( this.props.site ),
 			siteUtils.gmtOffset( this.props.site )
 		).format( 'll LT' );
@@ -139,9 +142,6 @@ class EditPostStatus extends Component {
 					{ this.renderTZTooltop() }
 					{ this.renderPostSchedulePopover() }
 				</span>
-				<Revisions
-						revisions={ this.props.post && this.props.post.revisions }
-						adminUrl={ adminUrl } />
 				{ this.props.type === 'post' &&
 					<label className="edit-post-status__sticky">
 						<span className="edit-post-status__label-text">
@@ -181,31 +181,61 @@ class EditPostStatus extends Component {
 						<Gridicon icon="undo" size={ 18 } /> { translate( 'Revert to draft' ) }
 					</Button>
 				}
+				{ this.renderPostVisibility() }
+				<Revisions
+					revisions={ this.props.post && this.props.post.revisions }
+					adminUrl={ adminUrl }
+				/>
 			</div>
+		);
+	}
+
+	renderPostVisibility() {
+		if ( ! this.props.post ) {
+			return;
+		}
+
+		const { password, type } = this.props.post || {};
+		const isPrivateSite = this.props.site && this.props.site.is_private;
+		const savedStatus = this.props.savedPost ? this.props.savedPost.status : null;
+		const savedPassword = this.props.savedPost ? this.props.savedPost.password : null;
+		const props = {
+			status: this.props.status,
+			onPrivatePublish: this.props.onPrivatePublish,
+			isPrivateSite,
+			type,
+			password,
+			savedStatus,
+			savedPassword
+		};
+
+		return (
+			<EditorVisibility { ...props } />
 		);
 	}
 
 	renderPostSchedulePopover() {
 		const tz = siteUtils.timezone( this.props.site ),
 			gmt = siteUtils.gmtOffset( this.props.site ),
-			selectedDay = this.props.post && this.props.post.date
-				? this.props.moment( this.props.post.date )
+			selectedDay = this.props.postDate
+				? this.props.moment( this.props.postDate )
 				: null;
 
 		return (
 			<Popover
 				context={ this.refs && this.refs.postStatusTooltip }
 				isVisible={ this.state.showPostSchedulePopover }
-				position="right"
+				position="bottom left"
 				onClose={ this.togglePostSchedulePopover }
 			>
 				<div className="edit-post-status__post-schedule">
-					<PostSchedule
+					<AsyncLoad
+						require="components/post-schedule"
 						selectedDay={ selectedDay }
 						timezone={ tz }
 						gmtOffset={ gmt }
-						onDateChange={ this.props.onDateChange }>
-					</PostSchedule>
+						onDateChange={ this.props.setPostDate }
+					/>
 				</div>
 			</Popover>
 		);
@@ -227,7 +257,7 @@ class EditPostStatus extends Component {
 			<Tooltip
 				context={ this.refs && this.refs.postStatusTooltip }
 				isVisible={ this.state.showTZTooltip }
-				position="right"
+				position="left"
 				onClose={ noop }
 			>
 				<div className="edit-post-status__full-date__tooltip">

@@ -16,6 +16,7 @@ import {
 	JETPACK_CONNECT_AUTHORIZE_LOGIN_COMPLETE,
 	JETPACK_CONNECT_AUTHORIZE_RECEIVE,
 	JETPACK_CONNECT_AUTHORIZE_RECEIVE_SITE_LIST,
+	JETPACK_CONNECT_RETRY_AUTH,
 	JETPACK_CONNECT_SSO_AUTHORIZE_REQUEST,
 	JETPACK_CONNECT_SSO_AUTHORIZE_SUCCESS,
 	JETPACK_CONNECT_SSO_AUTHORIZE_ERROR,
@@ -148,6 +149,21 @@ describe( 'actions', () => {
 		} );
 	} );
 
+	describe( '#retryAuth()', () => {
+		it( 'should dispatch redirect action when called', () => {
+			const { retryAuth } = actions;
+			const url = 'http://example.com';
+
+			retryAuth( url, 0 )( spy );
+
+			expect( spy ).to.have.been.calledWith( {
+				type: JETPACK_CONNECT_RETRY_AUTH,
+				slug: 'example.com',
+				attemptNumber: 0
+			} );
+		} );
+	} );
+
 	describe( '#authorize()', () => {
 		const queryObject = {
 			_wp_nonce: 'nonce',
@@ -198,7 +214,8 @@ describe( 'actions', () => {
 					.persist()
 					.get( '/rest/v1.1/me/sites' )
 					.query( {
-						site_visibility: 'all'
+						site_visibility: 'all',
+						include_domain_only: true
 					} )
 					.reply( 200, {
 						sites: [ client_id ]

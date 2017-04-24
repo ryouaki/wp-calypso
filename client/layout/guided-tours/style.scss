@@ -13,13 +13,22 @@
 	animation-name: guided-tours__step-fadein;
 	animation-timing-function: ease-in-out;
 
-	.guided-tours__step-text {
+	p {
 		color: lighten( $gray, 30 );
 		margin-bottom: 16px;
 
 		strong {
 			color: $white;
 		}
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	.gridicon {
+		vertical-align: middle;
+		margin-top: -4px;
 	}
 
 	.gridicon[height="16"] {
@@ -79,6 +88,9 @@
 	.button {
 		width: 48%;
 	}
+	.guided-tours__button-link {
+		text-align: center;
+	}
 	.button:nth-child(1) {
 		margin-right: 4%;
 	}
@@ -93,6 +105,11 @@
 	.button {
 		width: 100%;
 	}
+	.guided-tours__subtle-button, {
+		color: darken( $white, 20% );
+		background: none;
+		border: none;
+	}
 }
 
 .guided-tours__external-link,
@@ -100,11 +117,8 @@
 	color: lighten( $gray, 10 );
 	margin-bottom: 0;
 	font-style: italic;
-
-	.gridicon {
-		position: relative;
-		top: 7px;
-	}
+	line-height: 24px;
+	min-height: 24px;
 
 	.external-link {
 		font-style: normal;
@@ -113,10 +127,6 @@
 		padding-top: 12px;
 		margin-top: 16px;
 	}
-}
-
-.guided-tours__actionstep-instructions {
-	margin-top: -7px;
 }
 
 // style the pure text representation of the actionstep icon

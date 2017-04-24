@@ -7,19 +7,21 @@ import { bindActionCreators } from 'redux';
 import debugModule from 'debug';
 import get from 'lodash/get';
 import map from 'lodash/map';
+import Gridicon from 'gridicons';
+import cookie from 'cookie';
 
 /**
  * Internal dependencies
  */
 import Main from 'components/main';
 import StepHeader from '../step-header';
-import observe from 'lib/mixins/data-observe';
 import Card from 'components/card';
 import CompactCard from 'components/card/compact';
 import Gravatar from 'components/gravatar';
 import Button from 'components/button';
 import LoggedOutFormLinks from 'components/logged-out-form/links';
 import LoggedOutFormLinkItem from 'components/logged-out-form/link-item';
+import { login } from 'lib/paths';
 import { validateSSONonce, authorizeSSO } from 'state/jetpack-connect/actions';
 import { getSSO } from 'state/jetpack-connect/selectors';
 import addQueryArgs from 'lib/route/add-query-args';
@@ -30,7 +32,6 @@ import NoticeAction from 'components/notice/notice-action';
 import Site from 'blocks/site';
 import SitePlaceholder from 'blocks/site/placeholder';
 import { decodeEntities } from 'lib/formatting';
-import Gridicon from 'components/gridicon';
 import LoggedOutFormFooter from 'components/logged-out-form/footer';
 import Dialog from 'components/dialog';
 import analytics from 'lib/analytics';
@@ -45,8 +46,6 @@ const debug = debugModule( 'calypso:jetpack-connect:sso' );
 
 const JetpackSSOForm = React.createClass( {
 	displayName: 'JetpackSSOForm',
-
-	mixins: [ observe( 'userModule' ) ],
 
 	getInitialState() {
 		return {
@@ -80,6 +79,12 @@ const JetpackSSOForm = React.createClass( {
 
 		const { siteId, ssoNonce } = this.props;
 		const siteUrl = get( this.props, 'blogDetails.URL' );
+		const cookieOptions = {
+			maxAge: 300,
+			path: '/',
+		};
+		document.cookie = cookie.serialize( 'jetpack_sso_approved', siteId, cookieOptions );
+
 		debug( 'Approving sso' );
 		this.props.authorizeSSO( siteId, ssoNonce, siteUrl );
 	},
@@ -131,8 +136,7 @@ const JetpackSSOForm = React.createClass( {
 	},
 
 	getSignInLink() {
-		const loginUrl = config( 'login_url' ) || 'https://wordpress.com/wp-login.php';
-		return addQueryArgs( { redirect_to: window.location.href }, loginUrl );
+		return login( { legacy: true, redirectTo: window.location.href } );
 	},
 
 	maybeValidateSSO( props = this.props ) {

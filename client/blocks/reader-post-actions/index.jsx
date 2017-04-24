@@ -9,23 +9,42 @@ import classnames from 'classnames';
  */
 import CommentButton from 'blocks/comment-button';
 import LikeButton from 'reader/like-button';
-import ShareButton from 'reader/share';
+import ShareButton from 'blocks/reader-share';
 import PostEditButton from 'blocks/post-edit-button';
 import ReaderPostOptionsMenu from 'blocks/reader-post-options-menu';
 import { shouldShowComments } from 'blocks/comments/helper';
 import { shouldShowLikes } from 'reader/like-helper';
-import { shouldShowShare } from 'reader/share/helper';
+import { shouldShowShare } from 'blocks/reader-share/helper';
 import { userCan } from 'lib/posts/utils';
 import * as stats from 'reader/stats';
 import { localize } from 'i18n-calypso';
-import ExternalLink from 'components/external-link';
+import ReaderVisitLink from 'blocks/reader-visit-link';
 
-const ReaderPostActions = ( { translate, post, site, onCommentClick, showEdit, showVisit, showMenu, iconSize, className } ) => {
+const ReaderPostActions = ( props ) => {
+	const {
+		post,
+		site,
+		onCommentClick,
+		showEdit,
+		showVisit,
+		showMenu,
+		showMenuFollow,
+		iconSize,
+		className,
+		visitUrl,
+		fullPost,
+		translate,
+	} = props;
+
 	const onEditClick = () => {
 		stats.recordAction( 'edit_post' );
 		stats.recordGaEvent( 'Clicked Edit Post', 'full_post' );
 		stats.recordTrackForPost( 'calypso_reader_edit_post_clicked', post );
 	};
+
+	function onPermalinkVisit() {
+		stats.recordPermalinkClick( 'card', post );
+	}
 
 	const listClassnames = classnames( 'reader-post-actions', className );
 
@@ -34,9 +53,12 @@ const ReaderPostActions = ( { translate, post, site, onCommentClick, showEdit, s
 		<ul className={ listClassnames }>
 			{ showVisit &&
 				<li className="reader-post-actions__item reader-post-actions__visit">
-					<ExternalLink href={ post.URL } target="_blank" icon={ true } showIconFirst={ true } iconSize={ iconSize }>
-						<span className="reader-post-actions__visit-label">{ translate( 'Visit' ) }</span>
-					</ExternalLink>
+					<ReaderVisitLink
+						href={ visitUrl || post.URL }
+						iconSize={ iconSize }
+						onClick={ onPermalinkVisit }>
+							{ translate( 'Visit' ) }
+					</ReaderVisitLink>
 				</li>
 			}
 			{ showEdit && site && userCan( 'edit_post', post ) &&
@@ -65,7 +87,9 @@ const ReaderPostActions = ( { translate, post, site, onCommentClick, showEdit, s
 						key="like-button"
 						siteId={ +post.site_ID }
 						postId={ +post.ID }
-						fullPost={ true }
+						post={ post }
+						site={ site }
+						fullPost={ fullPost }
 						tagName="div"
 						forceCounter={ true }
 						iconSize={ iconSize }
@@ -74,7 +98,7 @@ const ReaderPostActions = ( { translate, post, site, onCommentClick, showEdit, s
 			}
 			{ showMenu &&
 				<li className="reader-post-actions__item">
-					<ReaderPostOptionsMenu className="ignore-click" post={ post } />
+					<ReaderPostOptionsMenu className="ignore-click" showFollow={ showMenuFollow } post={ post } />
 				</li>
 			}
 		</ul>
@@ -88,14 +112,18 @@ ReaderPostActions.propTypes = {
 	onCommentClick: React.PropTypes.func,
 	showEdit: React.PropTypes.bool,
 	iconSize: React.PropTypes.number,
-	showMenu: React.PropTypes.bool
+	showMenu: React.PropTypes.bool,
+	showMenuFollow: React.PropTypes.bool,
+	visitUrl: React.PropTypes.string,
+	fullPost: React.PropTypes.bool,
 };
 
 ReaderPostActions.defaultProps = {
 	showEdit: true,
 	showVisit: false,
 	showMenu: false,
-	iconSize: 24
+	iconSize: 24,
+	showMenuFollow: true
 };
 
 export default localize( ReaderPostActions );

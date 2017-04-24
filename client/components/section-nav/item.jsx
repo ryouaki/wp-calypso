@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External Dependencies
  */
@@ -10,7 +8,8 @@ var React = require( 'react' ),
 /**
  * Internal Dependencies
  */
-var Count = require( 'components/count' );
+import Count from 'components/count';
+import { preload } from 'sections-preload';
 
 /**
  * Main
@@ -28,7 +27,17 @@ var NavItem = React.createClass( {
 		isExternalLink: React.PropTypes.bool,
 		disabled: React.PropTypes.bool,
 		count: React.PropTypes.number,
-		className: React.PropTypes.string
+		className: React.PropTypes.string,
+		preloadSectionName: React.PropTypes.string
+	},
+
+	_preloaded: false,
+
+	preload() {
+		if ( ! this._preloaded && this.props.preloadSectionName ) {
+			this._preloaded = true;
+			preload( this.props.preloadSectionName );
+		}
 	},
 
 	render: function() {
@@ -60,7 +69,8 @@ var NavItem = React.createClass( {
 					href={ this.props.path }
 					target={ target }
 					className={ 'section-nav-' + itemClassPrefix + '__link' }
-					onTouchTap={ onClick }
+					onClick={ onClick }
+					onMouseEnter={ this.preload }
 					tabIndex={ this.props.tabIndex || 0 }
 					aria-selected={ this.props.selected }
 					disabled={ this.props.disabled }

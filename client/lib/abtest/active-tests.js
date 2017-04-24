@@ -1,38 +1,4 @@
 module.exports = {
-	// `browserNotifications` controls whether or not users see the
-	// nudge notice to enable browser notifications at the top of
-	// some Calypso screens; any users with this enabled will also
-	// have the preference available in /me/notifications;
-	// note: not renaming this test at this point in time so that we don't
-	// mess with any users that were put in the `enabled` variation -- don't
-	// want to take their browser notifications preference away from them!
-	browserNotifications: {
-		datestamp: '20160628',
-		variations: {
-			disabled: 95,
-			enabled: 5,
-		},
-		defaultVariation: 'disabled',
-		allowExistingUsers: true,
-	},
-	coldStartReader: {
-		datestamp: '20160901',
-		variations: {
-			noEmailColdStart: 33,
-			noEmailColdStartWithAutofollows: 33,
-			noChanges: 34
-		},
-		defaultVariation: 'noChanges',
-		allowExistingUsers: false,
-	},
-	domainSuggestionClickableRow: {
-		datestamp: '20160802',
-		variations: {
-			clickableRow: 20,
-			clickableButton: 80
-		},
-		defaultVariation: 'clickableButton'
-	},
 	multiDomainRegistrationV1: {
 		datestamp: '20200721',
 		variations: {
@@ -42,94 +8,63 @@ module.exports = {
 		},
 		defaultVariation: 'singlePurchaseFlow'
 	},
-	signupStore: {
-		datestamp: '20160927',
-		variations: {
-			designTypeWithoutStore: 0,
-			designTypeWithStore: 100,
-		},
-		defaultVariation: 'designTypeWithStore',
-		allowExistingUsers: false,
-	},
-	signupStoreBenchmarking: {
-		datestamp: '20160927',
-		variations: {
-			pressable: 97,
-			bluehost: 1,
-			bluehostWithWoo: 1,
-			siteground: 1
-		},
-		defaultVariation: 'pressable',
-		allowExistingUsers: false,
-	},
-	signupThemeUpload: {
-		datestamp: '20160928',
-		variations: {
-			showThemeUpload: 10,
-			hideThemeUpload: 90,
-		},
-		defaultVariation: 'hideThemeUpload',
-		allowExistingUsers: false,
-	},
-	signupSurveyStep: {
-		datestamp: '20161010',
-		variations: {
-			surveyStepV1: 50,
-			surveyStepV2: 50,
-		},
-		defaultVariation: 'surveyStepV1'
-	},
-	readerSearchSuggestions: {
-		datestamp: '20160804',
-		variations: {
-			staffSuggestions: 50,
-			popularSuggestions: 50
-		},
-		defaultVariation: 'staffSuggestions',
-		allowExistingUsers: true
-	},
-	domainSuggestionPopover: {
-		datestamp: '20160809',
-		variations: {
-			showPopover: 80,
-			hidePopover: 20,
-		},
-		defaultVariation: 'showPopover',
-		allowExistingUsers: false,
-	},
-	paidNuxStreamlined: {
-		datestamp: '20160912',
+	signupPlansCallToAction: {
+		datestamp: '20170403',
 		variations: {
 			original: 50,
-			streamlined: 50,
+			modified: 50,
 		},
 		defaultVariation: 'original',
 	},
-	readerFullPost: {
-		datestamp: '20160929',
+	automatedTransfer2: {
+		datestamp: '20170316',
 		variations: {
-			current: 50,
-			refreshed: 50
+			enabled: 100,
+			disabled: 0
 		},
-		defaultVariation: 'current',
-		allowExistingUsers: true
-	},
-	siteTitleStep: {
-		datestamp: '20160928',
-		variations: {
-			showSiteTitleStep: 5,
-			hideSiteTitleStep: 95,
-		},
-		defaultVariation: 'hideSiteTitleStep',
+		defaultVariation: 'disabled',
 		allowExistingUsers: false
 	},
-	domainToPersonalPlanNudge2: {
-		datestamp: '20161018',
+	jetpackNoMonthly: {
+		datestamp: '20170410',
 		variations: {
-			original: 50,
-			nudge: 50
+			showMonthly: 50,
+			dontShowMonthly: 50
+		},
+		defaultVariation: 'showMonthly',
+		allowExistingUsers: true
+	},
+	signupSurveyStep: {
+		datestamp: '20170329',
+		variations: {
+			showSurveyStep: 20,
+			hideSurveyStep: 80,
+		},
+		defaultVariation: 'hideSurveyStep',
+	},
+	conciergeOfferOnCancel: {
+		datestamp: '20170410',
+		variations: {
+			showConciergeOffer: 50,
+			hideConciergeOffer: 50,
+		},
+		defaultVariation: 'showConciergeOffer',
+	},
+	presaleChatButton: {
+		datestamp: '20170328',
+		variations: {
+			showChatButton: 20,
+			original: 80
 		},
 		defaultVariation: 'original',
-		allowExistingUsers: true
-	}
+		allowAnyLocale: true,
+	},
+	newSiteWithJetpack: {
+		datestamp: '20170419',
+		variations: {
+			showNewJetpackSite: 10,
+			onlyDotComSites: 90,
+		},
+		defaultVariation: 'onlyDotComSites',
+	},
 };

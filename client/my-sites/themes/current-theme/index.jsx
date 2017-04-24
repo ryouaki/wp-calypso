@@ -1,65 +1,66 @@
 /**
  * External dependencies
  */
-import React, { PropTypes } from 'react';
+import React, { Component, PropTypes } from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import map from 'lodash/map';
-import pickBy from 'lodash/pickBy';
+import { map, pickBy } from 'lodash';
+import { localize } from 'i18n-calypso';
 
 /**
  * Internal dependencies
  */
 import Card from 'components/card';
 import CurrentThemeButton from './button';
-import {
-	customize,
-	info,
-	support,
-	bindOptionsToDispatch,
-	bindOptionsToSite
-} from '../theme-options';
+import { connectOptions } from '../theme-options';
 import { trackClick } from '../helpers';
-import { isJetpackSite } from 'state/sites/selectors';
-import { canCurrentUser } from 'state/current-user/selectors';
-import { getCurrentTheme } from 'state/themes/current-theme/selectors';
-import QueryCurrentTheme from 'components/data/query-current-theme';
+import { getActiveTheme, getCanonicalTheme } from 'state/themes/selectors';
+import QueryActiveTheme from 'components/data/query-active-theme';
+import QueryCanonicalTheme from 'components/data/query-canonical-theme';
 
-/**
+/*
  * Show current active theme for a site, with
  * related actions.
  */
-const CurrentTheme = React.createClass( {
+class CurrentTheme extends Component {
 
-	propTypes: {
+	static propTypes = {
 		options: PropTypes.objectOf( PropTypes.shape( {
-			label: PropTypes.string.isRequired,
-			icon: PropTypes.string.isRequired,
-			getUrl: PropTypes.func.isRequired
+			label: PropTypes.string,
+			icon: PropTypes.string,
+			getUrl: PropTypes.func
 		} ) ),
-		site: PropTypes.oneOfType( [
-			PropTypes.object,
-			PropTypes.bool
-		] ).isRequired,
+		siteId: PropTypes.number.isRequired,
 		// connected props
-		isCustomizable: PropTypes.bool.isRequired,
-		isJetpack: PropTypes.bool.isRequired,
 		currentTheme: PropTypes.object
-	},
+	}
 
-	trackClick: trackClick.bind( null, 'current theme' ),
+	trackClick = ( event ) => trackClick( 'current theme', event )
 
 	render() {
-		const { currentTheme, site } = this.props,
+		const { currentTheme, currentThemeId, siteId, translate } = this.props,
 			placeholderText = <span className="current-theme__placeholder">loading...</span>,
 			text = ( currentTheme && currentTheme.name ) ? currentTheme.name : placeholderText;
 
+		const options = pickBy( this.props.options, option =>
+			option.icon && ! ( option.hideForTheme && option.hideForTheme( currentThemeId, siteId ) )
+		);
+
+		const showScreenshot = currentTheme && currentTheme.screenshot;
+		// Some themes have no screenshot, so only show placeholder until details loaded
+		const showScreenshotPlaceholder = ! currentTheme;
+
 		return (
 			<Card className="current-theme">
-				{ site && <QueryCurrentTheme siteId={ site.ID }/> }
+				<QueryActiveTheme siteId={ siteId } />
+				{ currentThemeId && <QueryCanonicalTheme themeId={ currentThemeId } siteId={ siteId } /> }
 				<div className="current-theme__current">
+					{ showScreenshotPlaceholder && <div className="current-theme__img-placeholder" /> }
+					{ showScreenshot && <img
+						src={ currentTheme.screenshot + '?w=150' }
+						className="current-theme__img" /> }
 					<span className="current-theme__label">
-						{ this.translate( 'Current Theme' ) }
+						{ translate( 'Current Theme' ) }
 					</span>
 					<span className="current-theme__name">
 						{ text }
@@ -67,56 +68,37 @@ const CurrentTheme = React.createClass( {
 				</div>
 				<div className={ classNames(
 					'current-theme__actions',
-					{ 'two-buttons': Object.keys( this.props.options ).length === 2 }
+					{ 'two-buttons': Object.keys( options ).length === 2 }
 					) } >
-					{ map( this.props.options, ( option, name ) => (
-						<CurrentThemeButton
+					{ map( options, ( option, name ) => (
+						<CurrentThemeButton name={ name }
 							key={ name }
-							name={ name }
 							label={ option.label }
-							icon={ option.icon }
-							href={ currentTheme && option.getUrl( currentTheme ) }
+							icon={ option.icon }
+							href={ currentThemeId && option.getUrl( currentThemeId ) }
 							onClick={ this.trackClick } />
 					) ) }
 				</div>
 			</Card>
 		);
 	}
-} );
+}
 
-const mergeProps = ( stateProps, dispatchProps, ownProps ) => {
-	const { site } = ownProps;
-	// FIXME (ockham): Remove this ugly hack. Currently required since the endpoint doesn't return an `active` attr
-	const theme = Object.assign( {}, stateProps.currentTheme, { active: true } );
+const ConnectedCurrentTheme = connectOptions( localize( CurrentTheme ) );
 
-	const filteredOptions = pickBy( dispatchProps, option =>
-		! ( option.hideForSite && option.hideForSite( stateProps ) ) &&
-		! ( option.hideForTheme && option.hideForTheme( theme ) )
-	);
-
-	return Object.assign(
-		{},
-		ownProps,
-		stateProps,
-		{
-			options: bindOptionsToSite( filteredOptions, site )
-		}
-	);
-};
+const CurrentThemeWithOptions = ( { siteId, currentTheme, currentThemeId } ) => (
+	<ConnectedCurrentTheme currentTheme={ currentTheme }
+		currentThemeId={ currentThemeId }
+		siteId={ siteId }
+		source="current theme" />
+);
 
 export default connect(
-	( state, props ) => {
-		const { site: selectedSite } = props;
+	( state, { siteId } ) => {
+		const currentThemeId = getActiveTheme( state, siteId );
 		return {
-			isJetpack: selectedSite && isJetpackSite( state, selectedSite.ID ),
-			isCustomizable: selectedSite && canCurrentUser( state, selectedSite.ID, 'edit_theme_options' ),
-			currentTheme: selectedSite && getCurrentTheme( state, selectedSite.ID )
+			currentThemeId,
+			currentTheme: getCanonicalTheme( state, siteId, currentThemeId ),
 		};
-	},
-	bindOptionsToDispatch( {
-		customize,
-		info,
-		support
-	}, 'current theme' ),
-	mergeProps
-)( CurrentTheme );
+	}
+)( CurrentThemeWithOptions );

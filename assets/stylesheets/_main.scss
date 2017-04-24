@@ -256,7 +256,7 @@ html.iframed {
 
 .noticon:before,
 .noticon:after {
-	@extend %clear-text;
+	@include clear-text;
 
 	font-family: Noticons;
 	line-height: 1;
@@ -271,6 +271,7 @@ img.wp-smiley {
 	margin: 0;
 	padding: 0 0.2em;
 	vertical-align: -0.1em;
+	width: 1em;
 }
 
 /* =Media
@@ -292,16 +293,6 @@ object {
 .wpcom-soundcloud-player,
 .embed-soundcloud iframe {
 	min-height: 150px;
-}
-
-
-/*
-Disabled blocks of content.
-Used in releated posts settings.
-@todo get rid of it
-*/
-.disabled-block {
-	opacity: 0.5;
 }
 
 /*

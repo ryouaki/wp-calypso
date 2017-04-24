@@ -12,26 +12,27 @@ import { createReduxStore, reducer } from 'state';
 import {
 	SERIALIZE,
 	DESERIALIZE,
-	SERVER_DESERIALIZE
 } from 'state/action-types';
 import localforage from 'lib/localforage';
 import { isSupportUserSession } from 'lib/user/support-user-interop';
 import config from 'config';
+import User from 'lib/user';
 
 /**
  * Module variables
  */
 const debug = debugModule( 'calypso:state' );
+const user = User();
 
 const DAY_IN_HOURS = 24;
 const HOUR_IN_MS = 3600000;
-export const SERIALIZE_THROTTLE = 500;
+export const SERIALIZE_THROTTLE = 5000;
 export const MAX_AGE = 7 * DAY_IN_HOURS * HOUR_IN_MS;
 
 function getInitialServerState() {
 	// Bootstrapped state from a server-render
 	if ( typeof window === 'object' && window.initialReduxState && ! isSupportUserSession() ) {
-		const serverState = reducer( window.initialReduxState, { type: SERVER_DESERIALIZE } );
+		const serverState = reducer( window.initialReduxState, { type: DESERIALIZE } );
 		return pick( serverState, Object.keys( window.initialReduxState ) );
 	}
 	return {};
@@ -68,9 +69,19 @@ function loadInitialStateFailed( error ) {
 	return createReduxStore();
 }
 
+function isLoggedIn() {
+	const userData = user.get();
+	return !! userData && userData.ID;
+}
+
 export function persistOnChange( reduxStore, serializeState = serialize ) {
 	let state;
-	reduxStore.subscribe( throttle( function() {
+
+	const throttledSaveState = throttle( function() {
+		if ( ! isLoggedIn() ) {
+			return;
+		}
+
 		const nextState = reduxStore.getState();
 		if ( state && nextState === state ) {
 			return;
@@ -78,18 +89,24 @@ export function persistOnChange( reduxStore, serializeState = serialize ) {
 
 		state = nextState;
 
-		localforage.setItem( 'redux-state', serializeState( state ) )
+		localforage.setItem( 'redux-state-' + user.get().ID, serializeState( state ) )
 			.catch( ( setError ) => {
 				debug( 'failed to set redux-store state', setError );
 			} );
-	}, SERIALIZE_THROTTLE, { leading: false, trailing: true } ) );
+	}, SERIALIZE_THROTTLE, { leading: false, trailing: true } );
+
+	if ( global.window ) {
+		global.window.addEventListener( 'beforeunload', throttledSaveState.flush );
+	}
+
+	reduxStore.subscribe( throttledSaveState );
 
 	return reduxStore;
 }
 
 export default function createReduxStoreFromPersistedInitialState( reduxStoreReady ) {
-	if ( config.isEnabled( 'persist-redux' ) && ! isSupportUserSession() ) {
-		localforage.getItem( 'redux-state' )
+	if ( config.isEnabled( 'persist-redux' ) && isLoggedIn() && ! isSupportUserSession() ) {
+		localforage.getItem( 'redux-state-' + user.get().ID )
 			.then( loadInitialState )
 			.catch( loadInitialStateFailed )
 			.then( persistOnChange )

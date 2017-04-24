@@ -21,8 +21,7 @@ import paths from 'my-sites/upgrades/paths';
 import {
 	hasGoogleApps,
 	hasGoogleAppsSupportedDomain,
-	getSelectedDomain,
-	hasMappedDomain
+	getSelectedDomain
 } from 'lib/domains';
 import { isPlanFeaturesEnabled } from 'lib/plans';
 
@@ -35,7 +34,6 @@ const Email = React.createClass( {
 			React.PropTypes.object,
 			React.PropTypes.bool
 		] ).isRequired,
-		sitePlans: React.PropTypes.object.isRequired,
 		user: React.PropTypes.object.isRequired,
 		googleAppsUsers: React.PropTypes.array.isRequired,
 		googleAppsUsersLoaded: React.PropTypes.bool.isRequired
@@ -68,13 +66,12 @@ const Email = React.createClass( {
 			<UpgradesNavigation
 				path={ this.props.context.path }
 				cart={ this.props.cart }
-				selectedSite={ this.props.selectedSite }
-				sitePlans={ this.props.sitePlans } />
+				selectedSite={ this.props.selectedSite } />
 		);
 	},
 
 	content() {
-		if ( ! ( this.props.domains.hasLoadedFromServer && this.props.googleAppsUsersLoaded ) ) {
+		if ( ! ( this.props.domains.hasLoadedFromServer && this.props.googleAppsUsersLoaded && this.props.products.gapps ) ) {
 			return <Placeholder />;
 		}
 
@@ -94,7 +91,6 @@ const Email = React.createClass( {
 		const {
 			selectedSite,
 			selectedDomainName,
-			domains
 			} = this.props;
 		let emptyContentProps;
 
@@ -105,18 +101,13 @@ const Email = React.createClass( {
 				secondaryAction: this.translate( 'Add Email Forwarding' ),
 				secondaryActionURL: paths.domainManagementEmailForwarding( selectedSite.slug, selectedDomainName )
 			};
-		} else if ( hasMappedDomain( domains.list ) ) {
-			emptyContentProps = {
-				title: this.translate( 'G Suite is not supported on mapped domains' ),
-				line: this.translate( 'Only domains registered with WordPress.com are eligible for G Suite.' )
-			};
 		} else {
 			emptyContentProps = {
-				title: this.translate( "You don't have any domains yet." ),
+				title: this.translate( "Enable powerful email features." ),
 				line: this.translate(
-					'Add a domain to your site to make it easier ' +
-					'to remember and easier to share, and get access to email ' +
-					'forwarding, G Suite, and other email services.'
+					'To set up email forwarding, G Suite, and other email ' +
+					'services for your site, upgrade your site’s web address ' +
+					'to a professional custom domain.'
 				)
 			};
 		}

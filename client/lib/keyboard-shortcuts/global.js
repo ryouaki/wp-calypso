@@ -10,25 +10,26 @@ var config = require( 'config' ),
 	route = require( 'lib/route' ),
 	KeyboardShortcuts = require( 'lib/keyboard-shortcuts' );
 
-module.exports = GlobalShortcuts;
+let singleton;
 
-/**
- * This class accepts a sites-list collection and binds KeyboardShortcuts events to methods that change
- * the route based on which keyboard shortcut was triggered.
- */
-function GlobalShortcuts( sites ) {
+export default function() {
+	if ( ! singleton ) {
+		singleton = new GlobalShortcuts();
+	}
+	return singleton;
+}
+
+function GlobalShortcuts() {
 	if ( ! ( this instanceof GlobalShortcuts ) ) {
-		return new GlobalShortcuts( sites );
+		return new GlobalShortcuts();
 	}
 
-	this.sites = sites;
-
+	this.selectedSite = null;
 	this.bindShortcuts();
 }
 
 GlobalShortcuts.prototype.bindShortcuts = function() {
 	KeyboardShortcuts.on( 'go-to-reader', this.goToReader.bind( this ) );
-	KeyboardShortcuts.on( 'go-to-my-comments', this.goToMyComments.bind( this ) );
 	KeyboardShortcuts.on( 'go-to-my-likes', this.goToMyLikes.bind( this ) );
 	KeyboardShortcuts.on( 'go-to-stats', this.goToStats.bind( this ) );
 	KeyboardShortcuts.on( 'go-to-blog-posts', this.goToBlogPosts.bind( this ) );
@@ -39,12 +40,12 @@ GlobalShortcuts.prototype.bindShortcuts = function() {
 	}
 };
 
-GlobalShortcuts.prototype.goToReader = function() {
-	page( '/' );
+GlobalShortcuts.prototype.setSelectedSite = function( site ) {
+	this.selectedSite = site;
 };
 
-GlobalShortcuts.prototype.goToMyComments = function() {
-	page( '/activities/comments' );
+GlobalShortcuts.prototype.goToReader = function() {
+	page( '/' );
 };
 
 GlobalShortcuts.prototype.goToMyLikes = function() {
@@ -52,7 +53,7 @@ GlobalShortcuts.prototype.goToMyLikes = function() {
 };
 
 GlobalShortcuts.prototype.goToStats = function() {
-	var site = this.sites.getSelectedSite();
+	const site = this.selectedSite;
 
 	if ( site && site.capabilities && ! site.capabilities.view_stats ) {
 		return null;
@@ -64,7 +65,7 @@ GlobalShortcuts.prototype.goToStats = function() {
 };
 
 GlobalShortcuts.prototype.goToBlogPosts = function() {
-	var site = this.sites.getSelectedSite();
+	const site = this.selectedSite;
 
 	if ( site && site.capabilities && ! site.capabilities.edit_posts ) {
 		return null;
@@ -76,7 +77,7 @@ GlobalShortcuts.prototype.goToBlogPosts = function() {
 };
 
 GlobalShortcuts.prototype.goToPages = function() {
-	var site = this.sites.getSelectedSite();
+	const site = this.selectedSite;
 
 	if ( site && site.capabilities && ! site.capabilities.edit_pages ) {
 		return null;

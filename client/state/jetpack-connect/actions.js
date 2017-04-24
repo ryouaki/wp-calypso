@@ -3,6 +3,7 @@
  */
 const debug = require( 'debug' )( 'calypso:jetpack-connect:actions' );
 import pick from 'lodash/pick';
+import page from 'page';
 
 /**
  * Internal dependencies
@@ -14,6 +15,7 @@ import {
 	JETPACK_CONNECT_CHECK_URL,
 	JETPACK_CONNECT_CHECK_URL_RECEIVE,
 	JETPACK_CONNECT_CONFIRM_JETPACK_STATUS,
+	JETPACK_CONNECT_COMPLETE_FLOW,
 	JETPACK_CONNECT_DISMISS_URL_STATUS,
 	JETPACK_CONNECT_AUTHORIZE,
 	JETPACK_CONNECT_AUTHORIZE_LOGIN_COMPLETE,
@@ -26,6 +28,8 @@ import {
 	JETPACK_CONNECT_REDIRECT,
 	JETPACK_CONNECT_REDIRECT_WP_ADMIN,
 	JETPACK_CONNECT_REDIRECT_XMLRPC_ERROR_FALLBACK_URL,
+	JETPACK_CONNECT_RETRY_AUTH,
+	JETPACK_CONNECT_SELECT_PLAN_IN_ADVANCE,
 	JETPACK_CONNECT_SSO_AUTHORIZE_REQUEST,
 	JETPACK_CONNECT_SSO_AUTHORIZE_SUCCESS,
 	JETPACK_CONNECT_SSO_AUTHORIZE_ERROR,
@@ -37,14 +41,15 @@ import userFactory from 'lib/user';
 import config from 'config';
 import addQueryArgs from 'lib/route/add-query-args';
 import { externalRedirect } from 'lib/route/path';
+import { urlToSlug } from 'lib/url';
+import { JPC_PLANS_PAGE } from './constants';
 
 /**
  *  Local variables;
  */
 const _fetching = {};
-const calypsoEnv = config( 'env_id' ) || process.env.NODE_ENV;
-const apiBaseUrl = 'https://jetpack.wordpress.com';
-const remoteAuthPath = '/wp-admin/admin.php?page=jetpack&connect_url_redirect=true';
+const calypsoEnv = config( 'env_id' );
+const remoteAuthPath = '/wp-admin/admin.php?page=jetpack&connect_url_redirect=true&calypso_env=' + calypsoEnv;
 const remoteInstallPath = '/wp-admin/plugin-install.php?tab=plugin-information&plugin=jetpack';
 const remoteActivatePath = '/wp-admin/plugins.php';
 const tracksEvent = ( dispatch, eventName, props ) => {
@@ -77,7 +82,6 @@ export default {
 			if ( _fetching[ url ] ) {
 				return;
 			}
-
 			if ( isUrlOnSites ) {
 				dispatch( {
 					type: JETPACK_CONNECT_CHECK_URL,
@@ -167,6 +171,20 @@ export default {
 			} );
 		};
 	},
+	goToPlans( url ) {
+		return ( dispatch ) => {
+			dispatch( {
+				type: JETPACK_CONNECT_REDIRECT,
+				url: url
+			} );
+			tracksEvent( dispatch, 'calypso_jpc_success_redirect', {
+				url: url,
+				type: 'plans_selection'
+			} );
+
+			page.redirect( JPC_PLANS_PAGE + urlToSlug( url ) );
+		};
+	},
 	goToRemoteAuth( url ) {
 		return ( dispatch ) => {
 			dispatch( {
@@ -177,11 +195,33 @@ export default {
 				url: url,
 				type: 'remote_auth'
 			} );
+			debug( 'goToRemoteAuth', url );
+			externalRedirect(
+				addQueryArgs( {
+					calypso_env: calypsoEnv
+				}, url + remoteAuthPath )
+			);
+		};
+	},
+	retryAuth( url, attemptNumber ) {
+		return ( dispatch ) => {
+			debug( 'retrying auth', url, attemptNumber );
+			dispatch( {
+				type: JETPACK_CONNECT_RETRY_AUTH,
+				attemptNumber: attemptNumber,
+				slug: urlToSlug( url )
+			} );
+			tracksEvent( dispatch, 'calypso_jpc_retry_auth', {
+				url: url,
+				attempt: attemptNumber
+			} );
+			debug( 'retryAuth', url );
 			externalRedirect(
 				addQueryArgs( {
 					jetpack_connect_url: url + remoteAuthPath,
-					calypso_env: calypsoEnv
-				}, apiBaseUrl )
+					calypso_env: calypsoEnv,
+					auth_type: 'jetpack'
+				}, url + remoteAuthPath )
 			);
 		};
 	},
@@ -195,11 +235,11 @@ export default {
 				url: url,
 				type: 'plugin_install'
 			} );
+            // TODO: set 'calypso_env' cookie on jetpack.wordpress.com before redirecting
 			externalRedirect(
 				addQueryArgs( {
-					jetpack_connect_url: url + remoteInstallPath,
 					calypso_env: calypsoEnv
-				}, apiBaseUrl )
+				}, url + remoteInstallPath )
 			);
 		};
 	},
@@ -213,11 +253,11 @@ export default {
 				url: url,
 				type: 'plugin_activation'
 			} );
+			// TODO: set 'calypso_env' cookie on jetpack.wordpress.com before redirecting
 			externalRedirect(
 				addQueryArgs( {
-					jetpack_connect_url: url + remoteActivatePath,
 					calypso_env: calypsoEnv
-				}, apiBaseUrl )
+				}, url + remoteActivatePath )
 			);
 		};
 	},
@@ -226,6 +266,7 @@ export default {
 			dispatch( {
 				type: JETPACK_CONNECT_REDIRECT_WP_ADMIN
 			} );
+			debug( 'goBackToWpAdmin', url );
 			externalRedirect( url );
 		};
 	},
@@ -239,7 +280,7 @@ export default {
 				type: JETPACK_CONNECT_REDIRECT_XMLRPC_ERROR_FALLBACK_URL,
 				url
 			} );
-			tracksEvent( dispatch, 'calyspo_jpc_xmlrpc_error', { error: queryObject.authorizeError } );
+			debug( 'goToXmlrpcErrorFallbackUrl', queryObject, authorizationCode );
 			externalRedirect( url );
 		};
 	},
@@ -308,7 +349,7 @@ export default {
 				} );
 				// Update the user now that we are fully connected.
 				userFactory().fetch();
-				return wpcom.me().sites( { site_visibility: 'all' } );
+				return wpcom.me().sites( { site_visibility: 'all', include_domain_only: true } );
 			} )
 			.then( ( data ) => {
 				tracksEvent( dispatch, 'calypso_jpc_auth_sitesrefresh', {
@@ -328,6 +369,9 @@ export default {
 				debug( 'Authorize error', error );
 				tracksEvent( dispatch, 'calypso_jpc_authorize_error', {
 					error_code: error.code,
+					error_name: error.name,
+					error_message: error.message,
+					status: error.status,
 					error: JSON.stringify( error ),
 					site: client_id
 				} );
@@ -418,6 +462,23 @@ export default {
 					data: null,
 					error: pick( error, [ 'error', 'status', 'message' ] )
 				} );
+			} );
+		};
+	},
+	selectPlanInAdvance( planSlug, site ) {
+		return ( dispatch ) => {
+			dispatch( {
+				type: JETPACK_CONNECT_SELECT_PLAN_IN_ADVANCE,
+				plan: planSlug,
+				site: site
+			} );
+		};
+	},
+	completeFlow( site ) {
+		return ( dispatch ) => {
+			dispatch( {
+				type: JETPACK_CONNECT_COMPLETE_FLOW,
+				site
 			} );
 		};
 	}

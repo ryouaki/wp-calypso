@@ -2,9 +2,9 @@
 	display: block;
 	max-width: 720px;
 
-	@include breakpoint( ">1040px" ) {
+	@include breakpoint( ">1280px" ) {
 		display: flex;
-		max-width: 1040px;
+		max-width: 1440px;
 		justify-content: center;
 	}
 }
@@ -12,71 +12,19 @@
 .posts__primary {
 	flex-grow: 1;
 	max-width: 720px;
+
+	@include breakpoint( ">1280px" ) {
+		min-width: 520px;
+	}
 }
 
 .posts__list {
-
-	.posts__post-share-services {
-		flex-direction: row;
-		justify-content: space-around;
-		display: flex;
-		flex-wrap: wrap;
-		border-bottom: solid 1px transparentize( lighten( $gray, 20% ), .5 );
-	}
-	.posts__post-share-service {
-		cursor: pointer;
-		padding: 4px;
-		display: flex;
-		justify-content: center;
-		flex: 1;
-		border-top: solid 1px transparentize( lighten( $gray, 20% ), .5 );
-		color: lighten( $gray, 20% );
-		&.is-active {
-			color: black;
-
-			.social-logo.twitter{
-				color: $color-twitter;
-			}
-
-			.social-logo.facebook{
-				color: $color-facebook;
-			}
-
-			.social-logo.google_plus {
-				color: $color-gplus;
-			}
-
-			.social-logo.linkedin {
-				color: $color-linkedin;
-			}
-
-			.social-logo.tumblr {
-				color: $color-tumblr;
-			}
-
-			.social-logo.path {
-				color: $color-path;
-			}
-
-			.social-logo.eventbrite {
-				color: $color-eventbrite;
-			}
-		}
-	}
-	.posts__post-share-service-account-name {
-		line-height: 24px;
-		padding-left: 4px;
-	}
-
 	.post {
 		position: relative;
 		padding: 0;
 		margin-bottom: (24 / 15) * 1em;
 		@include breakpoint( "<660px" ) {
 			font-size: 13px;
-		}
-		.posts__post-share-wrapper .notice {
-			margin-bottom: 0;
 		}
 	}
 
@@ -375,7 +323,7 @@
 	}
 }
 .post__site-title {
-	color: darken( $gray, 20 );
+	color: $gray-dark;
 	display: block;
 	font-size: 14px;
 	line-height: 38px;
@@ -383,7 +331,7 @@
 	padding-left: 48px;
 
 	a {
-		color: darken( $gray, 20 );
+		color: $gray-dark;
 	}
 }
 .post__header.has-author {
@@ -394,7 +342,7 @@
 }
 .post__author {
 	display: block;
-	color: $gray;
+	color: $gray-text-min;
 	font-size: 12px;
 	padding-left: 48px;
 }
@@ -422,22 +370,18 @@
 	cursor: pointer;
 }
 
-.post .comments {
+.post .comments__comment-list {
 	margin: 0;
 	padding: 0 24px 24px;
 	animation: appear .3s ease-in-out;
 }
 
-.post .posts__post-share {
-	margin: 0;
-	padding: 0 24px 24px;
-	animation: appear .3s ease-in-out;
-	border-top: solid 1px transparentize( lighten( $gray, 20% ), .5 );
+.post .comments__comment-timestamp {
+	margin-top: -4px;
 }
 
-.posts__post-share-title {
-	margin: 24px 0 24px 0;
-	font-weight: bold;
+.post .comments__view-earlier {
+	margin-top: 15px;
 }
 
 .post-controls {
@@ -488,12 +432,12 @@
 		}
 		a {
 			display: block;
-			color: darken( $gray, 10% );
+			color: $gray-text-min;
 			box-sizing: border-box;
 			font-size: inherit;
 			padding: (11 / 14) * 1em 0;
 			&:hover {
-				color: darken( $gray, 20% );
+				color: $gray-dark;
 				cursor: pointer;
 			}
 			.gridicon{
@@ -503,6 +447,12 @@
 			}
 		}
 	}
+}
+
+.post-controls__disabled {
+	cursor: not-allowed;
+	pointer-events: none;
+	opacity: 0.5;
 }
 
 .post-controls__more-options {
@@ -544,11 +494,32 @@
 .posts__recent-drafts {
 	flex-grow: 1;
 	margin: 0 0 24px 24px;
-	max-width: 296px;
 	display: none;
 
-	@include breakpoint( ">1040px" ) {
+	@include breakpoint( ">1280px" ) {
 		display: block;
+		max-width: 400px;
+	}
+
+	@include breakpoint( ">1600px" ) {
+		max-width: 600px;
+
+		.post-item.is-mini.card.is-compact {
+			padding: 16px 24px;
+
+			.post-item__meta {
+				display: block;
+			}
+
+			.post-item__title {
+				font-size: 15px;
+				margin-bottom: 2px;
+			}
+
+			.post-actions-ellipsis-menu {
+				margin-left: 8px;
+			}
+		}
 	}
 
 	.draft__actions {
@@ -557,25 +528,13 @@
 }
 
 .posts__recent-drafts .posts__drafts-header.card.is-compact {
-	margin-bottom: 16px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 3px 16px;
 	color: $gray-dark;
-	font-size: 14px;
 
 	&::after {
 		display: none;
-	}
-}
-
-.posts.is-single-site .section-nav-tab.is-draft {
-	@include breakpoint( ">1040px" ) {
-		display: none;
-		&.is-selected {
-			display: block;
-		}
 	}
 }
 
@@ -591,5 +550,23 @@
 
 	.count {
 		margin-left: 8px;
+	}
+}
+
+.posts__post-share-button{
+	width: 100%;
+
+	@include breakpoint( ">480px" ) {
+		width: auto;
+	}
+}
+
+.post__total-views {
+	display: inline-flex;
+	align-content: center;
+
+	.stat-update-indicator {
+		font-size: 14px;
+		padding-top: 2px;
 	}
 }

@@ -2,129 +2,194 @@
 /* eslint-disable */
 module.exports = {
 	countries: {
-		ac: {
-			isoCode: "ac",
+		KV: {
+			isoCode: "KV",
+			dialCode: "383",
+			nationalPrefix: "0"
+		},
+		UM: {
+			isoCode: "UM",
+			dialCode: "1",
+			nationalPrefix: "",
+			patternRegion: "us",
+			priority: -99
+		},
+		BV: {
+			isoCode: "BV",
+			dialCode: "47",
+			nationalPrefix: "",
+			priority: -99
+		},
+		TF: {
+			isoCode: "TF",
+			dialCode: "262",
+			nationalPrefix: "0"
+		},
+		HM: {
+			isoCode: "HM",
+			dialCode: "61",
+			nationalPrefix: "0",
+			priority: -99
+		},
+		PN: {
+			isoCode: "PN",
+			dialCode: "64",
+			nationalPrefix: "0",
+			priority: -99
+		},
+		GS: {
+			isoCode: "GS",
+			nationalPrefix: "",
+			dialCode: "500",
+			priority: -99
+		},
+		AC: {
+			isoCode: "AC",
 			dialCode: "247"
 		},
-		ad: {
-			isoCode: "ad",
+		AD: {
+			isoCode: "AD",
 			dialCode: "376",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[137-9]|6[0-8]"
 				},
 				{
-					match: "(180[02])(\\d{4})",
-					replace: "$1 $2"
+					match: "(\\d{4})(\\d{4})",
+					replace: "$1 $2",
+					leadingDigitPattern: "180[02]"
+				},
+				{
+					match: "(\\d{3})(\\d{3})(\\d{3})",
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "690"
 				}
 			]
 		},
-		ae: {
-			isoCode: "ae",
+		AE: {
+			isoCode: "AE",
 			dialCode: "971",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([2-4679])(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-4679][2-8]"
 				},
 				{
 					match: "(5\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5"
 				},
 				{
 					match: "([479]00)(\\d)(\\d{5})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[479]0"
 				},
 				{
 					match: "([68]00)(\\d{2,9})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "60|8"
 				}
 			]
 		},
-		af: {
-			isoCode: "af",
+		AF: {
+			isoCode: "AF",
 			dialCode: "93",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([2-7]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-7]"
 				}
 			]
 		},
-		ag: {
-			isoCode: "ag",
+		AG: {
+			isoCode: "AG",
 			dialCode: "1268",
+			countryDialCode: "1",
+			regionCode: "268",
 			nationalPrefix: "1"
 		},
-		ai: {
-			isoCode: "ai",
+		AI: {
+			isoCode: "AI",
 			dialCode: "1264",
+			countryDialCode: "1",
+			regionCode: "264",
 			nationalPrefix: "1"
 		},
-		al: {
-			isoCode: "al",
+		AL: {
+			isoCode: "AL",
 			dialCode: "355",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(4)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "4[0-6]"
 				},
 				{
 					match: "(6[6-9])(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2358][2-5]|4[7-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[235][16-9]|8[016-9]|[79]"
 				}
 			]
 		},
-		am: {
-			isoCode: "am",
+		AM: {
+			isoCode: "AM",
 			dialCode: "374",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "1|47"
 				},
 				{
 					match: "(\\d{2})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "4[1349]|[5-7]|9[1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[23]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0 $1"
+					nationalFormat: "0 $1",
+					leadingDigitPattern: "8|90"
 				}
 			]
 		},
-		ao: {
-			isoCode: "ao",
+		AO: {
+			isoCode: "AO",
 			dialCode: "244",
 			patterns: [
 				{
@@ -133,199 +198,234 @@ module.exports = {
 				}
 			]
 		},
-		ar: {
-			isoCode: "ar",
+		AR: {
+			isoCode: "AR",
 			dialCode: "54",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([68]\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[68]"
 				},
 				{
 					match: "(\\d{2})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[2-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[2-9]"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[2-9]"
 				},
 				{
 					match: "(9)(11)(\\d{4})(\\d{4})",
 					replace: "$2 15-$3-$4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "911"
 				},
 				{
 					match: "(9)(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$2 15-$3-$4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9(?:2(?:2(?:0[013-9]|[13])|3(?:0[013-9]|[67])|49|6(?:[0136]|4[0-59])|8|9(?:[19]|44|7[013-9]|8[14]))|3(?:36|4(?:[12]|3(?:4|5[014]|6[1239])|[58]4)|5(?:1|3[0-24-689]|8[46])|6|7[069]|8(?:[01]|34|[578][45])))"
 				},
 				{
 					match: "(9)(\\d{4})(\\d{2})(\\d{4})",
 					replace: "$2 15-$3-$4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9[23]"
 				},
 				{
 					match: "(11)(\\d{4})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:2(?:0[013-9]|[13])|3(?:0[013-9]|[67])|49|6(?:[0136]|4[0-59])|8|9(?:[19]|44|7[013-9]|8[14]))|3(?:36|4(?:[12]|3(?:4|5[014]|6[1239])|[58]4)|5(?:1|3[0-24-689]|8[46])|6|7[069]|8(?:[01]|34|[578][45]))"
 				},
 				{
 					match: "(\\d{4})(\\d{2})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23]"
 				},
 				{
 					match: "(\\d{3})",
 					replace: "$1",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1[012]|911"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "([68]\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[68]"
 				},
 				{
 					match: "(9)(11)(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3-$4"
+					replace: "$1 $2 $3-$4",
+					leadingDigitPattern: "911"
 				},
 				{
 					match: "(9)(\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3-$4"
+					replace: "$1 $2 $3-$4",
+					leadingDigitPattern: "9(?:2(?:2(?:0[013-9]|[13])|3(?:0[013-9]|[67])|49|6(?:[0136]|4[0-59])|8|9(?:[19]|44|7[013-9]|8[14]))|3(?:36|4(?:[12]|3(?:4|5[014]|6[1239])|[58]4)|5(?:1|3[0-24-689]|8[46])|6|7[069]|8(?:[01]|34|[578][45])))"
 				},
 				{
 					match: "(9)(\\d{4})(\\d{2})(\\d{4})",
-					replace: "$1 $2 $3-$4"
+					replace: "$1 $2 $3-$4",
+					leadingDigitPattern: "9[23]"
 				},
 				{
 					match: "(11)(\\d{4})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:2(?:0[013-9]|[13])|3(?:0[013-9]|[67])|49|6(?:[0136]|4[0-59])|8|9(?:[19]|44|7[013-9]|8[14]))|3(?:36|4(?:[12]|3(?:4|5[014]|6[1239])|[58]4)|5(?:1|3[0-24-689]|8[46])|6|7[069]|8(?:[01]|34|[578][45]))"
 				},
 				{
 					match: "(\\d{4})(\\d{2})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23]"
 				}
 			]
 		},
-		as: {
-			isoCode: "as",
+		AS: {
+			isoCode: "AS",
 			dialCode: "1684",
+			countryDialCode: "1",
+			regionCode: "684",
 			nationalPrefix: "1"
 		},
-		at: {
-			isoCode: "at",
+		AT: {
+			isoCode: "AT",
 			dialCode: "43",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(116\\d{3})",
 					replace: "$1",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "116"
 				},
 				{
 					match: "(1)(\\d{3,12})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(5\\d)(\\d{3,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5[079]"
 				},
 				{
 					match: "(5\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5[079]"
 				},
 				{
 					match: "(5\\d)(\\d{4})(\\d{4,7})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5[079]"
 				},
 				{
 					match: "(\\d{3})(\\d{3,10})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "316|46|51|732|6(?:5[0-3579]|[6-9])|7(?:[28]0)|[89]"
 				},
 				{
 					match: "(\\d{4})(\\d{3,9})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2|3(?:1[1-578]|[3-8])|4[2378]|5[2-6]|6(?:[12]|4[1-9]|5[468])|7(?:2[1-8]|35|4[1-8]|[5-79])"
 				}
 			]
 		},
-		au: {
-			isoCode: "au",
+		AU: {
+			isoCode: "AU",
 			dialCode: "61",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([2378])(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[2378]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[45]|14"
 				},
 				{
 					match: "(16)(\\d{3})(\\d{2,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "16"
 				},
 				{
 					match: "(1[389]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1(?:[38]00|90)"
 				},
 				{
 					match: "(180)(2\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1802"
 				},
 				{
 					match: "(19\\d)(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "19[13]"
 				},
 				{
 					match: "(19\\d{2})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "19[679]"
 				},
 				{
 					match: "(13)(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "13[1-9]"
 				}
 			],
 			priority: 10
 		},
-		aw: {
-			isoCode: "aw",
+		AW: {
+			isoCode: "AW",
 			dialCode: "297",
 			patterns: [
 				{
@@ -334,118 +434,134 @@ module.exports = {
 				}
 			]
 		},
-		ax: {
-			isoCode: "ax",
+		AX: {
+			isoCode: "AX",
 			dialCode: "358",
 			nationalPrefix: "0",
 			priority: 1,
-			patternRegion: "fi"
+			patternRegion: "FI"
 		},
-		az: {
-			isoCode: "az",
+		AZ: {
+			isoCode: "AZ",
 			dialCode: "994",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:1[28]|2(?:[45]2|[0-36])|365)"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[4-8]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				}
 			]
 		},
-		ba: {
-			isoCode: "ba",
+		BA: {
+			isoCode: "BA",
 			dialCode: "387",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-5]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6[1-356]|[7-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6[047]"
 				}
 			]
 		},
-		bb: {
-			isoCode: "bb",
+		BB: {
+			isoCode: "BB",
 			dialCode: "1246",
+			countryDialCode: "1",
+			regionCode: "246",
 			nationalPrefix: "1"
 		},
-		bd: {
-			isoCode: "bd",
+		BD: {
+			isoCode: "BD",
 			dialCode: "880",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2)(\\d{7,8})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(\\d{2})(\\d{4,6})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-79]1"
 				},
 				{
 					match: "(\\d{4})(\\d{3,6})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1|3(?:0|[2-58]2)|4(?:0|[25]2|3[23]|[4689][25])|5(?:[02-578]2|6[25])|6(?:[0347-9]2|[26][25])|7[02-9]2|8(?:[023][23]|[4-7]2)|9(?:[02][23]|[458]2|6[016])"
 				},
 				{
 					match: "(\\d{3})(\\d{3,7})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-79][2-9]|8"
 				}
 			]
 		},
-		be: {
-			isoCode: "be",
+		BE: {
+			isoCode: "BE",
 			dialCode: "32",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "4[6-9]"
 				},
 				{
 					match: "(\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23]|4[23]|9[2-4]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[156]|7[018]|8(?:0[1-9]|[1-79])"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:80|9)0"
 				}
 			]
 		},
-		bf: {
-			isoCode: "bf",
+		BF: {
+			isoCode: "BF",
 			dialCode: "226",
 			patterns: [
 				{
@@ -454,55 +570,63 @@ module.exports = {
 				}
 			]
 		},
-		bg: {
-			isoCode: "bg",
+		BG: {
+			isoCode: "BG",
 			dialCode: "359",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2)(\\d)(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(2)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "43[124-7]|70[1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{2})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "43[124-7]|70[1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[78]00"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "999"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2,3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[356]|4[124-7]|7[1-9]|8[1-6]|9[1-7]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "48|8[7-9]|9[08]"
 				}
 			]
 		},
-		bh: {
-			isoCode: "bh",
+		BH: {
+			isoCode: "BH",
 			dialCode: "973",
 			patterns: [
 				{
@@ -511,8 +635,8 @@ module.exports = {
 				}
 			]
 		},
-		bi: {
-			isoCode: "bi",
+		BI: {
+			isoCode: "BI",
 			dialCode: "257",
 			patterns: [
 				{
@@ -521,8 +645,8 @@ module.exports = {
 				}
 			]
 		},
-		bj: {
-			isoCode: "bj",
+		BJ: {
+			isoCode: "BJ",
 			dialCode: "229",
 			patterns: [
 				{
@@ -531,20 +655,22 @@ module.exports = {
 				}
 			]
 		},
-		bl: {
-			isoCode: "bl",
+		BL: {
+			isoCode: "BL",
 			dialCode: "590",
 			nationalPrefix: "0",
 			priority: 1,
-			patternRegion: "gp"
+			patternRegion: "GP"
 		},
-		bm: {
-			isoCode: "bm",
+		BM: {
+			isoCode: "BM",
 			dialCode: "1441",
+			countryDialCode: "1",
+			regionCode: "441",
 			nationalPrefix: "1"
 		},
-		bn: {
-			isoCode: "bn",
+		BN: {
+			isoCode: "BN",
 			dialCode: "673",
 			patterns: [
 				{
@@ -553,184 +679,213 @@ module.exports = {
 				}
 			]
 		},
-		bo: {
-			isoCode: "bo",
+		BO: {
+			isoCode: "BO",
 			dialCode: "591",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([234])(\\d{7})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[234]"
 				},
 				{
 					match: "([67]\\d{7})",
-					replace: "$1"
+					replace: "$1",
+					leadingDigitPattern: "[67]"
 				}
 			]
 		},
-		bq: {
-			isoCode: "bq",
+		BQ: {
+			isoCode: "BQ",
 			dialCode: "599",
 			priority: 1,
-			patternRegion: "cw"
+			patternRegion: "CW"
 		},
-		br: {
-			isoCode: "br",
+		BR: {
+			isoCode: "BR",
 			dialCode: "55",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[2-9](?:[1-9]|0[1-9])"
 				},
 				{
 					match: "(\\d{5})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "9(?:[1-9]|0[1-9])"
 				},
 				{
 					match: "(\\d{3,5})",
 					replace: "$1",
-					nationalFormat: "$1"
-				},
-				{
-					match: "(\\d{2})(\\d{5})(\\d{4})",
-					replace: "$1 $2-$3",
-					nationalFormat: "($1)"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1[125689]"
 				},
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "[1-9][1-9]"
+				},
+				{
+					match: "(\\d{2})(\\d{5})(\\d{4})",
+					replace: "$1 $2-$3",
+					nationalFormat: "($1)",
+					leadingDigitPattern: "(?:[14689][1-9]|2[12478]|3[1-578]|5[1-5]|7[13-579])9"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "(?:300|40(?:0|20))"
 				},
 				{
 					match: "([3589]00)(\\d{2,3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3589]00"
 				}
 			],
 			internationalPatterns: [
 				{
-					match: "(\\d{2})(\\d{5})(\\d{4})",
-					replace: "$1 $2-$3",
-					nationalFormat: "($1)"
-				},
-				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "[1-9][1-9]"
+				},
+				{
+					match: "(\\d{2})(\\d{5})(\\d{4})",
+					replace: "$1 $2-$3",
+					nationalFormat: "($1)",
+					leadingDigitPattern: "(?:[14689][1-9]|2[12478]|3[1-578]|5[1-5]|7[13-579])9"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "(?:300|40(?:0|20))"
 				},
 				{
 					match: "([3589]00)(\\d{2,3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3589]00"
 				}
 			]
 		},
-		bs: {
-			isoCode: "bs",
+		BS: {
+			isoCode: "BS",
 			dialCode: "1242",
+			countryDialCode: "1",
+			regionCode: "242",
 			nationalPrefix: "1"
 		},
-		bt: {
-			isoCode: "bt",
+		BT: {
+			isoCode: "BT",
 			dialCode: "975",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "1|77"
 				},
 				{
 					match: "([2-8])(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[2-68]|7[246]"
 				}
 			]
 		},
-		bw: {
-			isoCode: "bw",
+		BW: {
+			isoCode: "BW",
 			dialCode: "267",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[2-6]"
 				},
 				{
 					match: "(7\\d)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(90)(\\d{5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "9"
 				}
 			]
 		},
-		by: {
-			isoCode: "by",
+		BY: {
+			isoCode: "BY",
 			dialCode: "375",
 			nationalPrefix: "8",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2-$3-$4",
-					nationalFormat: "8 0$1"
+					nationalFormat: "8 0$1",
+					leadingDigitPattern: "17(?:[02358]|1[0-2]|9[0189])|2[4-9]|[34]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2-$3-$4",
-					nationalFormat: "8 0$1"
+					nationalFormat: "8 0$1",
+					leadingDigitPattern: "1(?:5[24]|6(?:2|3[04-9]|5[0346-9])|7(?:[46]|7[37-9]))|2(?:1[246]|2[25]|3[26])"
 				},
 				{
 					match: "(\\d{4})(\\d{2})(\\d{3})",
 					replace: "$1 $2-$3",
-					nationalFormat: "8 0$1"
+					nationalFormat: "8 0$1",
+					leadingDigitPattern: "1(?:5[169]|6(?:3[1-3]|4|5[125])|7(?:1[3-9]|7[0-24-6]|9[2-7]))|2(?:1[35]|2[34]|3[3-5])"
 				},
 				{
 					match: "([89]\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "8 $1"
+					nationalFormat: "8 $1",
+					leadingDigitPattern: "8[01]|9"
 				},
 				{
 					match: "(82\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "8 $1"
+					nationalFormat: "8 $1",
+					leadingDigitPattern: "82"
 				},
 				{
 					match: "(800)(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "8 $1"
+					nationalFormat: "8 $1",
+					leadingDigitPattern: "800"
 				},
 				{
 					match: "(800)(\\d{2})(\\d{2,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "8 $1"
+					nationalFormat: "8 $1",
+					leadingDigitPattern: "800"
 				}
 			]
 		},
-		bz: {
-			isoCode: "bz",
+		BZ: {
+			isoCode: "BZ",
 			dialCode: "501",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "[2-8]"
 				},
 				{
 					match: "(0)(800)(\\d{4})(\\d{3})",
-					replace: "$1-$2-$3-$4"
+					replace: "$1-$2-$3-$4",
+					leadingDigitPattern: "0"
 				}
 			]
 		},
-		ca: {
-			isoCode: "ca",
+		CA: {
+			isoCode: "CA",
 			dialCode: "1",
 			areaCodes: [
 				"204",
@@ -777,44 +932,48 @@ module.exports = {
 			],
 			nationalPrefix: "1",
 			priority: 5,
-			patternRegion: "us"
+			patternRegion: "US"
 		},
-		cc: {
-			isoCode: "cc",
+		CC: {
+			isoCode: "CC",
 			dialCode: "61",
 			nationalPrefix: "0",
 			priority: 1,
-			patternRegion: "au"
+			patternRegion: "AU"
 		},
-		cd: {
-			isoCode: "cd",
+		CD: {
+			isoCode: "CD",
 			dialCode: "243",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "12"
 				},
 				{
 					match: "([89]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[0-2459]|9"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "88"
 				},
 				{
 					match: "(\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-6]"
 				}
 			]
 		},
-		cf: {
-			isoCode: "cf",
+		CF: {
+			isoCode: "CF",
 			dialCode: "236",
 			patterns: [
 				{
@@ -823,44 +982,49 @@ module.exports = {
 				}
 			]
 		},
-		cg: {
-			isoCode: "cg",
+		CG: {
+			isoCode: "CG",
 			dialCode: "242",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[02]"
 				},
 				{
 					match: "(\\d)(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		ch: {
-			isoCode: "ch",
+		CH: {
+			isoCode: "CH",
 			dialCode: "41",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([2-9]\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-7]|[89]1"
 				},
 				{
 					match: "([89]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[047]|90"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4 $5",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "860"
 				}
 			]
 		},
-		ci: {
-			isoCode: "ci",
+		CI: {
+			isoCode: "CI",
 			dialCode: "225",
 			patterns: [
 				{
@@ -869,8 +1033,8 @@ module.exports = {
 				}
 			]
 		},
-		ck: {
-			isoCode: "ck",
+		CK: {
+			isoCode: "CK",
 			dialCode: "682",
 			patterns: [
 				{
@@ -879,321 +1043,378 @@ module.exports = {
 				}
 			]
 		},
-		cl: {
-			isoCode: "cl",
+		CL: {
+			isoCode: "CL",
 			dialCode: "56",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "2[23]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "[357]|4[1-35]|6[13-57]"
 				},
 				{
 					match: "(9)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(44)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "44"
 				},
 				{
 					match: "([68]00)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "60|8"
 				},
 				{
 					match: "(600)(\\d{3})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "60"
 				},
 				{
 					match: "(1230)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d{5})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "219"
 				},
 				{
 					match: "(\\d{4,5})",
 					replace: "$1",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[1-9]"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "2[23]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "[357]|4[1-35]|6[13-57]"
 				},
 				{
 					match: "(9)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(44)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "44"
 				},
 				{
 					match: "([68]00)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "60|8"
 				},
 				{
 					match: "(600)(\\d{3})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "60"
 				},
 				{
 					match: "(1230)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d{5})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "219"
 				}
 			]
 		},
-		cm: {
-			isoCode: "cm",
+		CM: {
+			isoCode: "CM",
 			dialCode: "237",
 			patterns: [
 				{
 					match: "([26])(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4 $5"
+					replace: "$1 $2 $3 $4 $5",
+					leadingDigitPattern: "[26]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[23]|88"
 				},
 				{
 					match: "(800)(\\d{2})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "80"
 				}
 			]
 		},
-		cn: {
-			isoCode: "cn",
+		CN: {
+			isoCode: "CN",
 			dialCode: "86",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(80\\d{2})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80[2678]"
 				},
 				{
 					match: "([48]00)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[48]00"
 				},
 				{
 					match: "(\\d{5,6})",
-					replace: "$1"
+					replace: "$1",
+					leadingDigitPattern: "100|95"
 				},
 				{
 					match: "(\\d{2})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:10|2\\d)(?:100|9[56])"
 				},
 				{
 					match: "(\\d{3})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-9]\\d{2}(?:10|9[56])"
 				},
 				{
 					match: "(\\d{3,4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[2-9]"
 				},
 				{
 					match: "(21)(\\d{4})(\\d{4,6})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21"
 				},
 				{
 					match: "([12]\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "10(?:[1-79]|8(?:[1-9]|0[1-9]))|2[02-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:1[02-9]|35|49|5|7[02-68]|9[1-68])|4(?:1[02-9]|2[179]|[35][2-9]|6[4789]|7\\d|8[23])|5(?:3[03-9]|4[36]|5[02-9]|6[1-46]|7[028]|80|9[2-46-9])|6(?:3[1-5]|6[0238]|9[12])|7(?:01|[1579]|2[248]|3[04-9]|4[3-6]|6[2368])|8(?:1[236-8]|2[5-7]|3|5[1-9]|7[02-9]|8[3678]|9[1-7])|9(?:0[1-3689]|1[1-79]|[379]|4[13]|5[1-5])"
 				},
 				{
 					match: "(\\d{3})(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:11|7[179])|4(?:[15]1|3[1-35])|5(?:1|2[37]|3[12]|51|7[13-79]|9[15])|7(?:31|5[457]|6[09]|91)|8(?:[57]1|98)"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8078"
 				},
 				{
 					match: "(\\d{3})(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1[3-578]"
 				},
 				{
 					match: "(10800)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "10800"
 				},
 				{
 					match: "(\\d{3})(\\d{7,8})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "950"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(80\\d{2})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80[2678]"
 				},
 				{
 					match: "([48]00)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[48]00"
 				},
 				{
 					match: "(\\d{2})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:10|2\\d)(?:100|9[56])"
 				},
 				{
 					match: "(\\d{3})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-9]\\d{2}(?:10|9[56])"
 				},
 				{
 					match: "(21)(\\d{4})(\\d{4,6})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21"
 				},
 				{
 					match: "([12]\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "10(?:[1-79]|8(?:[1-9]|0[1-9]))|2[02-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:1[02-9]|35|49|5|7[02-68]|9[1-68])|4(?:1[02-9]|2[179]|[35][2-9]|6[4789]|7\\d|8[23])|5(?:3[03-9]|4[36]|5[02-9]|6[1-46]|7[028]|80|9[2-46-9])|6(?:3[1-5]|6[0238]|9[12])|7(?:01|[1579]|2[248]|3[04-9]|4[3-6]|6[2368])|8(?:1[236-8]|2[5-7]|3|5[1-9]|7[02-9]|8[3678]|9[1-7])|9(?:0[1-3689]|1[1-79]|[379]|4[13]|5[1-5])"
 				},
 				{
 					match: "(\\d{3})(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:11|7[179])|4(?:[15]1|3[1-35])|5(?:1|2[37]|3[12]|51|7[13-79]|9[15])|7(?:31|5[457]|6[09]|91)|8(?:[57]1|98)"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8078"
 				},
 				{
 					match: "(\\d{3})(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1[3-578]"
 				},
 				{
 					match: "(10800)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "10800"
 				},
 				{
 					match: "(\\d{3})(\\d{7,8})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "950"
 				}
 			]
 		},
-		co: {
-			isoCode: "co",
+		CO: {
+			isoCode: "CO",
 			dialCode: "57",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "1(?:8[2-9]|9(?:09|[1-3])|[2-7])|[24-8]"
 				},
 				{
 					match: "(\\d{3})(\\d{7})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "3"
 				},
 				{
 					match: "(1)(\\d{3})(\\d{7})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:800|9(?:0[01]|4[78]))"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d)(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "1(?:8[2-9]|9(?:09|[1-3])|[2-7])|[24-8]"
 				},
 				{
 					match: "(\\d{3})(\\d{7})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "3"
 				},
 				{
 					match: "(1)(\\d{3})(\\d{7})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1(?:800|9(?:0[01]|4[78]))"
 				}
 			]
 		},
-		cr: {
-			isoCode: "cr",
+		CR: {
+			isoCode: "CR",
 			dialCode: "506",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[24-7]|8[3-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1-$2-$3"
+					replace: "$1-$2-$3",
+					leadingDigitPattern: "[89]0"
 				}
 			]
 		},
-		cu: {
-			isoCode: "cu",
+		CU: {
+			isoCode: "CU",
 			dialCode: "53",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{6,7})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(\\d{2})(\\d{4,6})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[2-4]"
 				},
 				{
 					match: "(\\d)(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5"
 				}
 			]
 		},
-		cv: {
-			isoCode: "cv",
+		CV: {
+			isoCode: "CV",
 			dialCode: "238",
 			patterns: [
 				{
@@ -1202,30 +1423,32 @@ module.exports = {
 				}
 			]
 		},
-		cw: {
-			isoCode: "cw",
+		CW: {
+			isoCode: "CW",
 			dialCode: "599",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[13-7]"
 				},
 				{
 					match: "(9)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "9"
 				}
 			],
 			priority: 10
 		},
-		cx: {
-			isoCode: "cx",
+		CX: {
+			isoCode: "CX",
 			dialCode: "61",
 			nationalPrefix: "0",
 			priority: 5,
-			patternRegion: "au"
+			patternRegion: "AU"
 		},
-		cy: {
-			isoCode: "cy",
+		CY: {
+			isoCode: "CY",
 			dialCode: "357",
 			patterns: [
 				{
@@ -1234,123 +1457,144 @@ module.exports = {
 				}
 			]
 		},
-		cz: {
-			isoCode: "cz",
+		CZ: {
+			isoCode: "CZ",
 			dialCode: "420",
 			patterns: [
 				{
 					match: "([2-9]\\d{2})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[2-8]|9[015-7]"
 				},
 				{
 					match: "(96\\d)(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "96"
 				},
 				{
 					match: "(9\\d)(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "9[36]"
 				}
 			]
 		},
-		de: {
-			isoCode: "de",
+		DE: {
+			isoCode: "DE",
 			dialCode: "49",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(1\\d{2})(\\d{7,8})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[67]"
 				},
 				{
 					match: "(15\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "15[0568]"
 				},
 				{
 					match: "(1\\d{3})(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "15"
 				},
 				{
 					match: "(\\d{2})(\\d{3,11})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3[02]|40|[68]9"
 				},
 				{
 					match: "(\\d{3})(\\d{3,11})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:\\d1|0[2389]|1[24]|28|34)|3(?:[3-9][15]|40)|[4-8][1-9]1|9(?:06|[1-9]1)"
 				},
 				{
 					match: "(\\d{4})(\\d{2,11})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[24-6]|[7-9](?:\\d[1-9]|[1-9]\\d)|3(?:3(?:0[1-467]|2[127-9]|3[124578]|[46][1246]|7[1257-9]|8[1256]|9[145])|4(?:2[135]|3[1357]|4[13578]|6[1246]|7[1356]|9[1346])|5(?:0[14]|2[1-3589]|3[1357]|4[1246]|6[1-4]|7[1346]|8[13568]|9[1246])|6(?:0[356]|2[1-489]|3[124-6]|4[1347]|6[13]|7[12579]|8[1-356]|9[135])|7(?:2[1-7]|3[1357]|4[145]|6[1-5]|7[1-4])|8(?:21|3[1468]|4[1347]|6[0135-9]|7[1467]|8[136])|9(?:0[12479]|2[1358]|3[1357]|4[134679]|6[1-9]|7[136]|8[147]|9[1468]))"
 				},
 				{
 					match: "(3\\d{4})(\\d{1,10})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3"
 				},
 				{
 					match: "(800)(\\d{7,12})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "800"
 				},
 				{
 					match: "(\\d{3})(\\d)(\\d{4,10})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:37|80)|900[1359]"
 				},
 				{
 					match: "(1\\d{2})(\\d{5,11})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "181"
 				},
 				{
 					match: "(18\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "18500"
 				},
 				{
 					match: "(18\\d{2})(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "18[68]"
 				},
 				{
 					match: "(18\\d)(\\d{8})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "18[2-579]"
 				},
 				{
 					match: "(700)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "700"
 				},
 				{
 					match: "(138)(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "138"
 				},
 				{
 					match: "(15[013-68])(\\d{2})(\\d{8})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "15[013-68]"
 				},
 				{
 					match: "(15[279]\\d)(\\d{2})(\\d{7})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "15[279]"
 				},
 				{
 					match: "(1[67]\\d)(\\d{2})(\\d{7,8})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:6[023]|7)"
 				}
 			]
 		},
-		dj: {
-			isoCode: "dj",
+		DJ: {
+			isoCode: "DJ",
 			dialCode: "253",
 			patterns: [
 				{
@@ -1359,8 +1603,8 @@ module.exports = {
 				}
 			]
 		},
-		dk: {
-			isoCode: "dk",
+		DK: {
+			isoCode: "DK",
 			dialCode: "45",
 			patterns: [
 				{
@@ -1369,14 +1613,18 @@ module.exports = {
 				}
 			]
 		},
-		dm: {
-			isoCode: "dm",
+		DM: {
+			isoCode: "DM",
 			dialCode: "1767",
+			countryDialCode: "1",
+			regionCode: "767",
 			nationalPrefix: "1"
 		},
-		"do": {
-			isoCode: "do",
+		DO: {
+			isoCode: "DO",
 			dialCode: "18[024]9",
+			countryDialCode: "1",
+			regionCode: "8[024]9",
 			areaCodes: [
 				"809",
 				"829",
@@ -1384,119 +1632,137 @@ module.exports = {
 			],
 			nationalPrefix: "1",
 			priority: 3,
-			patternRegion: "do"
+			patternRegion: "DO"
 		},
-		dz: {
-			isoCode: "dz",
+		DZ: {
+			isoCode: "DZ",
 			dialCode: "213",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([1-4]\\d)(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-4]"
 				},
 				{
 					match: "([5-8]\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[5-8]"
 				},
 				{
 					match: "(9\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				}
 			]
 		},
-		ec: {
-			isoCode: "ec",
+		EC: {
+			isoCode: "EC",
 			dialCode: "593",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2-$3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[247]|[356][2-8]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(1800)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{4})",
-					replace: "$1-$2-$3"
+					replace: "$1-$2-$3",
+					leadingDigitPattern: "[247]|[356][2-8]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(1800)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1"
 				}
 			]
 		},
-		ee: {
-			isoCode: "ee",
+		EE: {
+			isoCode: "EE",
 			dialCode: "372",
 			patterns: [
 				{
 					match: "([3-79]\\d{2})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[369]|4[3-8]|5(?:[02]|1(?:[0-8]|95)|5[0-478]|6(?:4[0-4]|5[1-589]))|7[1-9]"
 				},
 				{
 					match: "(70)(\\d{2})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "70"
 				},
 				{
 					match: "(8000)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "8000"
 				},
 				{
 					match: "([458]\\d{3})(\\d{3,4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "40|5|8(?:00[1-9]|[1-5])"
 				}
 			]
 		},
-		eg: {
-			isoCode: "eg",
+		EG: {
+			isoCode: "EG",
 			dialCode: "20",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{7,8})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[012]|[89]00"
 				},
 				{
 					match: "(\\d{2})(\\d{6,7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[35]|[4-6]|[89][2-9]"
 				}
 			]
 		},
-		eh: {
-			isoCode: "eh",
+		EH: {
+			isoCode: "EH",
 			dialCode: "212528[89]",
+			countryDialCode: "212",
+			regionCode: "528[89]",
 			nationalPrefix: "0"
 		},
-		er: {
-			isoCode: "er",
+		ER: {
+			isoCode: "ER",
 			dialCode: "291",
 			nationalPrefix: "0",
 			patterns: [
@@ -1507,22 +1773,24 @@ module.exports = {
 				}
 			]
 		},
-		es: {
-			isoCode: "es",
+		ES: {
+			isoCode: "ES",
 			dialCode: "34",
 			patterns: [
 				{
 					match: "([89]00)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[89]00"
 				},
 				{
 					match: "([5-9]\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[568]|[79][0-8]"
 				}
 			]
 		},
-		et: {
-			isoCode: "et",
+		ET: {
+			isoCode: "ET",
 			dialCode: "251",
 			nationalPrefix: "0",
 			patterns: [
@@ -1533,54 +1801,62 @@ module.exports = {
 				}
 			]
 		},
-		fi: {
-			isoCode: "fi",
+		FI: {
+			isoCode: "FI",
 			dialCode: "358",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3,7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:[1-3]00|[6-8]0)"
 				},
 				{
 					match: "(116\\d{3})",
 					replace: "$1",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "116"
 				},
 				{
 					match: "(\\d{2})(\\d{4,10})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[14]|2[09]|50|7[135]"
 				},
 				{
 					match: "(\\d)(\\d{4,11})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[25689][1-8]|3"
 				}
 			],
 			priority: 10
 		},
-		fj: {
-			isoCode: "fj",
+		FJ: {
+			isoCode: "FJ",
 			dialCode: "679",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[36-9]"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "0"
 				}
 			]
 		},
-		fk: {
-			isoCode: "fk",
-			dialCode: "500"
+		FK: {
+			isoCode: "FK",
+			dialCode: "500",
+			priority: 10,
+			patternRegion: "FK"
 		},
-		fm: {
-			isoCode: "fm",
+		FM: {
+			isoCode: "FM",
 			dialCode: "691",
 			patterns: [
 				{
@@ -1589,8 +1865,8 @@ module.exports = {
 				}
 			]
 		},
-		fo: {
-			isoCode: "fo",
+		FO: {
+			isoCode: "FO",
 			dialCode: "298",
 			patterns: [
 				{
@@ -1599,142 +1875,164 @@ module.exports = {
 				}
 			]
 		},
-		fr: {
-			isoCode: "fr",
+		FR: {
+			isoCode: "FR",
 			dialCode: "33",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([1-79])(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4 $5",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-79]"
 				},
 				{
 					match: "(1\\d{2})(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "11"
 				},
 				{
 					match: "(8\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0 $1"
+					nationalFormat: "0 $1",
+					leadingDigitPattern: "8"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "([1-79])(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4 $5",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-79]"
 				},
 				{
 					match: "(8\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0 $1"
+					nationalFormat: "0 $1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		ga: {
-			isoCode: "ga",
+		GA: {
+			isoCode: "GA",
 			dialCode: "241",
 			patterns: [
 				{
 					match: "(\\d)(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-7]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "0"
 				}
 			]
 		},
-		gb: {
-			isoCode: "gb",
+		GB: {
+			isoCode: "GB",
 			dialCode: "44",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2|5[56]|7(?:0|6(?:[013-9]|2[0-35-9]))"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:1|\\d1)|3|9[018]"
 				},
 				{
 					match: "(\\d{5})(\\d{4,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:3873|5(?:242|39[456])|697[347]|768[347]|9467)"
 				},
 				{
 					match: "(1\\d{3})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(7\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7(?:[1-5789]|624)"
 				},
 				{
 					match: "(800)(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8001111"
 				},
 				{
 					match: "(845)(46)(4\\d)",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "845464"
 				},
 				{
 					match: "(8\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8(?:4[2-5]|7[0-3])"
 				},
 				{
 					match: "(80\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80"
 				},
 				{
 					match: "([58]00)(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[58]00"
 				}
 			],
 			priority: 10
 		},
-		gd: {
-			isoCode: "gd",
+		GD: {
+			isoCode: "GD",
 			dialCode: "1473",
+			countryDialCode: "1",
+			regionCode: "473",
 			nationalPrefix: "1"
 		},
-		ge: {
-			isoCode: "ge",
+		GE: {
+			isoCode: "GE",
 			dialCode: "995",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[348]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "5"
 				}
 			]
 		},
-		gf: {
-			isoCode: "gf",
+		GF: {
+			isoCode: "GF",
 			dialCode: "594",
 			nationalPrefix: "0",
 			patterns: [
@@ -1745,42 +2043,45 @@ module.exports = {
 				}
 			]
 		},
-		gg: {
-			isoCode: "gg",
+		GG: {
+			isoCode: "GG",
 			dialCode: "44",
 			nationalPrefix: "0",
 			priority: 1,
-			patternRegion: "gb"
+			patternRegion: "GB"
 		},
-		gh: {
-			isoCode: "gh",
+		GH: {
+			isoCode: "GH",
 			dialCode: "233",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[235]"
 				},
 				{
 					match: "(\\d{3})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		gi: {
-			isoCode: "gi",
+		GI: {
+			isoCode: "GI",
 			dialCode: "350",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "2"
 				}
 			]
 		},
-		gl: {
-			isoCode: "gl",
+		GL: {
+			isoCode: "GL",
 			dialCode: "299",
 			patterns: [
 				{
@@ -1789,8 +2090,8 @@ module.exports = {
 				}
 			]
 		},
-		gm: {
-			isoCode: "gm",
+		GM: {
+			isoCode: "GM",
 			dialCode: "220",
 			patterns: [
 				{
@@ -1799,22 +2100,24 @@ module.exports = {
 				}
 			]
 		},
-		gn: {
-			isoCode: "gn",
+		GN: {
+			isoCode: "GN",
 			dialCode: "224",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "3"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[67]"
 				}
 			]
 		},
-		gp: {
-			isoCode: "gp",
+		GP: {
+			isoCode: "GP",
 			dialCode: "590",
 			nationalPrefix: "0",
 			patterns: [
@@ -1826,73 +2129,84 @@ module.exports = {
 			],
 			priority: 10
 		},
-		gq: {
-			isoCode: "gq",
+		GQ: {
+			isoCode: "GQ",
 			dialCode: "240",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[235]"
 				},
 				{
 					match: "(\\d{3})(\\d{6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[89]"
 				}
 			]
 		},
-		gr: {
-			isoCode: "gr",
+		GR: {
+			isoCode: "GR",
 			dialCode: "30",
 			patterns: [
 				{
 					match: "([27]\\d)(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "21|7"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "2[2-9]1|[689]"
 				},
 				{
 					match: "(2\\d{3})(\\d{6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "2[2-9][02-9]"
 				}
 			]
 		},
-		gt: {
-			isoCode: "gt",
+		GT: {
+			isoCode: "GT",
 			dialCode: "502",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[2-7]"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1"
 				}
 			]
 		},
-		gu: {
-			isoCode: "gu",
+		GU: {
+			isoCode: "GU",
 			dialCode: "1671",
+			countryDialCode: "1",
+			regionCode: "671",
 			nationalPrefix: "1"
 		},
-		gw: {
-			isoCode: "gw",
+		GW: {
+			isoCode: "GW",
 			dialCode: "245",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "44|9[567]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "40"
 				}
 			]
 		},
-		gy: {
-			isoCode: "gy",
+		GY: {
+			isoCode: "GY",
 			dialCode: "592",
 			patterns: [
 				{
@@ -1901,30 +2215,34 @@ module.exports = {
 				}
 			]
 		},
-		hk: {
-			isoCode: "hk",
+		HK: {
+			isoCode: "HK",
 			dialCode: "852",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[235-7]|[89](?:0[1-9]|[1-9])"
 				},
 				{
 					match: "(800)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "800"
 				},
 				{
 					match: "(900)(\\d{2})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "900"
 				},
 				{
 					match: "(900)(\\d{2,5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "900"
 				}
 			]
 		},
-		hn: {
-			isoCode: "hn",
+		HN: {
+			isoCode: "HN",
 			dialCode: "504",
 			patterns: [
 				{
@@ -1933,70 +2251,81 @@ module.exports = {
 				}
 			]
 		},
-		hr: {
-			isoCode: "hr",
+		HR: {
+			isoCode: "HR",
 			dialCode: "385",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(1)(\\d{4})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(6[09])(\\d{4})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6[09]"
 				},
 				{
 					match: "([67]2)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[67]2"
 				},
 				{
 					match: "([2-5]\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-5]"
 				},
 				{
 					match: "(9\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(9\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(9\\d)(\\d{3,4})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2,3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6[0145]|7"
 				},
 				{
 					match: "(\\d{2})(\\d{3,4})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6[0145]|7"
 				},
 				{
 					match: "(80[01])(\\d{2})(\\d{2,3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				},
 				{
 					match: "(80[01])(\\d{3,4})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		ht: {
-			isoCode: "ht",
+		HT: {
+			isoCode: "HT",
 			dialCode: "509",
 			patterns: [
 				{
@@ -2005,245 +2334,284 @@ module.exports = {
 				}
 			]
 		},
-		hu: {
-			isoCode: "hu",
+		HU: {
+			isoCode: "HU",
 			dialCode: "36",
 			nationalPrefix: "06",
 			patterns: [
 				{
 					match: "(1)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "($1)"
+					nationalFormat: "($1)",
+					leadingDigitPattern: "[2-9]"
 				}
 			]
 		},
-		id: {
-			isoCode: "id",
+		ID: {
+			isoCode: "ID",
 			dialCode: "62",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{5,8})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "2[124]|[36]1"
 				},
 				{
 					match: "(\\d{3})(\\d{5,8})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[4579]|2[035-9]|[36][02-9]"
 				},
 				{
 					match: "(8\\d{2})(\\d{3,4})(\\d{3,5})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[1-35-9]"
 				},
 				{
 					match: "(1)(500)(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "15"
 				},
 				{
 					match: "(177)(\\d{6,8})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "17"
 				},
 				{
 					match: "(800)(\\d{5,7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "800"
 				},
 				{
 					match: "(804)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "804"
 				},
 				{
 					match: "(80\\d)(\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80[79]"
 				}
 			]
 		},
-		ie: {
-			isoCode: "ie",
+		IE: {
+			isoCode: "IE",
 			dialCode: "353",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(1)(\\d{3,4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "2[24-9]|47|58|6[237-9]|9[35-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "40[24]|50[45]"
 				},
 				{
 					match: "(48)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "48"
 				},
 				{
 					match: "(818)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "81"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[24-69]|7[14]"
 				},
 				{
 					match: "([78]\\d)(\\d{3,4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "76|8[35-9]"
 				},
 				{
 					match: "(700)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "70"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1(?:8[059]0|5)"
 				}
 			]
 		},
-		il: {
-			isoCode: "il",
+		IL: {
+			isoCode: "IL",
 			dialCode: "972",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([2-489])(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-489]"
 				},
 				{
 					match: "([57]\\d)(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[57]"
 				},
 				{
 					match: "(1)([7-9]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1-$2-$3-$4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1[7-9]"
 				},
 				{
 					match: "(1255)(\\d{3})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "125"
 				},
 				{
 					match: "(1200)(\\d{3})(\\d{3})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "120"
 				},
 				{
 					match: "(1212)(\\d{2})(\\d{2})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "121"
 				},
 				{
 					match: "(1599)(\\d{6})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "15"
 				},
 				{
 					match: "(\\d{4})",
 					replace: "*$1",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[2-689]"
 				}
 			]
 		},
-		im: {
-			isoCode: "im",
+		IM: {
+			isoCode: "IM",
 			dialCode: "44",
 			nationalPrefix: "0",
 			priority: 3,
-			patternRegion: "gb"
+			patternRegion: "GB"
 		},
-		"in": {
-			isoCode: "in",
+		IN: {
+			isoCode: "IN",
 			dialCode: "91",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{5})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7(?:0|19[0-5]|2(?:[0235679]|[14][017-9]|8(?:[0-569]|[78][089])|9[389])|3(?:[05-8]|1(?:[089]|7[5-9])|2(?:[5-8]|[0-49][089])|3[017-9]|4(?:[07-9]|11)|9(?:[01689]|[2345][089]|40|7[0189]))|4(?:[056]|1(?:[0135-9]|[23][089]|2[089]|4[089])|2(?:0[089]|[1-7][089]|[89])|3(?:[0-8][089]|9)|4(?:[089]|11|7[02-8])|7(?:[089]|11|7[02-8])|8(?:[0-24-7][089]|[389])|9(?:[0-7][089]|[89]))|5(?:[0346-9]|1(?:[019]|7[02-9])|2(?:[03-9]|[12][089])|5[017-9])|6(?:[06-9]|1[0-257-9]|2[0-5]|3[19]|4(?:6[89]|[7-9][089])|5(?:[0-367][089]|[4589]))|7(?:0(?:[02-9]|1[089])|[1-9])|8(?:[0-79]|8(?:0[0189]|11|8[013-9]|9[012]))|9(?:0|7(?:[2-8]|9[7-9])|8[0246-9]|9(?:[03-9]|11|2[234])))|8(?:0(?:[01589]|6[67]|7(?:[2-8]|9[056]))|1(?:[02-57-9]|1(?:[0135-9]|22|44)|6[089])|2(?:0[08]|[236-9]|5[1-9])|3(?:[0357-9]|1(?:7[02]|[89])|2(?:[09]|8[0-6])|4[1-9]|60)|[45]|6(?:[02457-9]|1[089]|3[89]|6(?:[08]|7[02-8]|9[01]))|7(?:0[07]|[1-69])|8(?:[0-26-9]|44|5[2-9])|9(?:[035-9]|19|2[2-9]|4[0-8]))|9"
 				},
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "11|2[02]|33|4[04]|79[1-9]|80[2-46]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:2[0-249]|3[0-25]|4[145]|[569][14]|7[1257]|8[1346]|[68][1-9])|2(?:1[257]|3[013]|4[01]|5[0137]|6[0158]|78|8[1568]|9[14])|3(?:26|4[1-3]|5[34]|6[01489]|7[02-46]|8[159])|4(?:1[36]|2[1-47]|3[15]|5[12]|6[0-26-9]|7[0-24-9]|8[013-57]|9[014-7])|5(?:1[025]|[36][25]|22|4[28]|5[12]|[78]1|9[15])|6(?:12|[2345]1|57|6[13]|7[14]|80)"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7(?:12|2[14]|3[134]|4[47]|5(?:1|5[2-6])|[67]1|88)"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8(?:16|2[014]|3[126]|6[136]|7[078]|8[34]|91)"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:[23579]|[468][1-9])|[2-8]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "008"
 				},
 				{
 					match: "(1600)(\\d{2})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1600"
 				},
 				{
 					match: "(1800)(\\d{4,5})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1800"
 				},
 				{
 					match: "(18[06]0)(\\d{2,4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "18[06]0"
 				},
 				{
 					match: "(140)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "140"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "18(?:0[03]|6[12])"
 				}
 			]
 		},
-		io: {
-			isoCode: "io",
+		IO: {
+			isoCode: "IO",
 			dialCode: "246",
 			patterns: [
 				{
@@ -2252,355 +2620,413 @@ module.exports = {
 				}
 			]
 		},
-		iq: {
-			isoCode: "iq",
+		IQ: {
+			isoCode: "IQ",
 			dialCode: "964",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(1)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "([2-6]\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-6]"
 				},
 				{
 					match: "(7\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				}
 			]
 		},
-		ir: {
-			isoCode: "ir",
+		IR: {
+			isoCode: "IR",
 			dialCode: "98",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(21)(\\d{3,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21"
 				},
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
-				},
-				{
-					match: "(\\d{3})(\\d{3})(\\d{3,4})",
-					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
-				},
-				{
-					match: "(\\d{3})(\\d{2})(\\d{2,3})",
-					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-8]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
+				},
+				{
+					match: "(\\d{3})(\\d{2})(\\d{2,3})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
+				},
+				{
+					match: "(\\d{3})(\\d{3})(\\d{3,4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				}
 			]
 		},
-		is: {
-			isoCode: "is",
+		IS: {
+			isoCode: "IS",
 			dialCode: "354",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[4-9]"
 				},
 				{
 					match: "(3\\d{2})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "3"
 				}
 			]
 		},
-		it: {
-			isoCode: "it",
+		IT: {
+			isoCode: "IT",
 			dialCode: "39",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3,4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "0[26]|55"
 				},
 				{
 					match: "(0[26])(\\d{4})(\\d{5})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "0[26]"
 				},
 				{
 					match: "(0[26])(\\d{4,6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "0[26]"
 				},
 				{
 					match: "(0\\d{2})(\\d{3,4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "0[13-57-9][0159]"
 				},
 				{
 					match: "(\\d{3})(\\d{3,6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "0[13-57-9][0159]|8(?:03|4[17]|9(?:2|[45][0-4]))"
 				},
 				{
 					match: "(0\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "0[13-57-9][2-46-8]"
 				},
 				{
 					match: "(0\\d{3})(\\d{2,6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "0[13-57-9][2-46-8]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3,4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[13]|8(?:00|4[08]|9(?:5[5-9]|9))"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "894[5-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "3"
 				}
 			],
 			priority: 10
 		},
-		je: {
-			isoCode: "je",
+		JE: {
+			isoCode: "JE",
 			dialCode: "44",
 			nationalPrefix: "0",
 			priority: 5,
-			patternRegion: "gb"
+			patternRegion: "GB"
 		},
-		jm: {
-			isoCode: "jm",
+		JM: {
+			isoCode: "JM",
 			dialCode: "1876",
+			countryDialCode: "1",
+			regionCode: "876",
 			nationalPrefix: "1"
 		},
-		jo: {
-			isoCode: "jo",
+		JO: {
+			isoCode: "JO",
 			dialCode: "962",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[2356]|87"
 				},
 				{
 					match: "(7)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7[457-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "70|8[0158]|9"
 				}
 			]
 		},
-		jp: {
-			isoCode: "jp",
+		JP: {
+			isoCode: "JP",
 			dialCode: "81",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:12|57|99)0"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "800"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "0077"
 				},
 				{
 					match: "(\\d{4})(\\d{2})(\\d{3,4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "0077"
 				},
 				{
 					match: "(\\d{4})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "0088"
 				},
 				{
 					match: "(\\d{4})(\\d{3})(\\d{3,4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "00(?:37|66)"
 				},
 				{
 					match: "(\\d{4})(\\d{4})(\\d{4,5})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "00(?:37|66)"
 				},
 				{
 					match: "(\\d{4})(\\d{5})(\\d{5,6})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "00(?:37|66)"
 				},
 				{
 					match: "(\\d{4})(\\d{6})(\\d{6,7})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "00(?:37|66)"
 				},
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2579]0|80[1-9]"
 				},
 				{
 					match: "(\\d{4})(\\d)(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:267|3(?:7[247]|9[278])|4(?:5[67]|66)|5(?:47|58|64|8[67])|6(?:3[245]|48|5[4-68]))|5(?:769|979[2-69])|499[2468]|7468|8(?:3(?:8[78]|96[2457-9])|636[2-57-9]|477|51[24])|9(?:496|802|9(?:1[23]|69))"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:2[3-6]|3[3-9]|4[2-6]|5(?:[236-8]|[45][2-69])|[68][2-7]|7[2-689]|9[1-578])|2(?:2(?:[04-689]|3[23])|3[3-58]|4[0-468]|5(?:5[78]|7[2-4]|[0468][2-9])|6(?:[0135-8]|4[2-5])|7(?:[0679]|8[2-7])|8(?:[024578]|3[25-9]|9[6-9])|9(?:11|3[2-4]))|4(?:2(?:2[2-9]|8[237-9])|3[689]|6[035-7]|7(?:[059][2-8]|[68])|80|9[3-5])|5(?:3[1-36-9]|4[4578]|5[013-8]|6[1-9]|7[2-8]|8[14-7]|9(?:[89][2-8]|[4-7]))|7(?:2[15]|3[5-9]|4[02-9]|6[135-8]|7[0-4689]|9(?:[017-9]|4[6-8]|5[2-478]|6[2-589]))|8(?:2(?:4[4-8]|9(?:[3578]|20|4[04-9]|6(?:5[25]|60)))|3(?:7(?:[2-5]|6[0-59])|[3-6][2-9]|8[2-5])|4[5-8]|5[2-9]|6(?:[37]|5(?:[467]|5[014-9])|6(?:[2-8]|9[02-69])|8[2-8]|9(?:[236-8]|9[23]))|7[579]|8[03-579]|9[2-8])|9(?:[23]0|4[02-46-9]|5[024-79]|6[4-9]|7[2-47-9]|8[02-7]|9(?:3(?:3[02-9]|4[0-24689])|4[2-69]|[5-7]))"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1|2(?:2[37]|5(?:[57]|[68]0|9(?:17|99))|64|78|8[39]|917)|4(?:2(?:[68]|20|9[178])|64|7[347])|5(?:[2-589]|39[67])|60|8(?:[46-9]|3[279]|2[124589])|9(?:[235-8]|93(?:31|4))"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:9[14-79]|74|[34]7|[56]9)|82|993"
 				},
 				{
 					match: "(\\d)(\\d{4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3|4(?:2[09]|7[01])|6[1-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2479][1-9]"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:12|57|99)0"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "800"
 				},
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2579]0|80[1-9]"
 				},
 				{
 					match: "(\\d{4})(\\d)(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:267|3(?:7[247]|9[278])|4(?:5[67]|66)|5(?:47|58|64|8[67])|6(?:3[245]|48|5[4-68]))|5(?:769|979[2-69])|499[2468]|7468|8(?:3(?:8[78]|96[2457-9])|636[2-57-9]|477|51[24])|9(?:496|802|9(?:1[23]|69))"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:2[3-6]|3[3-9]|4[2-6]|5(?:[236-8]|[45][2-69])|[68][2-7]|7[2-689]|9[1-578])|2(?:2(?:[04-689]|3[23])|3[3-58]|4[0-468]|5(?:5[78]|7[2-4]|[0468][2-9])|6(?:[0135-8]|4[2-5])|7(?:[0679]|8[2-7])|8(?:[024578]|3[25-9]|9[6-9])|9(?:11|3[2-4]))|4(?:2(?:2[2-9]|8[237-9])|3[689]|6[035-7]|7(?:[059][2-8]|[68])|80|9[3-5])|5(?:3[1-36-9]|4[4578]|5[013-8]|6[1-9]|7[2-8]|8[14-7]|9(?:[89][2-8]|[4-7]))|7(?:2[15]|3[5-9]|4[02-9]|6[135-8]|7[0-4689]|9(?:[017-9]|4[6-8]|5[2-478]|6[2-589]))|8(?:2(?:4[4-8]|9(?:[3578]|20|4[04-9]|6(?:5[25]|60)))|3(?:7(?:[2-5]|6[0-59])|[3-6][2-9]|8[2-5])|4[5-8]|5[2-9]|6(?:[37]|5(?:[467]|5[014-9])|6(?:[2-8]|9[02-69])|8[2-8]|9(?:[236-8]|9[23]))|7[579]|8[03-579]|9[2-8])|9(?:[23]0|4[02-46-9]|5[024-79]|6[4-9]|7[2-47-9]|8[02-7]|9(?:3(?:3[02-9]|4[0-24689])|4[2-69]|[5-7]))"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1|2(?:2[37]|5(?:[57]|[68]0|9(?:17|99))|64|78|8[39]|917)|4(?:2(?:[68]|20|9[178])|64|7[347])|5(?:[2-589]|39[67])|60|8(?:[46-9]|3[279]|2[124589])|9(?:[235-8]|93(?:31|4))"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:9[14-79]|74|[34]7|[56]9)|82|993"
 				},
 				{
 					match: "(\\d)(\\d{4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3|4(?:2[09]|7[01])|6[1-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2479][1-9]"
 				}
 			]
 		},
-		ke: {
-			isoCode: "ke",
+		KE: {
+			isoCode: "KE",
 			dialCode: "254",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{5,7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[24-6]"
 				},
 				{
 					match: "(\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89]"
 				}
 			]
 		},
-		kg: {
-			isoCode: "kg",
+		KG: {
+			isoCode: "KG",
 			dialCode: "996",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[25-7]|31[25]"
 				},
 				{
 					match: "(\\d{4})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:1[36]|[2-9])"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d)(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		kh: {
-			isoCode: "kh",
+		KH: {
+			isoCode: "KH",
 			dialCode: "855",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1\\d[1-9]|[2-9]"
 				},
 				{
 					match: "(1[89]00)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1[89]0"
 				}
 			]
 		},
-		ki: {
-			isoCode: "ki",
+		KI: {
+			isoCode: "KI",
 			dialCode: "686"
 		},
-		km: {
-			isoCode: "km",
+		KM: {
+			isoCode: "KM",
 			dialCode: "269",
 			patterns: [
 				{
@@ -2609,286 +3035,327 @@ module.exports = {
 				}
 			]
 		},
-		kn: {
-			isoCode: "kn",
+		KN: {
+			isoCode: "KN",
 			dialCode: "1869",
+			countryDialCode: "1",
+			regionCode: "869",
 			nationalPrefix: "1"
 		},
-		kp: {
-			isoCode: "kp",
+		KP: {
+			isoCode: "KP",
 			dialCode: "850",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		kr: {
-			isoCode: "kr",
+		KR: {
+			isoCode: "KR",
 			dialCode: "82",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{5})(\\d{3,4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "00798"
 				},
 				{
 					match: "(\\d{5})(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "00798"
 				},
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:0|1[19]|[69]9|5(?:44|59|8))|[57]0"
 				},
 				{
 					match: "(\\d{2})(\\d{3,4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:[01]|5(?:[1-3]|4[56])|6[2-8]|[7-9])|[68]0|[3-6][1-9][1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d)(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1312"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "131[13-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "13[2-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3-$4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "30"
 				},
 				{
 					match: "(\\d)(\\d{3,4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[1-9]"
 				},
 				{
 					match: "(\\d)(\\d{3,4})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21[0-46-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{3,4})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-6][1-9]1(?:[0-46-9])"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1(?:5(?:22|44|66|77|88|99)|6(?:00|44|6[16]|70|88)|8(?:00|33|55|77|99))"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d{2})(\\d{4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:0|1[19]|[69]9|5(?:44|59|8))|[57]0"
 				},
 				{
 					match: "(\\d{2})(\\d{3,4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:[01]|5(?:[1-3]|4[56])|6[2-8]|[7-9])|[68]0|[3-6][1-9][1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d)(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1312"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "131[13-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "13[2-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1-$2-$3-$4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "30"
 				},
 				{
 					match: "(\\d)(\\d{3,4})(\\d{4})",
 					replace: "$1-$2-$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[1-9]"
 				},
 				{
 					match: "(\\d)(\\d{3,4})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21[0-46-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{3,4})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-6][1-9]1(?:[0-46-9])"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1(?:5(?:22|44|66|77|88|99)|6(?:00|44|6[16]|70|88)|8(?:00|33|55|77|99))"
 				}
 			]
 		},
-		kw: {
-			isoCode: "kw",
+		KW: {
+			isoCode: "KW",
 			dialCode: "965",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{3,4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[16]|2(?:[0-35-9]|4[0-35-9])|9[024-9]|52[25]"
 				},
 				{
 					match: "(\\d{3})(\\d{5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "244|5(?:[015]|66)"
 				}
 			]
 		},
-		ky: {
-			isoCode: "ky",
+		KY: {
+			isoCode: "KY",
 			dialCode: "1345",
+			countryDialCode: "1",
+			regionCode: "345",
 			nationalPrefix: "1"
 		},
-		kz: {
-			isoCode: "kz",
+		KZ: {
+			isoCode: "KZ",
 			dialCode: "7",
 			nationalPrefix: "8",
 			priority: 1,
-			patternRegion: "ru"
+			patternRegion: "RU"
 		},
-		la: {
-			isoCode: "la",
+		LA: {
+			isoCode: "LA",
 			dialCode: "856",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(20)(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "20"
 				},
 				{
 					match: "([2-8]\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[13]|3[14]|[4-8]"
 				},
 				{
 					match: "(30)(\\d{2})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "30"
 				}
 			]
 		},
-		lb: {
-			isoCode: "lb",
+		LB: {
+			isoCode: "LB",
 			dialCode: "961",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[13-6]|7(?:[2-57]|62|8[0-7]|9[04-9])|8[02-9]|9"
 				},
 				{
 					match: "([7-9]\\d)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[89][01]|7(?:[01]|6[013-9]|8[89]|9[1-3])"
 				}
 			]
 		},
-		lc: {
-			isoCode: "lc",
+		LC: {
+			isoCode: "LC",
 			dialCode: "1758",
+			countryDialCode: "1",
+			regionCode: "758",
 			nationalPrefix: "1"
 		},
-		li: {
-			isoCode: "li",
+		LI: {
+			isoCode: "LI",
 			dialCode: "423",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[23789]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "6[56]"
 				},
 				{
 					match: "(69)(7\\d{2})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "697"
 				}
 			]
 		},
-		lk: {
-			isoCode: "lk",
+		LK: {
+			isoCode: "LK",
 			dialCode: "94",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{1})(\\d{6})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-689]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				}
 			]
 		},
-		lr: {
-			isoCode: "lr",
+		LR: {
+			isoCode: "LR",
 			dialCode: "231",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
-					match: "(\\d{3})(\\d{3})(\\d{3})",
+					match: "([4-5])(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
-				},
-				{
-					match: "([4-6])(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[45]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23578]"
 				}
 			]
 		},
-		ls: {
-			isoCode: "ls",
+		LS: {
+			isoCode: "LS",
 			dialCode: "266",
 			patterns: [
 				{
@@ -2897,77 +3364,90 @@ module.exports = {
 				}
 			]
 		},
-		lt: {
-			isoCode: "lt",
+		LT: {
+			isoCode: "LT",
 			dialCode: "370",
 			nationalPrefix: "8",
 			patterns: [
 				{
 					match: "([34]\\d)(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "(8-$1)"
+					nationalFormat: "(8-$1)",
+					leadingDigitPattern: "37|4(?:1|5[45]|6[2-4])"
 				},
 				{
 					match: "([3-6]\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(8-$1)"
+					nationalFormat: "(8-$1)",
+					leadingDigitPattern: "3[148]|4(?:[24]|6[09])|528|6"
 				},
 				{
 					match: "([7-9]\\d{2})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "8 $1"
+					nationalFormat: "8 $1",
+					leadingDigitPattern: "[7-9]"
 				},
 				{
 					match: "(5)(2\\d{2})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(8-$1)"
+					nationalFormat: "(8-$1)",
+					leadingDigitPattern: "52[0-79]"
 				}
 			]
 		},
-		lu: {
-			isoCode: "lu",
+		LU: {
+			isoCode: "LU",
 			dialCode: "352",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[2-5]|7[1-9]|[89](?:[1-9]|0[2-9])"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[2-5]|7[1-9]|[89](?:[1-9]|0[2-9])"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "20"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{1,2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "2(?:[0367]|4[3-8])"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{3})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "20"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})(\\d{1,2})",
-					replace: "$1 $2 $3 $4 $5"
+					replace: "$1 $2 $3 $4 $5",
+					leadingDigitPattern: "2(?:[0367]|4[3-8])"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{1,4})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "2(?:[12589]|4[12])|[3-5]|7[1-9]|8(?:[1-9]|0[2-9])|9(?:[1-9]|0[2-46-9])"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "70|80[01]|90[015]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "6"
 				}
 			]
 		},
-		lv: {
-			isoCode: "lv",
+		LV: {
+			isoCode: "LV",
 			dialCode: "371",
 			patterns: [
 				{
@@ -2976,8 +3456,8 @@ module.exports = {
 				}
 			]
 		},
-		ly: {
-			isoCode: "ly",
+		LY: {
+			isoCode: "LY",
 			dialCode: "218",
 			nationalPrefix: "0",
 			patterns: [
@@ -2988,108 +3468,127 @@ module.exports = {
 				}
 			]
 		},
-		ma: {
-			isoCode: "ma",
+		MA: {
+			isoCode: "MA",
 			dialCode: "212",
 			nationalPrefix: "0",
 			patterns: [
 				{
-					match: "([56]\\d{2})(\\d{6})",
+					match: "([5-7]\\d{2})(\\d{6})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5(?:2[015-7]|3[0-4])|[67]"
 				},
 				{
 					match: "([58]\\d{3})(\\d{5})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5(?:2(?:[2-48]|90)|3(?:[5-79]|80)|924)|892"
 				},
 				{
 					match: "(5\\d{4})(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5(?:29|38)[89]"
+				},
+				{
+					match: "([5]\\d{2})(\\d{2})(\\d{2})(\\d{2})",
+					replace: "$1 $2 $3 $4",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5(?:4[067]|5[03])"
 				},
 				{
 					match: "(8[09])(\\d{7})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8(?:0|9[013-9])"
 				}
 			]
 		},
-		mc: {
-			isoCode: "mc",
+		MC: {
+			isoCode: "MC",
 			dialCode: "377",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[39]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "4"
 				},
 				{
 					match: "(6)(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4 $5",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{2})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		md: {
-			isoCode: "md",
+		MD: {
+			isoCode: "MD",
 			dialCode: "373",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "22|3"
 				},
 				{
 					match: "([25-7]\\d{2})(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[13-9]|[5-7]"
 				},
 				{
 					match: "([89]\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89]"
 				}
 			]
 		},
-		me: {
-			isoCode: "me",
+		ME: {
+			isoCode: "ME",
 			dialCode: "382",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-57-9]|6(?:[03689]|7(?:[0-8]|9[3-9]))"
 				},
 				{
 					match: "(67)(9)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "679[0-2]"
 				}
 			]
 		},
-		mf: {
-			isoCode: "mf",
+		MF: {
+			isoCode: "MF",
 			dialCode: "590",
 			nationalPrefix: "0",
 			priority: 5,
-			patternRegion: "gp"
+			patternRegion: "GP"
 		},
-		mg: {
-			isoCode: "mg",
+		MG: {
+			isoCode: "MG",
 			dialCode: "261",
 			nationalPrefix: "0",
 			patterns: [
@@ -3100,8 +3599,8 @@ module.exports = {
 				}
 			]
 		},
-		mh: {
-			isoCode: "mh",
+		MH: {
+			isoCode: "MH",
 			dialCode: "692",
 			nationalPrefix: "1",
 			patterns: [
@@ -3111,134 +3610,154 @@ module.exports = {
 				}
 			]
 		},
-		mk: {
-			isoCode: "mk",
+		MK: {
+			isoCode: "MK",
 			dialCode: "389",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "([347]\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[347]"
 				},
 				{
 					match: "([58]\\d{2})(\\d)(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[58]"
 				}
 			]
 		},
-		ml: {
-			isoCode: "ml",
+		ML: {
+			isoCode: "ML",
 			dialCode: "223",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[246-9]"
 				},
 				{
 					match: "(\\d{4})",
-					replace: "$1"
+					replace: "$1",
+					leadingDigitPattern: "67|74"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[246-9]"
 				}
 			]
 		},
-		mm: {
-			isoCode: "mm",
+		MM: {
+			isoCode: "MM",
 			dialCode: "95",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1|2[245]"
 				},
 				{
 					match: "(2)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "251"
 				},
 				{
 					match: "(\\d)(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "16|2"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "67|81"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[4-8]"
 				},
 				{
 					match: "(9)(\\d{3})(\\d{4,6})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9(?:2[0-4]|[35-9]|4[137-9])"
 				},
 				{
 					match: "(9)([34]\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9(?:3[0-36]|4[0-57-9])"
 				},
 				{
 					match: "(9)(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "92[56]"
 				},
 				{
 					match: "(9)(\\d{3})(\\d{3})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "93"
 				}
 			]
 		},
-		mn: {
-			isoCode: "mn",
+		MN: {
+			isoCode: "MN",
 			dialCode: "976",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([12]\\d)(\\d{2})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[12]1"
 				},
 				{
 					match: "([12]2\\d)(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[12]2[1-3]"
 				},
 				{
 					match: "([12]\\d{3})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[12](?:27|[3-5]\\d)2"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[57-9]"
 				},
 				{
 					match: "([12]\\d{4})(\\d{4,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[12](?:27|[3-5]\\d)[4-9]"
 				}
 			]
 		},
-		mo: {
-			isoCode: "mo",
+		MO: {
+			isoCode: "MO",
 			dialCode: "853",
 			patterns: [
 				{
@@ -3247,13 +3766,15 @@ module.exports = {
 				}
 			]
 		},
-		mp: {
-			isoCode: "mp",
+		MP: {
+			isoCode: "MP",
 			dialCode: "1670",
+			countryDialCode: "1",
+			regionCode: "670",
 			nationalPrefix: "1"
 		},
-		mq: {
-			isoCode: "mq",
+		MQ: {
+			isoCode: "MQ",
 			dialCode: "596",
 			nationalPrefix: "0",
 			patterns: [
@@ -3264,8 +3785,8 @@ module.exports = {
 				}
 			]
 		},
-		mr: {
-			isoCode: "mr",
+		MR: {
+			isoCode: "MR",
 			dialCode: "222",
 			patterns: [
 				{
@@ -3274,13 +3795,15 @@ module.exports = {
 				}
 			]
 		},
-		ms: {
-			isoCode: "ms",
+		MS: {
+			isoCode: "MS",
 			dialCode: "1664",
+			countryDialCode: "1",
+			regionCode: "664",
 			nationalPrefix: "1"
 		},
-		mt: {
-			isoCode: "mt",
+		MT: {
+			isoCode: "MT",
 			dialCode: "356",
 			patterns: [
 				{
@@ -3289,257 +3812,295 @@ module.exports = {
 				}
 			]
 		},
-		mu: {
-			isoCode: "mu",
+		MU: {
+			isoCode: "MU",
 			dialCode: "230",
 			patterns: [
 				{
 					match: "([2-46-9]\\d{2})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[2-46-9]"
 				},
 				{
 					match: "(5\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "5"
 				}
 			]
 		},
-		mv: {
-			isoCode: "mv",
+		MV: {
+			isoCode: "MV",
 			dialCode: "960",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "[3467]|9(?:[1-9]|0[1-9])"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[89]00"
 				}
 			]
 		},
-		mw: {
-			isoCode: "mw",
+		MW: {
+			isoCode: "MW",
 			dialCode: "265",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(2\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1789]"
 				}
 			]
 		},
-		mx: {
-			isoCode: "mx",
+		MX: {
+			isoCode: "MX",
 			dialCode: "52",
 			nationalPrefix: "01",
 			patterns: [
 				{
 					match: "([358]\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "01 $1"
+					nationalFormat: "01 $1",
+					leadingDigitPattern: "33|55|81"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "01 $1"
+					nationalFormat: "01 $1",
+					leadingDigitPattern: "[2467]|3[0-2457-9]|5[089]|8[02-9]|9[0-35-9]"
 				},
 				{
 					match: "(1)([358]\\d)(\\d{4})(\\d{4})",
 					replace: "044 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1(?:33|55|81)"
 				},
 				{
 					match: "(1)(\\d{3})(\\d{3})(\\d{4})",
 					replace: "044 $2 $3 $4",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1(?:[2467]|3[0-2457-9]|5[089]|8[2-9]|9[1-35-9])"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "([358]\\d)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "01 $1"
+					nationalFormat: "01 $1",
+					leadingDigitPattern: "33|55|81"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "01 $1"
+					nationalFormat: "01 $1",
+					leadingDigitPattern: "[2467]|3[0-2457-9]|5[089]|8[02-9]|9[0-35-9]"
 				},
 				{
 					match: "(1)([358]\\d)(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "1(?:33|55|81)"
 				},
 				{
 					match: "(1)(\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "1(?:[2467]|3[0-2457-9]|5[089]|8[2-9]|9[1-35-9])"
 				}
 			]
 		},
-		my: {
-			isoCode: "my",
+		MY: {
+			isoCode: "MY",
 			dialCode: "60",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([4-79])(\\d{3})(\\d{4})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[4-79]"
 				},
 				{
 					match: "(3)(\\d{4})(\\d{4})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3"
 				},
 				{
 					match: "([18]\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[02-46-9][1-9]|8"
 				},
 				{
 					match: "(1)([36-8]00)(\\d{2})(\\d{4})",
-					replace: "$1-$2-$3-$4"
+					replace: "$1-$2-$3-$4",
+					leadingDigitPattern: "1[36-8]0"
 				},
 				{
 					match: "(11)(\\d{4})(\\d{4})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "11"
 				},
 				{
 					match: "(15[49])(\\d{3})(\\d{4})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "15"
 				}
 			]
 		},
-		mz: {
-			isoCode: "mz",
+		MZ: {
+			isoCode: "MZ",
 			dialCode: "258",
 			patterns: [
 				{
 					match: "([28]\\d)(\\d{3})(\\d{3,4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "2|8[2-7]"
 				},
 				{
 					match: "(80\\d)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "80"
 				}
 			]
 		},
-		na: {
-			isoCode: "na",
+		NA: {
+			isoCode: "NA",
 			dialCode: "264",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(8\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[1235]"
 				},
 				{
 					match: "(6\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6"
 				},
 				{
 					match: "(88)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "88"
 				},
 				{
 					match: "(870)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "870"
 				}
 			]
 		},
-		nc: {
-			isoCode: "nc",
+		NC: {
+			isoCode: "NC",
 			dialCode: "687",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1.$2.$3"
+					replace: "$1.$2.$3",
+					leadingDigitPattern: "[2-46-9]|5[0-4]"
 				}
 			]
 		},
-		ne: {
-			isoCode: "ne",
+		NE: {
+			isoCode: "NE",
 			dialCode: "227",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[289]|09"
 				},
 				{
 					match: "(08)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "08"
 				}
 			]
 		},
-		nf: {
-			isoCode: "nf",
+		NF: {
+			isoCode: "NF",
 			dialCode: "672",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(\\d)(\\d{5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "3"
 				}
 			]
 		},
-		ng: {
-			isoCode: "ng",
+		NG: {
+			isoCode: "NG",
 			dialCode: "234",
 			nationalPrefix: "0",
 			patterns: [
 				{
-					match: "(\\d{3})(\\d{3})(\\d{3,4})",
-					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
-				},
-				{
 					match: "(\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[12]|9(?:0[3-9]|[1-9])"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2,3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-6]|7(?:[1-79]|0[1-9])|8[2-9]"
+				},
+				{
+					match: "(\\d{3})(\\d{3})(\\d{3,4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "70|8[01]|90[235-9]"
 				},
 				{
 					match: "([78]00)(\\d{4})(\\d{4,5})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[78]00"
 				},
 				{
 					match: "([78]00)(\\d{5})(\\d{5,6})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[78]00"
 				},
 				{
 					match: "(78)(\\d{2})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "78"
 				}
 			]
 		},
-		ni: {
-			isoCode: "ni",
+		NI: {
+			isoCode: "NI",
 			dialCode: "505",
 			patterns: [
 				{
@@ -3548,82 +4109,93 @@ module.exports = {
 				}
 			]
 		},
-		nl: {
-			isoCode: "nl",
+		NL: {
+			isoCode: "NL",
 			dialCode: "31",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([1-578]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[035]|2[0346]|3[03568]|4[0356]|5[0358]|7|8[4578]"
 				},
 				{
 					match: "([1-5]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[16-8]|2[259]|3[124]|4[17-9]|5[124679]"
 				},
 				{
 					match: "(6)(\\d{8})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6[0-57-9]"
 				},
 				{
 					match: "(66)(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "66"
 				},
 				{
 					match: "(14)(\\d{3,4})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "14"
 				},
 				{
 					match: "([89]0\\d)(\\d{4,7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80|9"
 				}
 			]
 		},
-		no: {
-			isoCode: "no",
+		NO: {
+			isoCode: "NO",
 			dialCode: "47",
 			patterns: [
 				{
 					match: "([489]\\d{2})(\\d{2})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[489]"
 				},
 				{
 					match: "([235-7]\\d)(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[235-7]"
 				}
 			],
 			priority: 10
 		},
-		np: {
-			isoCode: "np",
+		NP: {
+			isoCode: "NP",
 			dialCode: "977",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(1)(\\d{7})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[2-6]"
 				},
 				{
 					match: "(\\d{2})(\\d{6})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[01]|[2-8]|9(?:[1-69]|7[15-9])"
 				},
 				{
 					match: "(9\\d{2})(\\d{7})",
 					replace: "$1-$2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "9(?:6[013]|7[245]|8)"
 				}
 			]
 		},
-		nr: {
-			isoCode: "nr",
+		NR: {
+			isoCode: "NR",
 			dialCode: "674",
 			patterns: [
 				{
@@ -3632,254 +4204,295 @@ module.exports = {
 				}
 			]
 		},
-		nu: {
-			isoCode: "nu",
+		NU: {
+			isoCode: "NU",
 			dialCode: "683"
 		},
-		nz: {
-			isoCode: "nz",
+		NZ: {
+			isoCode: "NZ",
 			dialCode: "64",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([34679])(\\d{3})(\\d{4})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[346]|7[2-57-9]|9[1-9]"
 				},
 				{
 					match: "(24099)(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "24099"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,5})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:1[1-9]|[69]|7[0-35-9])|70|86"
 				},
 				{
 					match: "(2\\d)(\\d{3,4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[028]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:10|74)|5|[89]0"
 				}
-			]
+			],
+			priority: 10
 		},
-		om: {
-			isoCode: "om",
+		OM: {
+			isoCode: "OM",
 			dialCode: "968",
 			patterns: [
 				{
 					match: "(2\\d)(\\d{6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "([79]\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[79]"
 				},
 				{
 					match: "([58]00)(\\d{4,6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[58]"
 				}
 			]
 		},
-		pa: {
-			isoCode: "pa",
+		PA: {
+			isoCode: "PA",
 			dialCode: "507",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "[1-57-9]"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "6"
 				}
 			]
 		},
-		pe: {
-			isoCode: "pe",
+		PE: {
+			isoCode: "PE",
 			dialCode: "51",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(1)(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "([4-8]\\d)(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[4-7]|8[2-4]"
 				},
 				{
 					match: "(\\d{3})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "80"
 				},
 				{
 					match: "(9\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "9"
 				}
 			]
 		},
-		pf: {
-			isoCode: "pf",
+		PF: {
+			isoCode: "PF",
 			dialCode: "689",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "4[09]|8[79]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "44"
 				}
 			]
 		},
-		pg: {
-			isoCode: "pg",
+		PG: {
+			isoCode: "PG",
 			dialCode: "675",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[13-689]|27"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "20|7"
 				}
 			]
 		},
-		ph: {
-			isoCode: "ph",
+		PH: {
+			isoCode: "PH",
 			dialCode: "63",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(2)(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "(\\d{4})(\\d{4,6})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "3(?:230|397|461)|4(?:2(?:35|[46]4|51)|396|4(?:22|63)|59[347]|76[15])|5(?:221|446)|642[23]|8(?:622|8(?:[24]2|5[13]))"
 				},
 				{
 					match: "(\\d{5})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "3469|4(?:279|9(?:30|56))|8834"
 				},
 				{
 					match: "([3-8]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[3-8]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "81|9"
 				},
 				{
 					match: "(1800)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1"
 				},
 				{
 					match: "(1800)(\\d{1,2})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "1"
 				}
 			]
 		},
-		pk: {
-			isoCode: "pk",
+		PK: {
+			isoCode: "PK",
 			dialCode: "92",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(111)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:2[125]|4[0-246-9]|5[1-35-7]|6[1-8]|7[14]|8[16]|91)111"
 				},
 				{
 					match: "(\\d{3})(111)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:2[349]|45|54|60|72|8[2-5]|9[2-9])\\d111"
 				},
 				{
 					match: "(\\d{2})(\\d{7,8})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:2[125]|4[0-246-9]|5[1-35-7]|6[1-8]|7[14]|8[16]|91)[2-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{6,7})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:2[349]|45|54|60|72|8[2-5]|9[2-9])\\d[2-9]"
 				},
 				{
 					match: "(3\\d{2})(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3"
 				},
 				{
 					match: "([15]\\d{3})(\\d{5,6})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "58[12]|1"
 				},
 				{
 					match: "(586\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "586"
 				},
 				{
 					match: "([89]00)(\\d{3})(\\d{2})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89]00"
 				}
 			]
 		},
-		pl: {
-			isoCode: "pl",
+		PL: {
+			isoCode: "PL",
 			dialCode: "48",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[14]|2[0-57-9]|3[2-4]|5[24-689]|6[1-3578]|7[14-7]|8[1-79]|9[145]"
 				},
 				{
 					match: "(\\d{2})(\\d{1})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[12]2"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "26|39|5[0137]|6[0469]|7[02389]|8[08]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2,3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "64"
 				},
 				{
 					match: "(\\d{3})(\\d{3})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "64"
 				}
 			]
 		},
-		pm: {
-			isoCode: "pm",
+		PM: {
+			isoCode: "PM",
 			dialCode: "508",
 			nationalPrefix: "0",
 			patterns: [
@@ -3890,55 +4503,62 @@ module.exports = {
 				}
 			]
 		},
-		pr: {
-			isoCode: "pr",
+		PR: {
+			isoCode: "PR",
 			dialCode: "1787|939",
+			countryDialCode: "1",
+			regionCode: "787|939",
 			areaCodes: [
 				"787",
 				"939"
 			],
 			nationalPrefix: "1",
 			priority: 1,
-			patternRegion: "pr"
+			patternRegion: "PR"
 		},
-		ps: {
-			isoCode: "ps",
+		PS: {
+			isoCode: "PS",
 			dialCode: "970",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([2489])(2\\d{2})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2489]"
 				},
 				{
 					match: "(5[69]\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5"
 				},
 				{
 					match: "(1[78]00)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1[78]"
 				}
 			]
 		},
-		pt: {
-			isoCode: "pt",
+		PT: {
+			isoCode: "PT",
 			dialCode: "351",
 			patterns: [
 				{
 					match: "(2\\d)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "2[12]"
 				},
 				{
 					match: "([2-46-9]\\d{2})(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "2[3-9]|[346-9]"
 				}
 			]
 		},
-		pw: {
-			isoCode: "pw",
+		PW: {
+			isoCode: "PW",
 			dialCode: "680",
 			patterns: [
 				{
@@ -3947,64 +4567,75 @@ module.exports = {
 				}
 			]
 		},
-		py: {
-			isoCode: "py",
+		PY: {
+			isoCode: "PY",
 			dialCode: "595",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:[26]1|3[289]|4[124678]|7[123]|8[1236])"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "(?:[26]1|3[289]|4[124678]|7[123]|8[1236])"
 				},
 				{
 					match: "(\\d{3})(\\d{3,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-9]0"
 				},
 				{
 					match: "(\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9[1-9]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "8700"
 				},
 				{
 					match: "(\\d{3})(\\d{4,5})",
 					replace: "$1 $2",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[2-8][1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[2-8][1-9]"
 				}
 			]
 		},
-		qa: {
-			isoCode: "qa",
+		QA: {
+			isoCode: "QA",
 			dialCode: "974",
 			patterns: [
 				{
 					match: "([28]\\d{2})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[28]"
 				},
 				{
 					match: "([3-7]\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[3-7]"
 				}
 			]
 		},
-		re: {
-			isoCode: "re",
+		RE: {
+			isoCode: "RE",
 			dialCode: "262262|6[49]|8",
+			countryDialCode: "262",
+			regionCode: "262|6[49]|8",
 			nationalPrefix: "0",
 			patterns: [
 				{
@@ -4014,189 +4645,211 @@ module.exports = {
 				}
 			]
 		},
-		ro: {
-			isoCode: "ro",
+		RO: {
+			isoCode: "RO",
 			dialCode: "40",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23]1"
 				},
 				{
 					match: "(21)(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23][3-7]|[7-9]"
 				},
 				{
 					match: "(2\\d{2})(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[3-6]"
 				}
 			]
 		},
-		rs: {
-			isoCode: "rs",
+		RS: {
+			isoCode: "RS",
 			dialCode: "381",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([23]\\d{2})(\\d{4,9})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "(?:2[389]|39)0"
 				},
 				{
 					match: "([1-3]\\d)(\\d{5,10})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1|2(?:[0-24-7]|[389][1-9])|3(?:[0-8]|9[1-9])"
 				},
 				{
 					match: "(6\\d)(\\d{6,8})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "6"
 				},
 				{
 					match: "([89]\\d{2})(\\d{3,9})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89]"
 				},
 				{
 					match: "(7[26])(\\d{4,9})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7[26]"
 				},
 				{
 					match: "(7[08]\\d)(\\d{4,9})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7[08]"
 				}
 			]
 		},
-		ru: {
-			isoCode: "ru",
+		RU: {
+			isoCode: "RU",
 			dialCode: "7",
 			nationalPrefix: "8",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1-$2-$3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "[1-79]"
 				},
 				{
 					match: "([3489]\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2-$3-$4",
-					nationalFormat: "8 ($1)"
+					nationalFormat: "8 ($1)",
+					leadingDigitPattern: "[34689]"
 				},
 				{
 					match: "(7\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "8 ($1)"
+					nationalFormat: "8 ($1)",
+					leadingDigitPattern: "7"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "([3489]\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2-$3-$4",
-					nationalFormat: "8 ($1)"
+					nationalFormat: "8 ($1)",
+					leadingDigitPattern: "[34689]"
 				},
 				{
 					match: "(7\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "8 ($1)"
+					nationalFormat: "8 ($1)",
+					leadingDigitPattern: "7"
 				}
 			],
 			priority: 10
 		},
-		rw: {
-			isoCode: "rw",
+		RW: {
+			isoCode: "RW",
 			dialCode: "250",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "([7-9]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[7-9]"
 				},
 				{
 					match: "(0\\d)(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "0"
 				}
 			]
 		},
-		sa: {
-			isoCode: "sa",
+		SA: {
+			isoCode: "SA",
 			dialCode: "966",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([1-467])(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-467]"
 				},
 				{
 					match: "(1\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[1-467]"
 				},
 				{
 					match: "(5\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5"
 				},
 				{
 					match: "(92\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "92"
 				},
 				{
 					match: "(800)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "80"
 				},
 				{
 					match: "(811)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "81"
 				}
 			]
 		},
-		sb: {
-			isoCode: "sb",
+		SB: {
+			isoCode: "SB",
 			dialCode: "677",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[7-9]"
 				}
 			]
 		},
-		sc: {
-			isoCode: "sc",
+		SC: {
+			isoCode: "SC",
 			dialCode: "248",
 			patterns: [
 				{
-					match: "(\\d{3})(\\d{3})",
-					replace: "$1 $2"
-				},
-				{
 					match: "(\\d)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[246]"
 				}
 			]
 		},
-		sd: {
-			isoCode: "sd",
+		SD: {
+			isoCode: "SD",
 			dialCode: "249",
 			nationalPrefix: "0",
 			patterns: [
@@ -4207,214 +4860,250 @@ module.exports = {
 				}
 			]
 		},
-		se: {
-			isoCode: "se",
+		SE: {
+			isoCode: "SE",
 			dialCode: "46",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(8)(\\d{2,3})(\\d{2,3})(\\d{2})",
 					replace: "$1-$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				},
 				{
 					match: "([1-69]\\d)(\\d{2,3})(\\d{2})(\\d{2})",
 					replace: "$1-$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[013689]|2[0136]|3[1356]|4[0246]|54|6[03]|90"
 				},
 				{
 					match: "([1-469]\\d)(\\d{3})(\\d{2})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[136]|2[136]|3[356]|4[0246]|6[03]|90"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1-$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[2457]|2(?:[247-9]|5[0138])|3[0247-9]|4[1357-9]|5[0-35-9]|6(?:[124-689]|7[0-2])|9(?:[125-8]|3[0-5]|4[0-3])"
 				},
 				{
 					match: "(\\d{3})(\\d{2,3})(\\d{2})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[2457]|2(?:[247-9]|5[0138])|3[0247-9]|4[1357-9]|5[0-35-9]|6(?:[124-689]|7[0-2])|9(?:[125-8]|3[0-5]|4[0-3])"
 				},
 				{
 					match: "(7\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1-$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(77)(\\d{2})(\\d{2})",
 					replace: "$1-$2$3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(20)(\\d{2,3})(\\d{2})",
 					replace: "$1-$2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "20"
 				},
 				{
 					match: "(9[034]\\d)(\\d{2})(\\d{2})(\\d{3})",
 					replace: "$1-$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9[034]"
 				},
 				{
 					match: "(9[034]\\d)(\\d{4})",
 					replace: "$1-$2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9[034]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1-$2 $3 $4 $5",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "25[245]|67[3-6]"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(8)(\\d{2,3})(\\d{2,3})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "8"
 				},
 				{
 					match: "([1-69]\\d)(\\d{2,3})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "1[013689]|2[0136]|3[1356]|4[0246]|54|6[03]|90"
 				},
 				{
 					match: "([1-469]\\d)(\\d{3})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1[136]|2[136]|3[356]|4[0246]|6[03]|90"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "1[2457]|2(?:[247-9]|5[0138])|3[0247-9]|4[1357-9]|5[0-35-9]|6(?:[124-689]|7[0-2])|9(?:[125-8]|3[0-5]|4[0-3])"
 				},
 				{
 					match: "(\\d{3})(\\d{2,3})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1[2457]|2(?:[247-9]|5[0138])|3[0247-9]|4[1357-9]|5[0-35-9]|6(?:[124-689]|7[0-2])|9(?:[125-8]|3[0-5]|4[0-3])"
 				},
 				{
 					match: "(7\\d)(\\d{3})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(77)(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(20)(\\d{2,3})(\\d{2})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "20"
 				},
 				{
 					match: "(9[034]\\d)(\\d{2})(\\d{2})(\\d{3})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "9[034]"
 				},
 				{
 					match: "(9[034]\\d)(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "9[034]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4 $5"
+					replace: "$1 $2 $3 $4 $5",
+					leadingDigitPattern: "25[245]|67[3-6]"
 				}
 			]
 		},
-		sg: {
-			isoCode: "sg",
+		SG: {
+			isoCode: "SG",
 			dialCode: "65",
 			patterns: [
 				{
 					match: "([3689]\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[369]|8[1-9]"
 				},
 				{
 					match: "(1[89]00)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "1[89]"
 				},
 				{
 					match: "(7000)(\\d{4})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "70"
 				},
 				{
 					match: "(800)(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "80"
 				}
 			]
 		},
-		sh: {
-			isoCode: "sh",
+		SH: {
+			isoCode: "SH",
 			dialCode: "290",
 			priority: 10,
-			patternRegion: "sh"
+			patternRegion: "SH"
 		},
-		si: {
-			isoCode: "si",
+		SI: {
+			isoCode: "SI",
 			dialCode: "386",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "(0$1)"
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[12]|3[24-8]|4[24-8]|5[2-8]|7[3-8]"
 				},
 				{
 					match: "([3-7]\\d)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[37][01]|4[0139]|51|6"
 				},
 				{
 					match: "([89][09])(\\d{3,6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89][09]"
 				},
 				{
 					match: "([58]\\d{2})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "59|8[1-3]"
 				}
 			]
 		},
-		sj: {
-			isoCode: "sj",
+		SJ: {
+			isoCode: "SJ",
 			dialCode: "47",
 			priority: 1,
-			patternRegion: "no"
+			patternRegion: "NO"
 		},
-		sk: {
-			isoCode: "sk",
+		SK: {
+			isoCode: "SK",
 			dialCode: "421",
 			nationalPrefix: "0",
 			patterns: [
 				{
-					match: "(2)(16)(\\d{3,4})",
+					match: "(2)(1[67])(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "21[67]"
 				},
 				{
 					match: "([3-5]\\d)(16)(\\d{2,3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-5]"
 				},
 				{
 					match: "(2)(\\d{3})(\\d{3})(\\d{2})",
 					replace: "$1/$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "([3-5]\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1/$2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[3-5]"
 				},
 				{
 					match: "([689]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[689]"
 				},
 				{
 					match: "(9090)(\\d{3})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9090"
 				}
 			]
 		},
-		sl: {
-			isoCode: "sl",
+		SL: {
+			isoCode: "SL",
 			dialCode: "232",
 			nationalPrefix: "0",
 			patterns: [
@@ -4425,95 +5114,120 @@ module.exports = {
 				}
 			]
 		},
-		sm: {
-			isoCode: "sm",
+		SM: {
+			isoCode: "SM",
 			dialCode: "378",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[5-7]"
 				},
 				{
 					match: "(0549)(\\d{6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "0"
 				},
 				{
 					match: "(\\d{6})",
-					replace: "0549 $1"
+					replace: "0549 $1",
+					leadingDigitPattern: "[89]"
 				}
 			],
 			internationalPatterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[5-7]"
 				},
 				{
 					match: "(0549)(\\d{6})",
-					replace: "($1) $2"
+					replace: "($1) $2",
+					leadingDigitPattern: "0"
 				},
 				{
 					match: "(\\d{6})",
-					replace: "(0549) $1"
+					replace: "(0549) $1",
+					leadingDigitPattern: "[89]"
 				}
 			]
 		},
-		sn: {
-			isoCode: "sn",
+		SN: {
+			isoCode: "SN",
 			dialCode: "221",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "[379]"
 				},
 				{
 					match: "(\\d{3})(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1 $2 $3 $4"
+					replace: "$1 $2 $3 $4",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		so: {
-			isoCode: "so",
+		SO: {
+			isoCode: "SO",
 			dialCode: "252",
 			nationalPrefix: "0",
 			patterns: [
 				{
+					match: "(\\d{6})",
+					replace: "$1",
+					leadingDigitPattern: "[134]"
+				},
+				{
 					match: "(\\d)(\\d{6})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "2[0-79]|[13-5]"
 				},
 				{
 					match: "(\\d)(\\d{7})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "24|[67]"
+				},
+				{
+					match: "(\\d{2})(\\d{4})",
+					replace: "$1 $2",
+					leadingDigitPattern: "8[125]"
 				},
 				{
 					match: "(\\d{2})(\\d{5,7})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "15|28|6[1-35-9]|799|9[2-9]"
 				},
 				{
-					match: "(90\\d)(\\d{3})(\\d{3})",
-					replace: "$1 $2 $3"
+					match: "(\\d{3})(\\d{3})(\\d{3})",
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "3[59]|4[89]|6[24-6]|79|8[08]|90"
 				}
 			]
 		},
-		sr: {
-			isoCode: "sr",
+		SR: {
+			isoCode: "SR",
 			dialCode: "597",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{3})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "[2-4]|5[2-58]"
 				},
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})",
-					replace: "$1-$2-$3"
+					replace: "$1-$2-$3",
+					leadingDigitPattern: "56"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "59|[6-8]"
 				}
 			]
 		},
-		ss: {
-			isoCode: "ss",
+		SS: {
+			isoCode: "SS",
 			dialCode: "211",
 			nationalPrefix: "0",
 			patterns: [
@@ -4524,8 +5238,8 @@ module.exports = {
 				}
 			]
 		},
-		st: {
-			isoCode: "st",
+		ST: {
+			isoCode: "ST",
 			dialCode: "239",
 			patterns: [
 				{
@@ -4534,69 +5248,79 @@ module.exports = {
 				}
 			]
 		},
-		sv: {
-			isoCode: "sv",
+		SV: {
+			isoCode: "SV",
 			dialCode: "503",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[267]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[89]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})(\\d{4})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "[89]"
 				}
 			]
 		},
-		sx: {
-			isoCode: "sx",
+		SX: {
+			isoCode: "SX",
 			dialCode: "1721",
+			countryDialCode: "1",
+			regionCode: "721",
 			nationalPrefix: "1"
 		},
-		sy: {
-			isoCode: "sy",
+		SY: {
+			isoCode: "SY",
 			dialCode: "963",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-5]"
 				},
 				{
 					match: "(9\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9"
 				}
 			]
 		},
-		sz: {
-			isoCode: "sz",
+		SZ: {
+			isoCode: "SZ",
 			dialCode: "268",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[027]"
 				}
 			]
 		},
-		ta: {
-			isoCode: "ta",
+		TA: {
+			isoCode: "TA",
 			dialCode: "290",
 			priority: 1,
-			patternRegion: "sh"
+			patternRegion: "SH"
 		},
-		tc: {
-			isoCode: "tc",
+		TC: {
+			isoCode: "TC",
 			dialCode: "1649",
+			countryDialCode: "1",
+			regionCode: "649",
 			nationalPrefix: "1"
 		},
-		td: {
-			isoCode: "td",
+		TD: {
+			isoCode: "TD",
 			dialCode: "235",
 			patterns: [
 				{
@@ -4605,8 +5329,8 @@ module.exports = {
 				}
 			]
 		},
-		tg: {
-			isoCode: "tg",
+		TG: {
+			isoCode: "TG",
 			dialCode: "228",
 			patterns: [
 				{
@@ -4615,97 +5339,109 @@ module.exports = {
 				}
 			]
 		},
-		th: {
-			isoCode: "th",
+		TH: {
+			isoCode: "TH",
 			dialCode: "66",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(2)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2"
 				},
 				{
 					match: "([13-9]\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "14|[3-9]"
 				},
 				{
 					match: "(1[89]00)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1"
 				}
 			]
 		},
-		tj: {
-			isoCode: "tj",
+		TJ: {
+			isoCode: "TJ",
 			dialCode: "992",
 			nationalPrefix: "8",
 			patterns: [
 				{
 					match: "([349]\\d{2})(\\d{2})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(8) $1"
+					nationalFormat: "(8) $1",
+					leadingDigitPattern: "[34]7|91[78]"
 				},
 				{
 					match: "([4589]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(8) $1"
+					nationalFormat: "(8) $1",
+					leadingDigitPattern: "4[148]|[58]|9(?:1[59]|[0235-9])"
 				},
 				{
 					match: "(331700)(\\d)(\\d{2})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(8) $1"
+					nationalFormat: "(8) $1",
+					leadingDigitPattern: "331700"
 				},
 				{
 					match: "(\\d{4})(\\d)(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "(8) $1"
+					nationalFormat: "(8) $1",
+					leadingDigitPattern: "3(?:[1245]|3(?:[02-9]|1[0-589]))"
 				}
 			]
 		},
-		tk: {
-			isoCode: "tk",
+		TK: {
+			isoCode: "TK",
 			dialCode: "690"
 		},
-		tl: {
-			isoCode: "tl",
+		TL: {
+			isoCode: "TL",
 			dialCode: "670",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[2-489]"
 				},
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "7"
 				}
 			]
 		},
-		tm: {
-			isoCode: "tm",
+		TM: {
+			isoCode: "TM",
 			dialCode: "993",
 			nationalPrefix: "8",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{2})(\\d{2})(\\d{2})",
 					replace: "$1 $2-$3-$4",
-					nationalFormat: "(8 $1)"
+					nationalFormat: "(8 $1)",
+					leadingDigitPattern: "12"
 				},
 				{
 					match: "(\\d{2})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "8 $1"
+					nationalFormat: "8 $1",
+					leadingDigitPattern: "6"
 				},
 				{
 					match: "(\\d{3})(\\d)(\\d{2})(\\d{2})",
 					replace: "$1 $2-$3-$4",
-					nationalFormat: "(8 $1)"
+					nationalFormat: "(8 $1)",
+					leadingDigitPattern: "13|[2-5]"
 				}
 			]
 		},
-		tn: {
-			isoCode: "tn",
+		TN: {
+			isoCode: "TN",
 			dialCode: "216",
 			patterns: [
 				{
@@ -4714,144 +5450,182 @@ module.exports = {
 				}
 			]
 		},
-		to: {
-			isoCode: "to",
+		TO: {
+			isoCode: "TO",
 			dialCode: "676",
 			patterns: [
 				{
 					match: "(\\d{2})(\\d{3})",
-					replace: "$1-$2"
+					replace: "$1-$2",
+					leadingDigitPattern: "[1-6]|7[0-4]|8[05]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "7[5-9]|8[47-9]"
 				},
 				{
 					match: "(\\d{4})(\\d{3})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "0"
 				}
 			]
 		},
-		tr: {
-			isoCode: "tr",
+		TR: {
+			isoCode: "TR",
 			dialCode: "90",
 			nationalPrefix: "0",
 			patterns: [
 				{
-					match: "(\\d{3})(\\d{3})(\\d{4})",
-					replace: "$1 $2 $3",
-					nationalFormat: "(0$1)"
+					match: "(\\d{3})(\\d{3})(\\d{2})(\\d{2})",
+					replace: "$1 $2 $3 $4",
+					nationalFormat: "(0$1)",
+					leadingDigitPattern: "[23]|4(?:[0-35-9]|4[0-35-9])"
+				},
+				{
+					match: "(\\d{3})(\\d{3})(\\d{2})(\\d{2})",
+					replace: "$1 $2 $3 $4",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "5[02-69]"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "51|[89]"
 				},
 				{
 					match: "(444)(\\d{1})(\\d{3})",
-					replace: "$1 $2 $3"
+					replace: "$1 $2 $3",
+					leadingDigitPattern: "444"
 				}
 			]
 		},
-		tt: {
-			isoCode: "tt",
+		TT: {
+			isoCode: "TT",
 			dialCode: "1868",
+			countryDialCode: "1",
+			regionCode: "868",
 			nationalPrefix: "1"
 		},
-		tv: {
-			isoCode: "tv",
+		TV: {
+			isoCode: "TV",
 			dialCode: "688"
 		},
-		tw: {
-			isoCode: "tw",
+		TW: {
+			isoCode: "TW",
 			dialCode: "886",
 			nationalPrefix: "0",
 			patterns: [
 				{
+					match: "(20)(\\d)(\\d{4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "202"
+				},
+				{
+					match: "(20)(\\d{3})(\\d{4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "20[013-9]"
+				},
+				{
 					match: "([2-8])(\\d{3,4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[23-8]|[3-6]|[78][1-9]"
 				},
 				{
 					match: "([89]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80|9"
 				},
 				{
 					match: "(70)(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "70"
 				}
 			]
 		},
-		tz: {
-			isoCode: "tz",
+		TZ: {
+			isoCode: "TZ",
 			dialCode: "255",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([24]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[24]"
 				},
 				{
 					match: "([67]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[67]"
 				},
 				{
 					match: "([89]\\d{2})(\\d{2})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89]"
 				}
 			]
 		},
-		ua: {
-			isoCode: "ua",
+		UA: {
+			isoCode: "UA",
 			dialCode: "380",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([3-9]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[38]9|4(?:[45][0-5]|87)|5(?:0|6(?:3[14-7]|7)|7[37])|6[36-8]|7|9[1-9]"
 				},
 				{
 					match: "([3-689]\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:[1-46-8]2[013-9]|52)|4(?:[1378]2|62[013-9])|5(?:[12457]2|6[24])|6(?:[49]2|[12][29]|5[24])|8[0-8]|90"
 				},
 				{
 					match: "([3-6]\\d{3})(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3(?:5[013-9]|[1-46-8](?:22|[013-9]))|4(?:[137][013-9]|6(?:[013-9]|22)|[45][6-9]|8[4-6])|5(?:[1245][013-9]|6(?:3[02389]|[015689])|3|7[4-6])|6(?:[49][013-9]|5[0135-9]|[12][13-8])"
 				}
 			]
 		},
-		ug: {
-			isoCode: "ug",
+		UG: {
+			isoCode: "UG",
 			dialCode: "256",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[7-9]|20(?:[013-8]|2[5-9])|4(?:6[45]|[7-9])"
 				},
 				{
 					match: "(\\d{2})(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "3|4(?:[1-5]|6[0-36-9])"
 				},
 				{
 					match: "(2024)(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2024"
 				}
 			]
 		},
-		us: {
-			isoCode: "us",
+		US: {
+			isoCode: "US",
 			dialCode: "1",
 			nationalPrefix: "1",
 			patterns: [
@@ -4872,29 +5646,32 @@ module.exports = {
 			],
 			priority: 10
 		},
-		uy: {
-			isoCode: "uy",
+		UY: {
+			isoCode: "UY",
 			dialCode: "598",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(\\d{4})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[24]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "9[1-9]"
 				},
 				{
 					match: "(\\d{3})(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[89]0"
 				}
 			]
 		},
-		uz: {
-			isoCode: "uz",
+		UZ: {
+			isoCode: "UZ",
 			dialCode: "998",
 			nationalPrefix: "8",
 			patterns: [
@@ -4905,19 +5682,21 @@ module.exports = {
 				}
 			]
 		},
-		va: {
-			isoCode: "va",
+		VA: {
+			isoCode: "VA",
 			dialCode: "39",
 			priority: 1,
-			patternRegion: "it"
+			patternRegion: "IT"
 		},
-		vc: {
-			isoCode: "vc",
+		VC: {
+			isoCode: "VC",
 			dialCode: "1784",
+			countryDialCode: "1",
+			regionCode: "784",
 			nationalPrefix: "1"
 		},
-		ve: {
-			isoCode: "ve",
+		VE: {
+			isoCode: "VE",
 			dialCode: "58",
 			nationalPrefix: "0",
 			patterns: [
@@ -4928,80 +5707,94 @@ module.exports = {
 				}
 			]
 		},
-		vg: {
-			isoCode: "vg",
+		VG: {
+			isoCode: "VG",
 			dialCode: "1284",
+			countryDialCode: "1",
+			regionCode: "284",
 			nationalPrefix: "1"
 		},
-		vi: {
-			isoCode: "vi",
+		VI: {
+			isoCode: "VI",
 			dialCode: "1340",
+			countryDialCode: "1",
+			regionCode: "340",
 			nationalPrefix: "1"
 		},
-		vn: {
-			isoCode: "vn",
+		VN: {
+			isoCode: "VN",
 			dialCode: "84",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([17]99)(\\d{4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[17]99"
 				},
 				{
 					match: "([48])(\\d{4})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "4|8(?:[1-57]|[689][0-79])"
 				},
 				{
 					match: "([235-7]\\d)(\\d{4})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[025-79]|3[0136-9]|5[2-9]|6[0-46-8]|7[02-79]"
 				},
 				{
 					match: "(80)(\\d{5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80"
 				},
 				{
 					match: "(69\\d)(\\d{4,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "69"
 				},
 				{
 					match: "([235-7]\\d{2})(\\d{4})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2[1348]|3[25]|5[01]|65|7[18]"
 				},
 				{
 					match: "([89]\\d)(\\d{3})(\\d{2})(\\d{2})",
 					replace: "$1 $2 $3 $4",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[689]8|9"
 				},
 				{
 					match: "(1[2689]\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:[26]|8[68]|99)"
 				},
 				{
 					match: "(1[89]00)(\\d{4,6})",
 					replace: "$1 $2",
-					nationalFormat: "$1"
+					nationalFormat: "$1",
+					leadingDigitPattern: "1[89]0"
 				}
 			]
 		},
-		vu: {
-			isoCode: "vu",
+		VU: {
+			isoCode: "VU",
 			dialCode: "678",
 			patterns: [
 				{
 					match: "(\\d{3})(\\d{4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "[579]"
 				}
 			]
 		},
-		wf: {
-			isoCode: "wf",
+		WF: {
+			isoCode: "WF",
 			dialCode: "681",
 			patterns: [
 				{
@@ -5010,960 +5803,1062 @@ module.exports = {
 				}
 			]
 		},
-		ws: {
-			isoCode: "ws",
+		WS: {
+			isoCode: "WS",
 			dialCode: "685",
 			patterns: [
 				{
 					match: "(8\\d{2})(\\d{3,4})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "8"
 				},
 				{
 					match: "(7\\d)(\\d{5})",
-					replace: "$1 $2"
+					replace: "$1 $2",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(\\d{5})",
-					replace: "$1"
+					replace: "$1",
+					leadingDigitPattern: "[2-6]"
 				}
 			]
 		},
-		ye: {
-			isoCode: "ye",
+		YE: {
+			isoCode: "YE",
 			dialCode: "967",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([1-7])(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-6]|7[24-68]"
 				},
 				{
 					match: "(7\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7[0137]"
 				}
 			]
 		},
-		yt: {
-			isoCode: "yt",
+		YT: {
+			isoCode: "YT",
 			dialCode: "262269|63",
+			countryDialCode: "262",
+			regionCode: "269|63",
 			nationalPrefix: "0"
 		},
-		za: {
-			isoCode: "za",
+		ZA: {
+			isoCode: "ZA",
 			dialCode: "27",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "(860)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "860"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[1-79]|8(?:[0-57]|6[1-9])"
 				},
 				{
 					match: "(\\d{2})(\\d{3,4})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[1-4]"
 				},
 				{
 					match: "(\\d{2})(\\d{3})(\\d{2,3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8[1-4]"
 				}
 			]
 		},
-		zm: {
-			isoCode: "zm",
+		ZM: {
+			isoCode: "ZM",
 			dialCode: "260",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([29]\\d)(\\d{7})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[29]"
 				},
 				{
 					match: "(800)(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8"
 				}
 			]
 		},
-		zw: {
-			isoCode: "zw",
+		ZW: {
+			isoCode: "ZW",
 			dialCode: "263",
 			nationalPrefix: "0",
 			patterns: [
 				{
 					match: "([49])(\\d{3})(\\d{2,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "4|9[2-9]"
 				},
 				{
 					match: "(7\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7"
 				},
 				{
 					match: "(86\\d{2})(\\d{3})(\\d{3})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "86[24]"
 				},
 				{
 					match: "([2356]\\d{2})(\\d{3,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:0[45]|2[278]|[49]8|[78])|3(?:08|17|3[78]|7[1569]|8[37]|98)|5[15][78]|6(?:[29]8|[38]7|6[78]|75|[89]8)"
 				},
 				{
 					match: "(\\d{3})(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2(?:1[39]|2[0157]|6[14]|7[35]|84)|329"
 				},
 				{
 					match: "([1-356]\\d)(\\d{3,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1[3-9]|2[0569]|3[0-69]|5[05689]|6[0-46-9]"
 				},
 				{
 					match: "([235]\\d)(\\d{3})(\\d{3,4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[23]9|54"
 				},
 				{
 					match: "([25]\\d{3})(\\d{3,5})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "258[23]|5483"
 				},
 				{
 					match: "(8\\d{3})(\\d{6})",
 					replace: "$1 $2",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "86"
 				},
 				{
 					match: "(80\\d)(\\d{3})(\\d{4})",
 					replace: "$1 $2 $3",
-					nationalFormat: "0$1"
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80"
 				}
 			]
+		},
+		UK: {
+			isoCode: "GB",
+			dialCode: "44",
+			nationalPrefix: "0",
+			patterns: [
+				{
+					match: "(\\d{2})(\\d{4})(\\d{4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "2|5[56]|7(?:0|6(?:[013-9]|2[0-35-9]))"
+				},
+				{
+					match: "(\\d{3})(\\d{3})(\\d{4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:1|\\d1)|3|9[018]"
+				},
+				{
+					match: "(\\d{5})(\\d{4,5})",
+					replace: "$1 $2",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1(?:3873|5(?:242|39[456])|697[347]|768[347]|9467)"
+				},
+				{
+					match: "(1\\d{3})(\\d{5,6})",
+					replace: "$1 $2",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "1"
+				},
+				{
+					match: "(7\\d{3})(\\d{6})",
+					replace: "$1 $2",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "7(?:[1-5789]|624)"
+				},
+				{
+					match: "(800)(\\d{4})",
+					replace: "$1 $2",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8001111"
+				},
+				{
+					match: "(845)(46)(4\\d)",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "845464"
+				},
+				{
+					match: "(8\\d{2})(\\d{3})(\\d{4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "8(?:4[2-5]|7[0-3])"
+				},
+				{
+					match: "(80\\d)(\\d{3})(\\d{4})",
+					replace: "$1 $2 $3",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "80"
+				},
+				{
+					match: "([58]00)(\\d{6})",
+					replace: "$1 $2",
+					nationalFormat: "0$1",
+					leadingDigitPattern: "[58]00"
+				}
+			],
+			priority: 10
 		}
 	},
 	dialCodeMap: {
 		1: [
-			"us",
-			"ca"
+			"US",
+			"CA",
+			"UM"
 		],
 		7: [
-			"ru",
-			"kz"
+			"RU",
+			"KZ"
 		],
 		20: [
-			"eg"
+			"EG"
 		],
 		27: [
-			"za"
+			"ZA"
 		],
 		30: [
-			"gr"
+			"GR"
 		],
 		31: [
-			"nl"
+			"NL"
 		],
 		32: [
-			"be"
+			"BE"
 		],
 		33: [
-			"fr"
+			"FR"
 		],
 		34: [
-			"es"
+			"ES"
 		],
 		36: [
-			"hu"
+			"HU"
 		],
 		39: [
-			"it",
-			"va"
+			"IT",
+			"VA"
 		],
 		40: [
-			"ro"
+			"RO"
 		],
 		41: [
-			"ch"
+			"CH"
 		],
 		43: [
-			"at"
+			"AT"
 		],
 		44: [
-			"gb",
-			"je",
-			"im",
-			"gg"
+			"GB",
+			"JE",
+			"IM",
+			"GG"
 		],
 		45: [
-			"dk"
+			"DK"
 		],
 		46: [
-			"se"
+			"SE"
 		],
 		47: [
-			"no",
-			"sj"
+			"NO",
+			"SJ",
+			"BV"
 		],
 		48: [
-			"pl"
+			"PL"
 		],
 		49: [
-			"de"
+			"DE"
 		],
 		51: [
-			"pe"
+			"PE"
 		],
 		52: [
-			"mx"
+			"MX"
 		],
 		53: [
-			"cu"
+			"CU"
 		],
 		54: [
-			"ar"
+			"AR"
 		],
 		55: [
-			"br"
+			"BR"
 		],
 		56: [
-			"cl"
+			"CL"
 		],
 		57: [
-			"co"
+			"CO"
 		],
 		58: [
-			"ve"
+			"VE"
 		],
 		60: [
-			"my"
+			"MY"
 		],
 		61: [
-			"au",
-			"cx",
-			"cc"
+			"AU",
+			"CX",
+			"CC",
+			"HM"
 		],
 		62: [
-			"id"
+			"ID"
 		],
 		63: [
-			"ph"
+			"PH"
 		],
 		64: [
-			"nz"
+			"NZ",
+			"PN"
 		],
 		65: [
-			"sg"
+			"SG"
 		],
 		66: [
-			"th"
+			"TH"
 		],
 		81: [
-			"jp"
+			"JP"
 		],
 		82: [
-			"kr"
+			"KR"
 		],
 		84: [
-			"vn"
+			"VN"
 		],
 		86: [
-			"cn"
+			"CN"
 		],
 		90: [
-			"tr"
+			"TR"
 		],
 		91: [
-			"in"
+			"IN"
 		],
 		92: [
-			"pk"
+			"PK"
 		],
 		93: [
-			"af"
+			"AF"
 		],
 		94: [
-			"lk"
+			"LK"
 		],
 		95: [
-			"mm"
+			"MM"
 		],
 		98: [
-			"ir"
+			"IR"
 		],
 		211: [
-			"ss"
+			"SS"
 		],
 		212: [
-			"ma"
+			"MA"
 		],
 		213: [
-			"dz"
+			"DZ"
 		],
 		216: [
-			"tn"
+			"TN"
 		],
 		218: [
-			"ly"
+			"LY"
 		],
 		220: [
-			"gm"
+			"GM"
 		],
 		221: [
-			"sn"
+			"SN"
 		],
 		222: [
-			"mr"
+			"MR"
 		],
 		223: [
-			"ml"
+			"ML"
 		],
 		224: [
-			"gn"
+			"GN"
 		],
 		225: [
-			"ci"
+			"CI"
 		],
 		226: [
-			"bf"
+			"BF"
 		],
 		227: [
-			"ne"
+			"NE"
 		],
 		228: [
-			"tg"
+			"TG"
 		],
 		229: [
-			"bj"
+			"BJ"
 		],
 		230: [
-			"mu"
+			"MU"
 		],
 		231: [
-			"lr"
+			"LR"
 		],
 		232: [
-			"sl"
+			"SL"
 		],
 		233: [
-			"gh"
+			"GH"
 		],
 		234: [
-			"ng"
+			"NG"
 		],
 		235: [
-			"td"
+			"TD"
 		],
 		236: [
-			"cf"
+			"CF"
 		],
 		237: [
-			"cm"
+			"CM"
 		],
 		238: [
-			"cv"
+			"CV"
 		],
 		239: [
-			"st"
+			"ST"
 		],
 		240: [
-			"gq"
+			"GQ"
 		],
 		241: [
-			"ga"
+			"GA"
 		],
 		242: [
-			"cg"
+			"CG"
 		],
 		243: [
-			"cd"
+			"CD"
 		],
 		244: [
-			"ao"
+			"AO"
 		],
 		245: [
-			"gw"
+			"GW"
 		],
 		246: [
-			"io"
+			"IO"
 		],
 		247: [
-			"ac"
+			"AC"
 		],
 		248: [
-			"sc"
+			"SC"
 		],
 		249: [
-			"sd"
+			"SD"
 		],
 		250: [
-			"rw"
+			"RW"
 		],
 		251: [
-			"et"
+			"ET"
 		],
 		252: [
-			"so"
+			"SO"
 		],
 		253: [
-			"dj"
+			"DJ"
 		],
 		254: [
-			"ke"
+			"KE"
 		],
 		255: [
-			"tz"
+			"TZ"
 		],
 		256: [
-			"ug"
+			"UG"
 		],
 		257: [
-			"bi"
+			"BI"
 		],
 		258: [
-			"mz"
+			"MZ"
 		],
 		260: [
-			"zm"
+			"ZM"
 		],
 		261: [
-			"mg"
+			"MG"
+		],
+		262: [
+			"TF"
 		],
 		263: [
-			"zw"
+			"ZW"
 		],
 		264: [
-			"na"
+			"NA"
 		],
 		265: [
-			"mw"
+			"MW"
 		],
 		266: [
-			"ls"
+			"LS"
 		],
 		267: [
-			"bw"
+			"BW"
 		],
 		268: [
-			"sz"
+			"SZ"
 		],
 		269: [
-			"km"
+			"KM"
 		],
 		290: [
-			"sh",
-			"ta"
+			"SH",
+			"TA"
 		],
 		291: [
-			"er"
+			"ER"
 		],
 		297: [
-			"aw"
+			"AW"
 		],
 		298: [
-			"fo"
+			"FO"
 		],
 		299: [
-			"gl"
+			"GL"
 		],
 		350: [
-			"gi"
+			"GI"
 		],
 		351: [
-			"pt"
+			"PT"
 		],
 		352: [
-			"lu"
+			"LU"
 		],
 		353: [
-			"ie"
+			"IE"
 		],
 		354: [
-			"is"
+			"IS"
 		],
 		355: [
-			"al"
+			"AL"
 		],
 		356: [
-			"mt"
+			"MT"
 		],
 		357: [
-			"cy"
+			"CY"
 		],
 		358: [
-			"fi",
-			"ax"
+			"FI",
+			"AX"
 		],
 		359: [
-			"bg"
+			"BG"
 		],
 		370: [
-			"lt"
+			"LT"
 		],
 		371: [
-			"lv"
+			"LV"
 		],
 		372: [
-			"ee"
+			"EE"
 		],
 		373: [
-			"md"
+			"MD"
 		],
 		374: [
-			"am"
+			"AM"
 		],
 		375: [
-			"by"
+			"BY"
 		],
 		376: [
-			"ad"
+			"AD"
 		],
 		377: [
-			"mc"
+			"MC"
 		],
 		378: [
-			"sm"
+			"SM"
 		],
 		380: [
-			"ua"
+			"UA"
 		],
 		381: [
-			"rs"
+			"RS"
 		],
 		382: [
-			"me"
+			"ME"
+		],
+		383: [
+			"KV"
 		],
 		385: [
-			"hr"
+			"HR"
 		],
 		386: [
-			"si"
+			"SI"
 		],
 		387: [
-			"ba"
+			"BA"
 		],
 		389: [
-			"mk"
+			"MK"
 		],
 		420: [
-			"cz"
+			"CZ"
 		],
 		421: [
-			"sk"
+			"SK"
 		],
 		423: [
-			"li"
+			"LI"
 		],
 		500: [
-			"fk"
+			"FK",
+			"GS"
 		],
 		501: [
-			"bz"
+			"BZ"
 		],
 		502: [
-			"gt"
+			"GT"
 		],
 		503: [
-			"sv"
+			"SV"
 		],
 		504: [
-			"hn"
+			"HN"
 		],
 		505: [
-			"ni"
+			"NI"
 		],
 		506: [
-			"cr"
+			"CR"
 		],
 		507: [
-			"pa"
+			"PA"
 		],
 		508: [
-			"pm"
+			"PM"
 		],
 		509: [
-			"ht"
+			"HT"
 		],
 		590: [
-			"gp",
-			"mf",
-			"bl"
+			"GP",
+			"MF",
+			"BL"
 		],
 		591: [
-			"bo"
+			"BO"
 		],
 		592: [
-			"gy"
+			"GY"
 		],
 		593: [
-			"ec"
+			"EC"
 		],
 		594: [
-			"gf"
+			"GF"
 		],
 		595: [
-			"py"
+			"PY"
 		],
 		596: [
-			"mq"
+			"MQ"
 		],
 		597: [
-			"sr"
+			"SR"
 		],
 		598: [
-			"uy"
+			"UY"
 		],
 		599: [
-			"cw",
-			"bq"
+			"CW",
+			"BQ"
 		],
 		670: [
-			"tl"
+			"TL"
 		],
 		672: [
-			"nf"
+			"NF"
 		],
 		673: [
-			"bn"
+			"BN"
 		],
 		674: [
-			"nr"
+			"NR"
 		],
 		675: [
-			"pg"
+			"PG"
 		],
 		676: [
-			"to"
+			"TO"
 		],
 		677: [
-			"sb"
+			"SB"
 		],
 		678: [
-			"vu"
+			"VU"
 		],
 		679: [
-			"fj"
+			"FJ"
 		],
 		680: [
-			"pw"
+			"PW"
 		],
 		681: [
-			"wf"
+			"WF"
 		],
 		682: [
-			"ck"
+			"CK"
 		],
 		683: [
-			"nu"
+			"NU"
 		],
 		685: [
-			"ws"
+			"WS"
 		],
 		686: [
-			"ki"
+			"KI"
 		],
 		687: [
-			"nc"
+			"NC"
 		],
 		688: [
-			"tv"
+			"TV"
 		],
 		689: [
-			"pf"
+			"PF"
 		],
 		690: [
-			"tk"
+			"TK"
 		],
 		691: [
-			"fm"
+			"FM"
 		],
 		692: [
-			"mh"
+			"MH"
 		],
 		850: [
-			"kp"
+			"KP"
 		],
 		852: [
-			"hk"
+			"HK"
 		],
 		853: [
-			"mo"
+			"MO"
 		],
 		855: [
-			"kh"
+			"KH"
 		],
 		856: [
-			"la"
+			"LA"
 		],
 		880: [
-			"bd"
+			"BD"
 		],
 		886: [
-			"tw"
+			"TW"
 		],
 		960: [
-			"mv"
+			"MV"
 		],
 		961: [
-			"lb"
+			"LB"
 		],
 		962: [
-			"jo"
+			"JO"
 		],
 		963: [
-			"sy"
+			"SY"
 		],
 		964: [
-			"iq"
+			"IQ"
 		],
 		965: [
-			"kw"
+			"KW"
 		],
 		966: [
-			"sa"
+			"SA"
 		],
 		967: [
-			"ye"
+			"YE"
 		],
 		968: [
-			"om"
+			"OM"
 		],
 		970: [
-			"ps"
+			"PS"
 		],
 		971: [
-			"ae"
+			"AE"
 		],
 		972: [
-			"il"
+			"IL"
 		],
 		973: [
-			"bh"
+			"BH"
 		],
 		974: [
-			"qa"
+			"QA"
 		],
 		975: [
-			"bt"
+			"BT"
 		],
 		976: [
-			"mn"
+			"MN"
 		],
 		977: [
-			"np"
+			"NP"
 		],
 		992: [
-			"tj"
+			"TJ"
 		],
 		993: [
-			"tm"
+			"TM"
 		],
 		994: [
-			"az"
+			"AZ"
 		],
 		995: [
-			"ge"
+			"GE"
 		],
 		996: [
-			"kg"
+			"KG"
 		],
 		998: [
-			"uz"
+			"UZ"
 		],
 		1204: [
-			"ca"
+			"CA"
 		],
 		1236: [
-			"ca"
+			"CA"
 		],
 		1242: [
-			"bs"
+			"BS"
 		],
 		1246: [
-			"bb"
+			"BB"
 		],
 		1249: [
-			"ca"
+			"CA"
 		],
 		1250: [
-			"ca"
+			"CA"
 		],
 		1264: [
-			"ai"
+			"AI"
 		],
 		1268: [
-			"ag"
+			"AG"
 		],
 		1284: [
-			"vg"
+			"VG"
 		],
 		1289: [
-			"ca"
+			"CA"
 		],
 		1306: [
-			"ca"
+			"CA"
 		],
 		1340: [
-			"vi"
+			"VI"
 		],
 		1343: [
-			"ca"
+			"CA"
 		],
 		1345: [
-			"ky"
+			"KY"
 		],
 		1365: [
-			"ca"
+			"CA"
 		],
 		1387: [
-			"ca"
+			"CA"
 		],
 		1403: [
-			"ca"
+			"CA"
 		],
 		1416: [
-			"ca"
+			"CA"
 		],
 		1418: [
-			"ca"
+			"CA"
 		],
 		1431: [
-			"ca"
+			"CA"
 		],
 		1437: [
-			"ca"
+			"CA"
 		],
 		1438: [
-			"ca"
+			"CA"
 		],
 		1441: [
-			"bm"
+			"BM"
 		],
 		1450: [
-			"ca"
+			"CA"
 		],
 		1473: [
-			"gd"
+			"GD"
 		],
 		1506: [
-			"ca"
+			"CA"
 		],
 		1514: [
-			"ca"
+			"CA"
 		],
 		1519: [
-			"ca"
+			"CA"
 		],
 		1548: [
-			"ca"
+			"CA"
 		],
 		1579: [
-			"ca"
+			"CA"
 		],
 		1581: [
-			"ca"
+			"CA"
 		],
 		1587: [
-			"ca"
+			"CA"
 		],
 		1604: [
-			"ca"
+			"CA"
 		],
 		1613: [
-			"ca"
+			"CA"
 		],
 		1639: [
-			"ca"
+			"CA"
 		],
 		1647: [
-			"ca"
+			"CA"
 		],
 		1649: [
-			"tc"
+			"TC"
 		],
 		1664: [
-			"ms"
+			"MS"
 		],
 		1670: [
-			"mp"
+			"MP"
 		],
 		1671: [
-			"gu"
+			"GU"
 		],
 		1672: [
-			"ca"
+			"CA"
 		],
 		1684: [
-			"as"
+			"AS"
 		],
 		1705: [
-			"ca"
+			"CA"
 		],
 		1709: [
-			"ca"
+			"CA"
 		],
 		1721: [
-			"sx"
+			"SX"
 		],
 		1742: [
-			"ca"
+			"CA"
 		],
 		1758: [
-			"lc"
+			"LC"
 		],
 		1767: [
-			"dm"
+			"DM"
 		],
 		1778: [
-			"ca"
+			"CA"
 		],
 		1780: [
-			"ca"
+			"CA"
 		],
 		1782: [
-			"ca"
+			"CA"
 		],
 		1784: [
-			"vc"
+			"VC"
 		],
 		1807: [
-			"ca"
+			"CA"
 		],
 		1819: [
-			"ca"
+			"CA"
 		],
 		1825: [
-			"ca"
+			"CA"
 		],
 		1867: [
-			"ca"
+			"CA"
 		],
 		1868: [
-			"tt"
+			"TT"
 		],
 		1869: [
-			"kn"
+			"KN"
 		],
 		1873: [
-			"ca"
+			"CA"
 		],
 		1876: [
-			"jm"
+			"JM"
 		],
 		1902: [
-			"ca"
+			"CA"
 		],
 		1905: [
-			"ca"
+			"CA"
 		]
 	}
 };

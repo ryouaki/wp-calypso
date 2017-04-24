@@ -11,7 +11,7 @@ import Title from 'reader/list-item/title';
 import Description from 'reader/list-item/description';
 import Actions from 'reader/list-item/actions';
 
-import SiteIcon from 'components/site-icon';
+import SiteIcon from 'blocks/site-icon';
 import FollowButton from 'reader/follow-button';
 import RecommendedSites from 'lib/recommended-sites-store/store';
 import { fetchMore } from 'lib/recommended-sites-store/actions';
@@ -101,7 +101,8 @@ const RecommendedForYou = React.createClass( {
 		recordAction( 'click_site_on_recommended_for_you' );
 		recordGaEvent( 'Clicked Site on Recommended For You' );
 		recordTrack( 'calypso_reader_recommended_site_clicked', {
-			clicked_url: clickedUrl
+			clicked_url: clickedUrl,
+			recommendation_source: 'recommendations-page',
 		} );
 	},
 

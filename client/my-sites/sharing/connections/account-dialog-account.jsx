@@ -1,61 +1,49 @@
 /**
  * External dependencies
  */
-var React = require( 'react' ),
-	classNames = require( 'classnames' );
+import React, { PropTypes } from 'react';
+import classNames from 'classnames';
+import Gridicon from 'gridicons';
 
-module.exports = React.createClass( {
-	displayName: 'AccountDialogAccount',
+const AccountDialogAccount = ( { account, conflicting, onChange, selected } ) => {
+	const classes = classNames( 'account-dialog-account', {
+		'is-connected': account.isConnected,
+		'is-conflict': conflicting,
+	} );
 
-	propTypes: {
-		account: React.PropTypes.shape( {
-			ID: React.PropTypes.oneOfType( [ React.PropTypes.number, React.PropTypes.string ] ),
-			name: React.PropTypes.string,
-			picture: React.PropTypes.string,
-			keyringConnectionId: React.PropTypes.number,
-			isConnected: React.PropTypes.bool,
-			isExternal: React.PropTypes.bool
-		} ).isRequired,
-		selected: React.PropTypes.bool,
-		conflicting: React.PropTypes.bool,
-		onChange: React.PropTypes.func
-	},
+	return (
+		<li className={ classes }>
+			<label className="account-dialog-account__label">
+				{ conflicting && <Gridicon icon="notice" /> }
+				{ ! account.isConnected &&
+					<input type="radio" onChange={ onChange } checked={ selected } className="account-dialog-account__input" /> }
+				{ account.picture &&
+					<img src={ account.picture } alt={ account.name } className="account-dialog-account__picture" /> }
+				<span className="account-dialog-account__name">{ account.name }</span>
+			</label>
+		</li>
+	);
+};
 
-	getDefaultProps: function() {
-		return {
-			connected: false,
-			selected: false,
-			conflicting: false,
-			onChange: function() {}
-		};
-	},
+AccountDialogAccount.propTypes = {
+	account: PropTypes.shape( {
+		ID: PropTypes.oneOfType( [ React.PropTypes.number, React.PropTypes.string ] ),
+		name: PropTypes.string,
+		picture: PropTypes.string,
+		keyringConnectionId: PropTypes.number,
+		isConnected: PropTypes.bool,
+		isExternal: PropTypes.bool
+	} ).isRequired,
+	selected: PropTypes.bool,
+	conflicting: PropTypes.bool,
+	onChange: PropTypes.func,
+};
 
-	getPictureElement: function() {
-		if ( this.props.account.picture ) {
-			return <img src={ this.props.account.picture } alt={ this.props.account.name } className="account-dialog-account__picture" />;
-		}
-	},
+AccountDialogAccount.defaultProps = {
+	conflicting: false,
+	connected: false,
+	onChange: () => {},
+	selected: false,
+};
 
-	getRadioElement: function() {
-		if ( ! this.props.account.isConnected ) {
-			return <input type="radio" onChange={ this.props.onChange } checked={ this.props.selected } className="account-dialog-account__input" />;
-		}
-	},
-
-	render: function() {
-		var classes = classNames( 'account-dialog-account', {
-			'is-connected': this.props.account.isConnected,
-			'is-conflict': this.props.conflicting
-		} );
-
-		return (
-			<li className={ classes }>
-				<label className="account-dialog-account__label">
-					{ this.getRadioElement() }
-					{ this.getPictureElement() }
-					<span className="account-dialog-account__name">{ this.props.account.name }</span>
-				</label>
-			</li>
-		);
-	}
-} );
+export default AccountDialogAccount;

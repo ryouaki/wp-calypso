@@ -7,8 +7,17 @@ import { get } from 'lodash';
  * Internal dependencies
  */
 import { getSiteByUrl } from 'state/sites/selectors';
+import { isStale } from './utils';
+import { urlToSlug } from 'lib/url';
+import { AUTH_ATTEMPS_TTL } from './constants';
 
-const JETPACK_CONNECT_TTL = 60 * 60 * 1000; // an hour
+const getJetpackSiteByUrl = ( state, url ) => {
+	const site = getSiteByUrl( state, url );
+	if ( site && ! site.jetpack ) {
+		return null;
+	}
+	return site;
+};
 
 const getConnectingSite = ( state ) => {
 	return get( state, [ 'jetpackConnect', 'jetpackConnectSite' ] );
@@ -23,13 +32,17 @@ const getAuthorizationRemoteQueryData = ( state ) => {
 };
 
 const getAuthorizationRemoteSite = ( state ) => {
-	const remoteUrl = get( getAuthorizationRemoteQueryData( state ), [ 'site' ] );
+	return get( getAuthorizationRemoteQueryData( state ), [ 'site' ] );
+};
+
+const isRemoteSiteOnSitesList = ( state ) => {
+	const remoteUrl = getAuthorizationRemoteSite( state );
 
 	if ( ! remoteUrl ) {
-		return null;
+		return false;
 	}
 
-	return getSiteByUrl( state, remoteUrl );
+	return !! getJetpackSiteByUrl( state, remoteUrl );
 };
 
 const getSessions = ( state ) => {
@@ -48,31 +61,37 @@ const isCalypsoStartedConnection = function( state, siteSlug ) {
 	if ( ! siteSlug ) {
 		return false;
 	}
-	const site = siteSlug.replace( /.*?:\/\//g, '' );
+	const site = urlToSlug( siteSlug );
 	const sessions = getSessions( state );
 
-	if ( sessions[ site ] ) {
-		const currentTime = ( new Date() ).getTime();
-		return ( currentTime - sessions[ site ].timestamp < JETPACK_CONNECT_TTL );
+	if ( sessions[ site ] && sessions[ site ].timestamp ) {
+		return ! isStale( sessions[ site ].timestamp );
 	}
 
 	return false;
 };
 
+const isRedirectingToWpAdmin = function( state ) {
+	const authorizationData = getAuthorizationData( state );
+	return !! authorizationData.isRedirectingToWpAdmin;
+};
+
 const getFlowType = function( state, siteSlug ) {
 	const sessions = getSessions( state );
+	siteSlug = urlToSlug( siteSlug );
+
 	if ( siteSlug && sessions[ siteSlug ] ) {
 		return sessions[ siteSlug ].flowType;
 	}
 	return false;
 };
 
-const getJetpackSiteByUrl = ( state, url ) => {
-	const site = getSiteByUrl( state, url );
-	if ( site && ! site.jetpack ) {
-		return null;
+const getAuthAttempts = ( state, slug ) => {
+	const attemptsData = get( state, [ 'jetpackConnect', 'jetpackAuthAttempts', slug ] );
+	if ( attemptsData && isStale( attemptsData.timestamp, AUTH_ATTEMPS_TTL ) ) {
+		return 0;
 	}
-	return site;
+	return attemptsData ? attemptsData.attempt || 0 : 0;
 };
 
 /**
@@ -94,6 +113,39 @@ const hasXmlrpcError = function( state ) {
 	);
 };
 
+const hasExpiredSecretError = function( state ) {
+	const authorizeData = getAuthorizationData( state );
+
+	return (
+		authorizeData &&
+		authorizeData.authorizeError &&
+		authorizeData.authorizeError.message &&
+		authorizeData.authorizationCode &&
+		authorizeData.authorizeError.message.indexOf( 'verify_secrets_expired' ) > -1
+	);
+};
+
+const getJetpackPlanSelected = function( state ) {
+	const selectedPlans = state.jetpackConnect.jetpackConnectSelectedPlans;
+	const siteUrl = getAuthorizationRemoteQueryData( state ).site;
+
+	if ( siteUrl ) {
+		const siteSlug = urlToSlug( siteUrl );
+		if ( selectedPlans && selectedPlans[ siteSlug ] ) {
+			return selectedPlans[ siteSlug ];
+		}
+	}
+	return false;
+};
+
+const getSiteSelectedPlan = function( state, siteSlug ) {
+	return state.jetpackConnect.jetpackConnectSelectedPlans && state.jetpackConnect.jetpackConnectSelectedPlans[ siteSlug ];
+};
+
+const getGlobalSelectedPlan = function( state ) {
+	return state.jetpackConnect.jetpackConnectSelectedPlans && state.jetpackConnect.jetpackConnectSelectedPlans[ '*' ];
+};
+
 export default {
 	getConnectingSite,
 	getAuthorizationData,
@@ -103,7 +155,14 @@ export default {
 	getSSOSessions,
 	getSSO,
 	isCalypsoStartedConnection,
+	isRedirectingToWpAdmin,
+	isRemoteSiteOnSitesList,
 	getFlowType,
 	getJetpackSiteByUrl,
-	hasXmlrpcError
+	hasXmlrpcError,
+	hasExpiredSecretError,
+	getJetpackPlanSelected,
+	getSiteSelectedPlan,
+	getGlobalSelectedPlan,
+	getAuthAttempts
 };

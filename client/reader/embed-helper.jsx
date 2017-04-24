@@ -24,7 +24,8 @@ var embedsConfig = {
 			}
 			return {
 				width: `${ width | 0 }px`,
-				height: `${ height | 0 }px`
+				height: `${ height | 0 }px`,
+				paddingRight: '1px', // this exists to solve a bug in safari that we found here: https://github.com/Automattic/wp-calypso/issues/8987
 			};
 		}
 	},
@@ -97,10 +98,16 @@ function resolveEmbedConfig( embed ) {
 	return embedsConfig.default;
 }
 
-module.exports = {
+const exported = {
 	getEmbedSizingFunction: function getEmbedSizingFunction( embed ) {
 		var embedConfig = resolveEmbedConfig( embed );
 
 		return embedConfig.sizingFunction.bind( embedConfig, embed );
 	}
 };
+
+export default exported;
+
+export const {
+    getEmbedSizingFunction
+} = exported;

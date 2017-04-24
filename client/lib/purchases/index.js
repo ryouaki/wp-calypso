@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -37,15 +35,16 @@ function getPurchasesBySite( purchases, sites ) {
 			const siteObject = find( sites, { ID: currentValue.siteId } );
 
 			result = result.concat( {
-				domain: currentValue.domain,
 				id: currentValue.siteId,
 				name: currentValue.siteName,
 				/* if the purchase is attached to a deleted site,
 				 * there will be no site with this ID in `sites`, so
 				 * we fall back on the domain. */
 				slug: siteObject ? siteObject.slug : currentValue.domain,
+				isDomainOnly: siteObject ? siteObject.options.is_domain_only : false,
 				title: currentValue.siteName || currentValue.domain || '',
-				purchases: [ currentValue ]
+				purchases: [ currentValue ],
+				domain: siteObject ? siteObject.domain : currentValue.domain
 			} );
 		}
 
@@ -70,11 +69,11 @@ function hasIncludedDomain( purchase ) {
 }
 
 function hasPaymentMethod( purchase ) {
-	return isPaidWithPaypal( purchase ) || isPaidWithCreditCard( purchase );
+	return isPaidWithPaypal( purchase ) || isPaidWithCreditCard( purchase ) || isPaidWithPayPalDirect( purchase );
 }
 
-function hasPrivateRegistration( purchase ) {
-	return purchase.hasPrivateRegistration;
+function hasPrivacyProtection( purchase ) {
+	return purchase.hasPrivacyProtection;
 }
 
 /**
@@ -88,6 +87,10 @@ function hasPrivateRegistration( purchase ) {
  */
 function isCancelable( purchase ) {
 	if ( isIncludedWithPlan( purchase ) ) {
+		return false;
+	}
+
+	if ( isPendingTransfer( purchase ) ) {
 		return false;
 	}
 
@@ -125,6 +128,10 @@ function isOneTimePurchase( purchase ) {
 
 function isPaidWithPaypal( purchase ) {
 	return 'paypal' === purchase.payment.type;
+}
+
+function isPendingTransfer( purchase ) {
+	return purchase.pendingTransfer;
 }
 
 function isRedeemable( purchase ) {
@@ -184,6 +191,10 @@ function isPaidWithCreditCard( purchase ) {
 	return 'credit_card' === purchase.payment.type && hasCreditCardData( purchase );
 }
 
+function isPaidWithPayPalDirect( purchase ) {
+	return 'paypal_direct' === purchase.payment.type && purchase.payment.expiryMoment;
+}
+
 function hasCreditCardData( purchase ) {
 	return Boolean( purchase.payment.creditCard.expiryMoment );
 }
@@ -203,6 +214,10 @@ function paymentLogoType( purchase ) {
 
 	if ( isPaidWithPaypal( purchase ) ) {
 		return 'paypal';
+	}
+
+	if ( isPaidWithPayPalDirect( purchase ) ) {
+		return 'placeholder';
 	}
 
 	return null;
@@ -243,9 +258,10 @@ export {
 	getSubscriptionEndDate,
 	hasIncludedDomain,
 	hasPaymentMethod,
-	hasPrivateRegistration,
+	hasPrivacyProtection,
 	isCancelable,
 	isPaidWithCreditCard,
+	isPaidWithPayPalDirect,
 	isPaidWithPaypal,
 	isExpired,
 	isExpiring,
@@ -261,4 +277,4 @@ export {
 	paymentLogoType,
 	purchaseType,
 	showCreditCardExpiringWarning,
-}
+};

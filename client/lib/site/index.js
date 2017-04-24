@@ -61,11 +61,19 @@ Site.prototype.attributes = function( attributes ) {
 };
 
 Site.prototype.set = function( attributes ) {
-	var changed = false;
+	let changed = false;
+	const computedAttributes = Object.assign( {}, attributes, getAttributes( attributes ) );
 
-	for ( var prop in attributes ) {
-		if ( attributes.hasOwnProperty( prop ) && ! isEqual( attributes[ prop ], this[ prop ] ) ) {
-			this[ prop ] = attributes[ prop ];
+	// `attributes` may only contain the attributes we're updating here, so we
+	// only check if the new computed properties match the existing ones.
+	for ( const prop in attributes ) {
+		if ( computedAttributes.hasOwnProperty( prop ) && ! isEqual( computedAttributes[ prop ], this[ prop ] ) ) {
+			if ( undefined === computedAttributes[ prop ] ) {
+				delete this[ prop ];
+			} else {
+				this[ prop ] = computedAttributes[ prop ];
+			}
+
 			changed = true;
 		}
 	}
@@ -77,7 +85,6 @@ Site.prototype.set = function( attributes ) {
 	}
 
 	return changed;
-
 };
 
 /**
@@ -209,10 +216,6 @@ Site.prototype.fetchUsers = function() {
 
 Site.prototype.isUpgradeable = function() {
 	return this.capabilities && this.capabilities.manage_options;
-};
-
-Site.prototype.isCustomizable = function() {
-	return !! ( this.capabilities && this.capabilities.edit_theme_options );
 };
 
 module.exports = Site;

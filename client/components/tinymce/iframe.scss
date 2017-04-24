@@ -1,7 +1,7 @@
 body {
 	@extend %content-font;
 	font-family: $serif;
-	font-size: 15px;
+	font-size: 16px;
 	line-height: 1.7;
 	margin-top: 32px;
 	margin-bottom: 72px;
@@ -31,15 +31,17 @@ a:active {
 }
 
 code {
-	background: lighten( $gray, 30% );
+	background: $gray-light;
 	font-family: $code;
-	padding: 4px 8px;
+	padding: 1px 4px;
+	border-radius: 2px;
 }
 
 pre {
-	background: lighten( $gray, 34% );
+	background: $gray-light;
 	font-family: $code;
 	padding: 8px;
+	overflow-x: auto;
 
 	code {
 		background: none;

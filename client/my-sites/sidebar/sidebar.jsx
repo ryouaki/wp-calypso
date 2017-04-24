@@ -1,65 +1,84 @@
 /**
  * External dependencies
  */
-var analytics = require( 'lib/analytics' ),
-	classNames = require( 'classnames' ),
-	debug = require( 'debug' )( 'calypso:my-sites:sidebar' ),
-	has = require( 'lodash/has' ),
-	includes = require( 'lodash/includes' ),
-	React = require( 'react' );
-
+import classNames from 'classnames';
+import debugFactory from 'debug';
+import { localize } from 'i18n-calypso';
+import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
-var config = require( 'config' ),
-	CurrentSite = require( 'my-sites/current-site' ),
-	getCustomizeUrl = require( '../themes/helpers' ).getCustomizeUrl,
-	Gridicon = require( 'components/gridicon' ),
-	productsValues = require( 'lib/products-values' ),
-	PublishMenu = require( './publish-menu' ),
-	Sidebar = require( 'layout/sidebar' ),
-	SidebarHeading = require( 'layout/sidebar/heading' ),
-	SidebarItem = require( 'layout/sidebar/item' ),
-	SidebarMenu = require( 'layout/sidebar/menu' ),
-	SidebarRegion = require( 'layout/sidebar/region' ),
-	SiteStatsStickyLink = require( 'components/site-stats-sticky-link' );
-
+import analytics from 'lib/analytics';
 import Button from 'components/button';
+import config from 'config';
+import CurrentSite from 'my-sites/current-site';
+import productsValues from 'lib/products-values';
+import PublishMenu from './publish-menu';
+import Sidebar from 'layout/sidebar';
 import SidebarButton from 'layout/sidebar/button';
 import SidebarFooter from 'layout/sidebar/footer';
+import SidebarHeading from 'layout/sidebar/heading';
+import SidebarItem from 'layout/sidebar/item';
+import SidebarMenu from 'layout/sidebar/menu';
+import SidebarRegion from 'layout/sidebar/region';
+import StatsSparkline from 'blocks/stats-sparkline';
+import JetpackLogo from 'components/jetpack-logo';
 import { isPersonal, isPremium, isBusiness } from 'lib/products-values';
 import { getCurrentUser } from 'state/current-user/selectors';
+import { getSelectedSiteId } from 'state/ui/selectors';
 import { setNextLayoutFocus, setLayoutFocus } from 'state/ui/layout-focus/actions';
+import { canCurrentUser, getMenusUrl, getPrimarySiteId, getSites, isDomainOnlySite } from 'state/selectors';
+import {
+	getCustomizerUrl,
+	getSite,
+	isJetpackMinimumVersion,
+	isJetpackModuleActive,
+	isJetpackSite
+} from 'state/sites/selectors';
+import isSiteAutomatedTransfer from 'state/selectors/is-site-automated-transfer';
+import { getStatsPathForTab } from 'lib/route/path';
+import { isATEnabled } from 'lib/automated-transfer';
+import { abtest } from 'lib/abtest';
 
-export const MySitesSidebar = React.createClass( {
-	propTypes: {
-		setNextLayoutFocus: React.PropTypes.func.isRequired,
-		setLayoutFocus: React.PropTypes.func.isRequired,
-		path: React.PropTypes.string,
-		sites: React.PropTypes.object,
-		currentUser: React.PropTypes.object,
-	},
+/**
+ * Module variables
+ */
+const debug = debugFactory( 'calypso:my-sites:sidebar' );
 
-	componentDidMount: function() {
+export class MySitesSidebar extends Component {
+
+	static propTypes = {
+		setNextLayoutFocus: PropTypes.func.isRequired,
+		setLayoutFocus: PropTypes.func.isRequired,
+		path: PropTypes.string,
+		sites: PropTypes.object,
+		currentUser: PropTypes.object,
+		isDomainOnly: PropTypes.bool,
+		isJetpack: PropTypes.bool,
+		isSiteAutomatedTransfer: PropTypes.bool,
+	};
+
+	componentDidMount() {
 		debug( 'The sidebar React component is mounted.' );
-	},
+	}
 
-	onNavigate: function() {
+	onNavigate = () => {
 		this.props.setNextLayoutFocus( 'content' );
 		window.scrollTo( 0, 0 );
-	},
+	};
 
-	onPreviewSite( event ) {
-		const site = this.getSelectedSite();
+	onPreviewSite = ( event ) => {
+		const { site } = this.props;
 		if ( site.is_previewable && ! event.metaKey && ! event.ctrlKey ) {
 			event.preventDefault();
 			this.props.setLayoutFocus( 'preview' );
 		}
-	},
+	};
 
-	itemLinkClass: function( paths, existingClasses ) {
+	itemLinkClass = ( paths, existingClasses ) => {
 		var classSet = {};
 
 		if ( typeof existingClasses !== 'undefined' ) {
@@ -75,9 +94,9 @@ export const MySitesSidebar = React.createClass( {
 		classSet.selected = this.isItemLinkSelected( paths );
 
 		return classNames( classSet );
-	},
+	};
 
-	isItemLinkSelected: function( paths ) {
+	isItemLinkSelected( paths ) {
 		if ( ! Array.isArray( paths ) ) {
 			paths = [ paths ];
 		}
@@ -85,94 +104,61 @@ export const MySitesSidebar = React.createClass( {
 		return paths.some( function( path ) {
 			return path === this.props.path || 0 === this.props.path.indexOf( path + '/' );
 		}, this );
-	},
+	}
 
-	isSingle: function() {
-		return !! ( this.props.sites.getSelectedSite() || this.props.sites.get().length === 1 );
-	},
-
-	getSingleSiteDomain: function() {
-		if ( this.props.sites.selected ) {
-			return this.getSelectedSite().slug;
-		}
-
-		return this.props.sites.getPrimary().slug;
-	},
-
-	getSelectedSite: function() {
-		if ( this.props.sites.get().length === 1 ) {
-			return this.props.sites.getPrimary();
-		}
-
-		return this.props.sites.getSelectedSite();
-	},
-
-	hasJetpackSites: function() {
-		return this.props.sites.get().some( function( site ) {
-			return site.jetpack;
-		} );
-	},
-
-	siteSuffix: function() {
-		return this.isSingle() ? '/' + this.getSingleSiteDomain() : '';
-	},
-
-	publish: function() {
+	publish() {
 		return (
-			<PublishMenu site={ this.getSelectedSite() }
-				sites={ this.props.sites }
-				siteSuffix={ this.siteSuffix() }
-				isSingle={ this.isSingle() }
+			<PublishMenu siteId={ this.props.siteId }
 				itemLinkClass={ this.itemLinkClass }
 				onNavigate={ this.onNavigate } />
 		);
-	},
+	}
 
-	stats: function() {
-		var site = this.getSelectedSite();
+	stats() {
+		const { siteId, canUserViewStats } = this.props;
 
-		if ( site && ! site.capabilities ) {
+		if ( siteId && ! canUserViewStats ) {
 			return null;
 		}
 
-		if ( site && site.capabilities && ! site.capabilities.view_stats ) {
-			return null;
-		}
-
-		return (
-			<li className={ this.itemLinkClass( '/stats', 'stats' ) }>
-				<SiteStatsStickyLink onClick={ this.onNavigate }>
-					<Gridicon icon="stats-alt" size={ 24 } />
-					<span className="menu-link-text">{ this.translate( 'Stats' ) }</span>
-				</SiteStatsStickyLink>
-			</li>
-		);
-	},
-
-	ads: function() {
-		var site = this.getSelectedSite(),
-			adsLink = '/ads/earnings' + this.siteSuffix();
-
-		if ( ! site || ! site.options.wordads ) {
-			return null;
-		}
-
+		const statsLink = getStatsPathForTab( 'day', siteId );
 		return (
 			<SidebarItem
-				label={ site.jetpack ? 'AdControl' : 'WordAds' }
+				tipTarget="menus"
+				label={ this.props.translate( 'Stats' ) }
+				className={ this.itemLinkClass( '/stats', 'stats' ) }
+				link={ statsLink }
+				onNavigate={ this.onNavigate }
+				icon="stats-alt">
+				<a href={ statsLink }>
+					<StatsSparkline className="sidebar__sparkline" siteId={ siteId } />
+				</a>
+			</SidebarItem>
+		);
+	}
+
+	ads() {
+		const { site, canUserManageOptions } = this.props;
+		const adsLink = '/ads/earnings' + this.props.siteSuffix;
+		const canManageAds = site && site.options.wordads && canUserManageOptions;
+
+		return (
+			canManageAds &&
+			<SidebarItem
+				label={ this.props.isJetpack ? 'Ads' : 'WordAds' }
 				className={ this.itemLinkClass( '/ads', 'rads' ) }
 				link={ adsLink }
 				onNavigate={ this.onNavigate }
 				icon="speaker" />
 		);
-	},
+	}
 
-	themes: function() {
-		var site = this.getSelectedSite(),
-			jetpackEnabled = config.isEnabled( 'manage/themes-jetpack' ),
-			themesLink;
+	themes() {
+		const { site, canUserEditThemeOptions } = this.props,
+			jetpackEnabled = config.isEnabled( 'manage/themes-jetpack' );
+		let themesLink;
 
-		if ( site && ! site.isCustomizable() ) {
+		if ( site && ! canUserEditThemeOptions ) {
 			return null;
 		}
 
@@ -180,75 +166,60 @@ export const MySitesSidebar = React.createClass( {
 			return null;
 		}
 
-		if ( site.jetpack && ! jetpackEnabled && site.options ) {
+		if ( this.props.isJetpack && ! jetpackEnabled && site.options ) {
 			themesLink = site.options.admin_url + 'themes.php';
-		} else if ( this.isSingle() ) {
-			themesLink = '/design' + this.siteSuffix();
+		} else if ( this.props.siteId ) {
+			themesLink = '/themes' + this.props.siteSuffix;
 		} else {
-			themesLink = '/design';
+			themesLink = '/themes';
 		}
 
 		return (
 			<SidebarItem
-				label={ this.translate( 'Themes' ) }
+				label={ this.props.translate( 'Themes' ) }
 				tipTarget="themes"
-				className={ this.itemLinkClass( '/design', 'themes' ) }
+				className={ this.itemLinkClass( '/themes', 'themes' ) }
 				link={ themesLink }
 				onNavigate={ this.onNavigate }
 				icon="themes"
 				preloadSectionName="themes"
 			>
-				<SidebarButton href={ getCustomizeUrl( null, site ) } preloadSectionName="customize">
-					{ this.translate( 'Customize' ) }
+				<SidebarButton href={ this.props.customizeUrl } preloadSectionName="customize">
+					{ this.props.translate( 'Customize' ) }
 				</SidebarButton>
 			</SidebarItem>
 		);
-	},
+	}
 
-	menus: function() {
-		var site = this.getSelectedSite(),
-			menusLink = '/menus' + this.siteSuffix(),
-			showClassicLink = ! config.isEnabled( 'manage/menus' );
-
-		if ( ! site ) {
+	menus() {
+		const { menusUrl } = this.props;
+		if ( ! menusUrl ) {
 			return null;
-		}
-
-		if ( ! site.capabilities ) {
-			return null;
-		}
-
-		if ( site.capabilities && ! site.capabilities.edit_theme_options ) {
-			return null;
-		}
-
-		if ( ! this.isSingle() ) {
-			return null;
-		}
-
-		if ( showClassicLink ) {
-			menusLink = site.options.admin_url + 'nav-menus.php';
 		}
 
 		return (
 			<SidebarItem
 				tipTarget="menus"
-				label={ this.translate( 'Menus' ) }
+				label={ this.props.translate( 'Menus' ) }
 				className={ this.itemLinkClass( '/menus', 'menus' ) }
-				link={ menusLink }
+				link={ menusUrl }
 				onNavigate={ this.onNavigate }
 				icon="menus"
 				preloadSectionName="menus" />
 		);
-	},
+	}
 
-	plugins: function() {
-		var site = this.getSelectedSite(),
-			pluginsLink = '/plugins' + this.siteSuffix(),
-			addPluginsLink;
+	plugins() {
+		const { site } = this.props;
+		let pluginsLink = '/plugins' + this.props.siteSuffix;
+		let addPluginsLink;
+
+		if ( this.props.atEnabled ) {
+			addPluginsLink = '/plugins/browse' + this.props.siteSuffix;
+		}
 
 		if ( ! config.isEnabled( 'manage/plugins' ) ) {
-			if ( ! this.isSingle() ) {
+			if ( ! this.props.siteId ) {
 				return null;
 			}
 
@@ -257,17 +228,17 @@ export const MySitesSidebar = React.createClass( {
 			}
 		}
 
-		if ( ! this.props.sites.canManageSelectedOrAll() ) {
+		if ( ! this.props.canManagePlugins ) {
 			return null;
 		}
 
-		if ( ( this.isSingle() && site.jetpack ) || ( ! this.isSingle() && this.hasJetpackSites() ) ) {
-			addPluginsLink = '/plugins/browse' + this.siteSuffix();
+		if ( ( this.props.siteId && this.props.isJetpack ) || ( ! this.props.siteId && this.props.hasJetpackSites ) ) {
+			addPluginsLink = '/plugins/browse' + this.props.siteSuffix;
 		}
 
 		return (
 			<SidebarItem
-				label={ this.translate( 'Plugins' ) }
+				label={ this.props.translate( 'Plugins' ) }
 				className={ this.itemLinkClass( '/plugins', 'plugins' ) }
 				link={ pluginsLink }
 				onNavigate={ this.onNavigate }
@@ -275,80 +246,64 @@ export const MySitesSidebar = React.createClass( {
 				preloadSectionName="plugins"
 			>
 				<SidebarButton href={ addPluginsLink }>
-					{ this.translate( 'Add' ) }
+					{ this.props.translate( 'Add' ) }
 				</SidebarButton>
 			</SidebarItem>
 		);
-	},
+	}
 
-	upgrades: function() {
-		var site = this.getSelectedSite(),
-			domainsLink = '/domains/manage' + this.siteSuffix(),
-			addDomainLink = '/domains/add' + this.siteSuffix();
+	upgrades() {
+		const { canUserManageOptions } = this.props;
+		const domainsLink = '/domains/manage' + this.props.siteSuffix;
+		const addDomainLink = '/domains/add' + this.props.siteSuffix;
 
-		if ( ! config.isEnabled( 'manage/plans' ) ) {
+		if ( ! this.props.siteId ) {
 			return null;
 		}
 
-		if ( ! this.isSingle() ) {
+		if ( ! canUserManageOptions ) {
 			return null;
 		}
 
-		if ( ! site.capabilities ) {
-			return null;
-		}
-
-		if ( site.capabilities && ! site.capabilities.manage_options ) {
-			return null;
-		}
-
-		if ( site.jetpack ) {
+		if ( this.props.isJetpack && ! this.props.atEnabled ) {
 			return null;
 		}
 
 		return (
 			<SidebarItem
-				label={ this.translate( 'Domains' ) }
+				label={ this.props.translate( 'Domains' ) }
 				className={ this.itemLinkClass( [ '/domains' ], 'domains' ) }
 				link={ domainsLink }
 				onNavigate={ this.onNavigate }
-				icon="globe"
+				icon="domains"
 				preloadSectionName="upgrades"
 			>
 				<SidebarButton href={ addDomainLink }>
-					{ this.translate( 'Add' ) }
+					{ this.props.translate( 'Add' ) }
 				</SidebarButton>
 			</SidebarItem>
 		);
-	},
+	}
 
-	plan: function() {
-		if ( ! config.isEnabled( 'manage/plans' ) ) {
+	plan() {
+		if ( ! this.props.siteId ) {
 			return null;
 		}
 
-		if ( ! this.isSingle() ) {
+		const { site, canUserManageOptions } = this.props;
+
+		if ( site && ! canUserManageOptions ) {
 			return null;
 		}
 
-		const site = this.getSelectedSite();
-
-		if ( ! site.capabilities ) {
-			return null;
-		}
-
-		if ( site.capabilities && ! site.capabilities.manage_options ) {
-			return null;
-		}
-
-		let planLink = '/plans' + this.siteSuffix();
+		let planLink = '/plans' + this.props.siteSuffix;
 
 		// Show plan details for upgraded sites
 		if (
 			site &&
 			( isPersonal( site.plan ) || isPremium( site.plan ) || isBusiness( site.plan ) )
 		) {
-			planLink = '/plans/my-plan' + this.siteSuffix();
+			planLink = '/plans/my-plan' + this.props.siteSuffix;
 		}
 
 		let linkClass = 'upgrades-nudge';
@@ -360,7 +315,7 @@ export const MySitesSidebar = React.createClass( {
 		let planName = site.plan.product_name_short;
 
 		if ( productsValues.isFreeTrial( site.plan ) ) {
-			planName = this.translate( 'Trial', {
+			planName = this.props.translate( 'Trial', {
 				context: 'Label in the sidebar indicating that the user is on the free trial for a plan.'
 			} );
 		}
@@ -368,74 +323,58 @@ export const MySitesSidebar = React.createClass( {
 		return (
 			<li className={ this.itemLinkClass( [ '/plans' ], linkClass ) }>
 				<a onClick={ this.trackUpgradeClick } href={ planLink }>
-					<Gridicon icon="clipboard" size={ 24 } />
-					<span className="menu-link-text">{ this.translate( 'Plan', { context: 'noun' } ) }</span>
+					<JetpackLogo size={ 24 } />
+					<span className="menu-link-text">{ this.props.translate( 'Plan', { context: 'noun' } ) }</span>
 				</a>
 				<a href={ planLink } className="plan-name" onClick={ this.trackUpgradeClick }>{ planName }</a>
 			</li>
 		);
-	},
+	}
 
-	trackUpgradeClick: function() {
+	trackUpgradeClick = () => {
 		analytics.tracks.recordEvent( 'calypso_upgrade_nudge_cta_click', {
 			cta_name: 'sidebar_upgrade_default'
 		} );
 		this.onNavigate();
-	},
+	};
 
-	sharing: function() {
-		var site = this.getSelectedSite(),
-			sharingLink = '/sharing' + this.siteSuffix();
+	sharing() {
+		const { isJetpack, isSharingEnabledOnJetpackSite, site } = this.props;
+		const sharingLink = '/sharing' + this.props.siteSuffix;
 
-		if ( ! site.capabilities ) {
+		if ( site && ! this.props.canUserPublishPosts ) {
 			return null;
 		}
 
-		if (
-			site.jetpack &&
-			! site.isModuleActive( 'publicize' ) &&
-			( ! site.isModuleActive( 'sharedaddy' ) || site.versionCompare( '3.4-dev', '<' ) )
-		) {
+		if ( ! this.props.siteId ) {
 			return null;
 		}
 
-		if ( site.capabilities && ! site.capabilities.publish_posts ) {
+		if ( isJetpack && ! isSharingEnabledOnJetpackSite ) {
 			return null;
-		}
-
-		if ( ! this.isSingle() ) {
-			return null;
-		}
-
-		if ( ! config.isEnabled( 'manage/sharing' ) && site.options ) {
-			sharingLink = site.options.admin_url + 'options-general.php?page=sharing';
 		}
 
 		return (
 			<SidebarItem
-				label={ this.translate( 'Sharing' ) }
+				label={ this.props.translate( 'Sharing' ) }
 				className={ this.itemLinkClass( '/sharing', 'sharing' ) }
 				link={ sharingLink }
 				onNavigate={ this.onNavigate }
 				icon="share"
 				preloadSectionName="sharing" />
 		);
-	},
+	}
 
-	users: function() {
-		var site = this.getSelectedSite(),
-			usersLink = '/people/team' + this.siteSuffix(),
-			addPeopleLink = '/people/new' + this.siteSuffix();
+	users() {
+		const { site, canUserListUsers } = this.props;
+		let usersLink = '/people/team' + this.props.siteSuffix;
+		let addPeopleLink = '/people/new' + this.props.siteSuffix;
 
-		if ( ! site.capabilities ) {
+		if ( site && ! canUserListUsers ) {
 			return null;
 		}
 
-		if ( site.capabilities && ! site.capabilities.list_users ) {
-			return null;
-		}
-
-		if ( ! this.isSingle() ) {
+		if ( ! this.props.siteId ) {
 			return null;
 		}
 
@@ -443,15 +382,15 @@ export const MySitesSidebar = React.createClass( {
 			usersLink = site.options.admin_url + 'users.php';
 		}
 
-		if ( site.options && ( ! config.isEnabled( 'manage/add-people' ) || site.jetpack ) ) {
-			addPeopleLink = ( site.jetpack )
+		if ( site.options && this.props.isJetpack ) {
+			addPeopleLink = ( this.props.isJetpack )
 				? site.options.admin_url + 'user-new.php'
 				: site.options.admin_url + 'users.php?page=wpcom-invite-users';
 		}
 
 		return (
 			<SidebarItem
-				label={ this.translate( 'People' ) }
+				label={ this.props.translate( 'People' ) }
 				className={ this.itemLinkClass( '/people', 'users' ) }
 				link={ usersLink }
 				onNavigate={ this.onNavigate }
@@ -459,241 +398,137 @@ export const MySitesSidebar = React.createClass( {
 				preloadSectionName="people"
 			>
 				<SidebarButton href={ addPeopleLink }>
-					{ this.translate( 'Add' ) }
+					{ this.props.translate( 'Add' ) }
 				</SidebarButton>
 			</SidebarItem>
 		);
-	},
+	}
 
-	siteSettings: function() {
-		var site = this.getSelectedSite(),
-			siteSettingsLink = '/settings/general' + this.siteSuffix();
+	siteSettings() {
+		const { site, canUserManageOptions } = this.props;
+		const siteSettingsLink = '/settings/general' + this.props.siteSuffix;
 
-		if ( ! site.capabilities ) {
+		if ( site && ! canUserManageOptions ) {
 			return null;
 		}
 
-		if ( site.capabilities && ! site.capabilities.manage_options ) {
-			return null;
-		}
-
-		if ( ! this.isSingle() ) {
+		if ( ! this.props.siteId ) {
 			return null;
 		}
 
 		return (
 			<SidebarItem
-				label={ this.translate( 'Settings' ) }
+				label={ this.props.translate( 'Settings' ) }
 				className={ this.itemLinkClass( '/settings', 'settings' ) }
 				link={ siteSettingsLink }
 				onNavigate={ this.onNavigate }
 				icon="cog"
-				preloadSectionName="settings" />
+				preloadSectionName="settings"
+				tipTarget="settings" />
 		);
-	},
+	}
 
-	wpAdmin: function() {
-		var site = this.getSelectedSite(),
-			currentUser = this.props.currentUser;
+	wpAdmin() {
+		const { site } = this.props;
 
-		if ( ! site.options ) {
+		if ( ! site || ! site.options ) {
 			return null;
 		}
 
-		// only skip wpadmin for non-vip
-		if ( ! site.is_vip ) {
-			// safety check for nested attribute
-			if ( ! has( currentUser, 'meta.data.flags.active_flags' ) ) {
-				return null;
-			}
+		// Ignore Jetpack sites as they've opted into this interface.
+		if ( this.props.isJetpack && ! this.props.isSiteAutomatedTransfer ) {
+			return null;
+		}
 
-			if ( ! includes( currentUser.meta.data.flags.active_flags, 'wpcom-use-wpadmin-flows' ) ) {
-				return null;
-			}
+		if ( ! this.useWPAdminFlows() && ! this.props.isSiteAutomatedTransfer ) {
+			return null;
 		}
 
 		return (
 			<li className="wp-admin">
 				<a onClick={ this.trackWpadminClick } href={ site.options.admin_url } target="_blank" rel="noopener noreferrer">
 					<Gridicon icon="my-sites" size={ 24 } />
-					<span className="menu-link-text">{ this.translate( 'WP Admin' ) }</span>
-					<span className="noticon noticon-external" />
+					<span className="menu-link-text">{ this.props.translate( 'WP Admin' ) }</span>
+					<Gridicon icon="external" size={ 24 } />
 				</a>
 			</li>
 		);
-	},
+	}
 
-	trackWpadminClick: function() {
+	// Check for cases where WP Admin links should appear, where we need support for legacy reasons (VIP, older users, testing).
+	useWPAdminFlows() {
+		const { site } = this.props;
+		const currentUser = this.props.currentUser;
+		const userRegisteredDate = new Date( currentUser.date );
+		const cutOffDate = new Date( '2015-09-07' );
+
+		// VIP sites should always show a WP Admin link regardless of the current user.
+		if ( site.is_vip ) {
+			return true;
+		}
+
+		// User registered before the cut-off date of September 7, 2015 and we want to support them as legacy users.
+		if ( userRegisteredDate < cutOffDate ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	trackWpadminClick = () => {
 		analytics.ga.recordEvent( 'Sidebar', 'Clicked WP Admin' );
-	},
+	};
 
-	vip: function() {
-		var site, viplink;
-
-		if ( ! config.isEnabled( 'vip' ) ) {
-			return null;
-		}
-
-		site = this.getSelectedSite();
-		viplink = '/vip/updates' + this.siteSuffix();
-
-		if ( ! site ) {
-			return null;
-		}
-
-		return (
-			<li className={ this.itemLinkClass( '/vip/updates', 'sidebar__vip' ) } >
-				<a href={ viplink } >
-					<span className="menu-link-text">{ this.translate( 'Updates' ) }</span>
-				</a>
-			</li>
-		);
-	},
-
-	vipDeploys: function() {
-		var site, viplink;
-
-		if ( ! config.isEnabled( 'vip/deploys' ) ) {
-			return null;
-		}
-
-		site = this.getSelectedSite();
-		viplink = '/vip/deploys' + this.siteSuffix();
-
-		if ( ! site ) {
-			return null;
-		}
-
-		return (
-			<li className={ this.itemLinkClass( '/vip/deploys', 'sidebar__vip-deploys' ) } >
-				<a href={ viplink } >
-					<span className="menu-link-text">{ this.translate( 'Deploys' ) }</span>
-				</a>
-			</li>
-		);
-	},
-
-	vipBilling: function() {
-		var site, viplink;
-
-		if ( ! config.isEnabled( 'vip/billing' ) ) {
-			return null;
-		}
-
-		site = this.getSelectedSite();
-		viplink = '/vip/billing' + this.siteSuffix();
-
-		if ( ! site ) {
-			return null;
-		}
-
-		return (
-			<li className={ this.itemLinkClass( '/vip/billing', 'sidebar__vip-billing' ) }>
-				<a href={ viplink } >
-					<span className="menu-link-text">{ this.translate( 'Billing' ) }</span>
-				</a>
-			</li>
-		);
-	},
-
-	vipSupport: function() {
-		var viplink;
-
-		if ( ! config.isEnabled( 'vip/support' ) ) {
-			return null;
-		}
-
-		viplink = '/vip/support' + this.siteSuffix();
-
-		return (
-			<li className={ this.itemLinkClass( '/vip/support', 'sidebar__vip-support' ) }>
-				<a href={ viplink } >
-					<span className="menu-link-text">{ this.translate( 'Support' ) }</span>
-				</a>
-			</li>
-		);
-	},
-
-	vipBackups: function() {
-		var site, viplink;
-
-		if ( ! config.isEnabled( 'vip/backups' ) ) {
-			return null;
-		}
-
-		site = this.getSelectedSite();
-		viplink = '/vip/backups' + this.siteSuffix();
-
-		if ( ! site ) {
-			return null;
-		}
-
-		return (
-			<li className={ this.itemLinkClass( '/vip/backups', 'sidebar__vip-backups' ) }>
-				<a href={ viplink } >
-					<span className="menu-link-text">{ this.translate( 'Backups' ) }</span>
-				</a>
-			</li>
-		);
-	},
-
-	vipLogs: function() {
-		var site, viplink;
-
-		if ( ! config.isEnabled( 'vip/logs' ) ) {
-			return null;
-		}
-
-		site = this.getSelectedSite();
-		viplink = '/vip/logs' + this.siteSuffix();
-
-		if ( ! site ) {
-			return null;
-		}
-
-		return (
-			<li className={ this.itemLinkClass( '/vip/logs', 'sidebar__vip-logs' ) }>
-				<a href={ viplink } >
-					<span className="menu-link-text">{ this.translate( 'Logs' ) }</span>
-				</a>
-			</li>
-		);
-	},
-
-	focusContent: function() {
+	focusContent = () => {
 		this.props.setLayoutFocus( 'content' );
-	},
+	};
 
-	addNewSite: function() {
+	getAddNewSiteUrl() {
+		if ( this.props.sites.getJetpack().length ||
+			abtest( 'newSiteWithJetpack' ) === 'showNewJetpackSite' ) {
+			return '/jetpack/new/?ref=calypso-selector';
+		}
+		return config( 'signup_url' ) + '?ref=calypso-selector';
+	}
+
+	addNewSite() {
 		if ( this.props.currentUser.visible_site_count > 1 ) {
 			return null;
 		}
 
 		return (
-			<Button compact borderless
+			<Button borderless
 				className="my-sites-sidebar__add-new-site"
-				href={ config( 'signup_url' ) + '?ref=calypso-selector' }
+				href={ this.getAddNewSiteUrl() }
 				onClick={ this.focusContent }
 			>
-				<Gridicon icon="add-outline" /> { this.translate( 'Add New Site' ) }
+				<Gridicon icon="add-outline" /> { this.props.translate( 'Add New Site' ) }
 			</Button>
 		);
-	},
+	}
 
-	render: function() {
-		var publish = !! this.publish(),
+	renderSidebarMenus() {
+		if ( this.props.isDomainOnly ) {
+			return (
+				<SidebarMenu>
+					<ul>
+						<SidebarItem
+							className={ this.itemLinkClass( '/domains', 'settings' ) }
+							icon="cog"
+							label={ this.props.translate( 'Settings' ) }
+							link={ '/domains/manage' + this.props.siteSuffix }
+							onNavigate={ this.onNavigate } />
+					</ul>
+				</SidebarMenu>
+			);
+		}
+
+		const publish = !! this.publish(),
 			appearance = ( !! this.themes() || !! this.menus() ),
-			configuration = ( !! this.sharing() || !! this.users() || !! this.siteSettings() || !! this.plugins() || !! this.upgrades() ),
-			vip = !! this.vip();
+			configuration = ( !! this.sharing() || !! this.users() || !! this.siteSettings() || !! this.plugins() || !! this.upgrades() );
 
 		return (
-			<Sidebar>
-				<SidebarRegion>
-				<CurrentSite
-					sites={ this.props.sites }
-					siteCount={ this.props.currentUser.visible_site_count }
-					onClick={ this.onPreviewSite }
-				/>
+			<div>
 				<SidebarMenu>
 					<ul>
 						{ this.stats() }
@@ -701,24 +536,9 @@ export const MySitesSidebar = React.createClass( {
 					</ul>
 				</SidebarMenu>
 
-				{ vip
-					? <SidebarMenu>
-						<SidebarHeading>VIP</SidebarHeading>
-						<ul>
-							{ this.vip() }
-							{ this.vipDeploys() }
-							{ this.vipBilling() }
-							{ this.vipSupport() }
-							{ this.vipBackups() }
-							{ this.vipLogs() }
-						</ul>
-					</SidebarMenu>
-					: null
-				}
-
 				{ publish
 					? <SidebarMenu>
-						<SidebarHeading>{ this.translate( 'Publish' ) }</SidebarHeading>
+						<SidebarHeading>{ this.props.translate( 'Publish' ) }</SidebarHeading>
 						{ this.publish() }
 					</SidebarMenu>
 					: null
@@ -726,7 +546,7 @@ export const MySitesSidebar = React.createClass( {
 
 				{ appearance
 					? <SidebarMenu>
-						<SidebarHeading>{ this.translate( 'Personalize' ) }</SidebarHeading>
+						<SidebarHeading>{ this.props.translate( 'Personalize' ) }</SidebarHeading>
 						<ul>
 							{ this.themes() }
 							{ this.menus() }
@@ -737,7 +557,7 @@ export const MySitesSidebar = React.createClass( {
 
 				{ configuration
 					? <SidebarMenu>
-						<SidebarHeading>{ this.translate( 'Configure' ) }</SidebarHeading>
+						<SidebarHeading>{ this.props.translate( 'Configure' ) }</SidebarHeading>
 						<ul>
 							{ this.ads() }
 							{ this.sharing() }
@@ -750,6 +570,19 @@ export const MySitesSidebar = React.createClass( {
 					</SidebarMenu>
 					: null
 				}
+			</div>
+		);
+	}
+
+	render() {
+		return (
+			<Sidebar>
+				<SidebarRegion>
+					<CurrentSite
+						sites={ this.props.sites }
+						onClick={ this.onPreviewSite }
+					/>
+					{ this.renderSidebarMenus() }
 				</SidebarRegion>
 				<SidebarFooter>
 					{ this.addNewSite() }
@@ -757,13 +590,49 @@ export const MySitesSidebar = React.createClass( {
 			</Sidebar>
 		);
 	}
-} );
+}
 
 function mapStateToProps( state ) {
+	const currentUser = getCurrentUser( state );
+	const selectedSiteId = getSelectedSiteId( state );
+	const isSingleSite = !! selectedSiteId || currentUser.site_count === 1;
+	const siteId = selectedSiteId || ( isSingleSite && getPrimarySiteId( state ) ) || null;
+	const site = getSite( state, siteId );
+
+	const isJetpack = isJetpackSite( state, siteId );
+	// FIXME: Fun with Boolean algebra :-)
+	const isSharingEnabledOnJetpackSite = ! (
+		! isJetpackModuleActive( state, siteId, 'publicize' ) &&
+		( ! isJetpackModuleActive( state, siteId, 'sharedaddy' ) || isJetpackMinimumVersion( state, siteId, '3.4-dev' ) )
+	);
+	// FIXME: Turn into dedicated selector
+	const canManagePlugins = !! getSites( state ).some( ( s ) => (
+		( s.capabilities && s.capabilities.manage_options )
+	) );
+	// FIXME: Turn into dedicated selector
+	const hasJetpackSites = getSites( state ).some( s => s.jetpack );
+
 	return {
-		currentUser: getCurrentUser( state ),
+		atEnabled: isATEnabled( site ),
+		canManagePlugins,
+		canUserEditThemeOptions: canCurrentUser( state, siteId, 'edit_theme_options' ),
+		canUserListUsers: canCurrentUser( state, siteId, 'list_users' ),
+		canUserManageOptions: canCurrentUser( state, siteId, 'manage_options' ),
+		canUserPublishPosts: canCurrentUser( state, siteId, 'publish_posts' ),
+		canUserViewStats: canCurrentUser( state, siteId, 'view_stats' ),
+		currentUser,
+		customizeUrl: getCustomizerUrl( state, selectedSiteId ),
+		hasJetpackSites,
+		isDomainOnly: isDomainOnlySite( state, selectedSiteId ),
+		isJetpack,
+		isSharingEnabledOnJetpackSite,
+		isSiteAutomatedTransfer: !! isSiteAutomatedTransfer( state, selectedSiteId ),
+		menusUrl: getMenusUrl( state, siteId ),
+		siteId,
+		site,
+		siteSuffix: site ? '/' + site.slug : '',
 	};
 }
 
 // TODO: make this pure when sites can be retrieved from the Redux state
-export default connect( mapStateToProps, { setNextLayoutFocus, setLayoutFocus }, null, { pure: false } )( MySitesSidebar );
+export default connect( mapStateToProps, { setNextLayoutFocus, setLayoutFocus }, null, { pure: false } )( localize( MySitesSidebar ) );

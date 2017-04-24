@@ -1,5 +1,3 @@
-/** @ssr-ready **/
-
 /**
  * External dependencies
  */
@@ -35,10 +33,19 @@ import {
 	getSectionName,
 	getSelectedSite
 } from 'state/ui/selectors';
+import { recordTracksEvent } from 'state/analytics/actions';
 
 const PREVIEW_IMAGE_WIDTH = 512;
-const largeBlavatar = site => `${ get( site, 'icon.img', '//gravatar.com/avatar/' ) }?s=${ PREVIEW_IMAGE_WIDTH }`;
 const hasBusinessPlan = overSome( isBusiness, isEnterprise );
+
+const largeBlavatar = site => {
+	const siteIcon = get( site, 'icon.img' );
+	if ( ! siteIcon ) {
+		return null;
+	}
+
+	return `${ siteIcon }?s=${ PREVIEW_IMAGE_WIDTH }`;
+};
 
 const getPostImage = ( post ) => {
 	if ( ! post ) {
@@ -100,18 +107,13 @@ const ComingSoonMessage = translate => (
 const ReaderPost = ( site, post ) => {
 	return (
 		<ReaderPreview
-			siteTitle={ site.name }
-			siteSlug={ site.slug }
-			siteIcon={ `${ get( site, 'icon.img', '//gravatar.com/avatar/' ) }?s=32` }
-			postTitle={ get( post, 'title', '' ) }
+			site={ site }
+			post={ post }
 			postExcerpt={ formatExcerpt(
 				get( post, 'excerpt', false ) ||
 				get( post, 'content', false )
 			) }
 			postImage={ getPostImage( post ) }
-			postDate={ get( post, 'date', (new Date()).toISOString() ) }
-			authorName={ get( post, 'author.name', '' ) }
-			authorIcon={ get( post, 'author.avatar_URL', '' ) }
 		/>
 	);
 };
@@ -184,8 +186,19 @@ export class SeoPreviewPane extends PureComponent {
 		this.selectPreview = this.selectPreview.bind( this );
 	}
 
+	componentDidMount() {
+		// Track the first service that is viewed
+		const { trackPreviewService } = this.props;
+		const { selectedService } = this.state;
+
+		trackPreviewService( selectedService );
+	}
+
 	selectPreview( selectedService ) {
 		this.setState( { selectedService } );
+
+		const { trackPreviewService } = this.props;
+		trackPreviewService( selectedService );
 	}
 
 	render() {
@@ -270,4 +283,8 @@ const mapStateToProps = state => {
 	};
 };
 
-export default connect( mapStateToProps, null )( localize( SeoPreviewPane ) );
+const mapDispatchToProps = dispatch => ( {
+	trackPreviewService: service => dispatch( recordTracksEvent( 'calypso_seo_tools_social_preview', { service } ) )
+} );
+
+export default connect( mapStateToProps, mapDispatchToProps )( localize( SeoPreviewPane ) );

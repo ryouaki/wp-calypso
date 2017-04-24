@@ -10,11 +10,13 @@ import { localize } from 'i18n-calypso';
  */
 import Main from 'components/main';
 import {
-	getPlansBySite,
 	getCurrentPlan,
-	isCurrentPlanExpiring
+	isCurrentPlanExpiring,
+	isRequestingSitePlans
 } from 'state/sites/plans/selectors';
 import { getSelectedSite, getSelectedSiteId } from 'state/ui/selectors';
+import { isJetpackSite } from 'state/sites/selectors';
+import DocumentHead from 'components/data/document-head';
 import TrackComponentView from 'lib/analytics/track-component-view';
 import PlansNavigation from 'my-sites/upgrades/navigation';
 import ProductPurchaseFeatures from 'blocks/product-purchase-features';
@@ -25,21 +27,28 @@ import QuerySitePlans from 'components/data/query-site-plans';
 import { PLAN_BUSINESS } from 'lib/plans/constants';
 import { getPlan } from 'lib/plans';
 import QuerySiteDomains from 'components/data/query-site-domains';
-import { getDecoratedSiteDomains, isRequestingSiteDomains } from 'state/sites/domains/selectors';
+import { getDecoratedSiteDomains } from 'state/sites/domains/selectors';
 import DomainWarnings from 'my-sites/upgrades/components/domain-warnings';
+import isSiteAutomatedTransfer from 'state/selectors/is-site-automated-transfer';
+import SidebarNavigation from 'my-sites/sidebar-navigation';
 
 class CurrentPlan extends Component {
 	static propTypes = {
 		selectedSiteId: PropTypes.number,
 		selectedSite: PropTypes.object,
-		sitePlans: PropTypes.object,
-		context: PropTypes.object
+		isRequestingSitePlans: PropTypes.bool,
+		context: PropTypes.object,
+		domains: PropTypes.array,
+		currentPlan: PropTypes.object,
+		isExpiring: PropTypes.bool,
+		shouldShowDomainWarnings: PropTypes.bool,
+		hasDomainsLoaded: PropTypes.bool,
 	};
 
 	isLoading() {
-		const { selectedSite, sitePlans } = this.props;
+		const { selectedSite, isRequestingSitePlans: isRequestingPlans } = this.props;
 
-		return ! selectedSite || ! sitePlans.hasLoadedFromServer;
+		return ! selectedSite || isRequestingPlans;
 	}
 
 	getHeaderWording( plan ) {
@@ -65,39 +74,17 @@ class CurrentPlan extends Component {
 		};
 	}
 
-	renderDomainWarnings() {
-		const {
-			domains,
-			selectedSite,
-			hasDomainsLoaded
-		} = this.props;
-
-		if ( hasDomainsLoaded ) {
-			return (
-				<DomainWarnings
-					domains={ domains }
-					selectedSite={ selectedSite }
-					ruleWhiteList={ [
-						'newDomainsWithPrimary',
-						'newDomains',
-						'unverifiedDomainsCanManage',
-						'pendingGappsTosAcceptanceDomains',
-						'unverifiedDomainsCannotManage',
-						'wrongNSMappedDomains'
-					] }
-				/>
-			);
-		}
-	}
-
 	render() {
 		const {
 			selectedSite,
 			selectedSiteId,
-			sitePlans,
+			domains,
 			context,
 			currentPlan,
-			isExpiring
+			isExpiring,
+			shouldShowDomainWarnings,
+			hasDomainsLoaded,
+			translate,
 		} = this.props;
 
 		const currentPlanSlug = selectedSite.plan.product_slug,
@@ -105,19 +92,34 @@ class CurrentPlan extends Component {
 
 		const { title, tagLine } = this.getHeaderWording( currentPlanSlug );
 
+		const shouldQuerySiteDomains = selectedSiteId && shouldShowDomainWarnings;
+		const showDomainWarnings = hasDomainsLoaded && shouldShowDomainWarnings;
+
 		return (
 			<Main className="current-plan" wideLayout>
+				<SidebarNavigation />
+				<DocumentHead title={ translate( 'Plans', { textOnly: true } ) } />
 				<QuerySites siteId={ selectedSiteId } />
 				<QuerySitePlans siteId={ selectedSiteId } />
-				{ selectedSiteId && <QuerySiteDomains siteId={ selectedSiteId } /> }
+				{ shouldQuerySiteDomains && <QuerySiteDomains siteId={ selectedSiteId } /> }
 
 				<PlansNavigation
-					sitePlans={ sitePlans }
 					path={ context.path }
 					selectedSite={ selectedSite }
 				/>
 
-				{ this.renderDomainWarnings() }
+				{ showDomainWarnings && <DomainWarnings
+						domains={ domains }
+						selectedSite={ selectedSite }
+						ruleWhiteList={ [
+							'newDomainsWithPrimary',
+							'newDomains',
+							'unverifiedDomainsCanManage',
+							'pendingGappsTosAcceptanceDomains',
+							'unverifiedDomainsCannotManage',
+							'wrongNSMappedDomains'
+						] } />
+				}
 
 				<ProductPurchaseFeatures>
 					<CurrentPlanHeader
@@ -135,7 +137,7 @@ class CurrentPlan extends Component {
 					/>
 				</ProductPurchaseFeatures>
 
-				<TrackComponentView eventName={ 'calypso_plans_my-plan_view' } />
+				<TrackComponentView eventName={ 'calypso_plans_my_plan_view' } />
 			</Main>
 		);
 	}
@@ -143,18 +145,23 @@ class CurrentPlan extends Component {
 
 export default connect(
 	( state, ownProps ) => {
-		const selectedSite = getSelectedSite( state ),
-			selectedSiteId = getSelectedSiteId( state );
+		const selectedSite = getSelectedSite( state );
+		const selectedSiteId = getSelectedSiteId( state );
+		const domains = getDecoratedSiteDomains( state, selectedSiteId );
+
+		const isWpcom = ! isJetpackSite( state, selectedSiteId );
+		const isAutomatedTransfer = isSiteAutomatedTransfer( state, selectedSiteId );
 
 		return {
 			selectedSite,
 			selectedSiteId,
-			sitePlans: getPlansBySite( state, selectedSite ),
+			domains,
 			context: ownProps.context,
-			currentPlan: getCurrentPlan( state, getSelectedSiteId( state ) ),
-			isExpiring: isCurrentPlanExpiring( state, getSelectedSiteId( state ) ),
-			domains: getDecoratedSiteDomains( state, selectedSiteId ),
-			hasDomainsLoaded: ! isRequestingSiteDomains( state, selectedSiteId )
+			currentPlan: getCurrentPlan( state, selectedSiteId ),
+			isExpiring: isCurrentPlanExpiring( state, selectedSiteId ),
+			shouldShowDomainWarnings: isWpcom || isAutomatedTransfer,
+			hasDomainsLoaded: !! domains,
+			isRequestingSitePlans: isRequestingSitePlans( state, selectedSiteId ),
 		};
 	}
 )( localize( CurrentPlan ) );

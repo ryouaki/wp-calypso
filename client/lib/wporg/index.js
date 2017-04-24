@@ -22,6 +22,8 @@ var _WPORG_PLUGINS_LIST = 'https://api.wordpress.org/plugins/info/1.1/?action=qu
 	_DEFAULT_CATEGORY = 'all',
 	_DEFAULT_FIRST_PAGE = 1;
 
+const _WPORG_THEMES_ENDPOINT = 'https://api.wordpress.org/themes/info/1.1/';
+
 function getWporgLocaleCode( ) {
 	var currentLocaleCode,
 		wpOrgLocaleCode;
@@ -95,5 +97,54 @@ module.exports = {
 			.end( function( err, data ) {
 				callback( err, data.body );
 			} );
-	}
+	},
+	/**
+	 * Get information about a given theme from the WordPress.org API.
+	 * If provided with a callback, will call that on succes with an object with theme details.
+	 * Otherwise, will return a promise.
+	 *
+	 * @param {string}     themeId  The theme identifier.
+	 * @returns {Promise.<Object>}  A promise that returns a `theme` object
+	 */
+	fetchThemeInformation: function( themeId ) {
+		const query = {
+			action: 'theme_information',
+			// Return an `author` object containing `user_nicename` and `display_name` attrs.
+			// This is for consistency with WP.com, which always returns the display name as `author`.
+			'request[fields][extended_author]': true,
+			'request[slug]': themeId
+		};
+		return superagent
+			.get( _WPORG_THEMES_ENDPOINT )
+			.set( 'Accept', 'application/json' )
+			.query( query )
+			.then( ( { body } ) => ( body ) );
+	},
+	/**
+	 * Get information about a given theme from the WordPress.org API.
+	 *
+	 * @param  {Object}        options         Theme query
+	 * @param  {String}        options.search  Search string
+	 * @param  {Number}        options.number  How many themes to return per page
+	 * @param  {Number}        options.page    Which page of matching themes to return
+	 * @returns {Promise.<Object>}             A promise that returns an object containing a `themes` array and an `info` object
+	 */
+	fetchThemesList: function( options = {} ) {
+		const { search, page, number } = options;
+		const query = {
+			action: 'query_themes',
+			// Return an `author` object containing `user_nicename` and `display_name` attrs.
+			// This is for consistency with WP.com, which always returns the display name as `author`.
+			'request[fields][extended_author]': true,
+			'request[search]': search,
+			'request[page]': page,
+			'request[per_page]:': number
+		};
+
+		return superagent
+			.get( _WPORG_THEMES_ENDPOINT )
+			.set( 'Accept', 'application/json' )
+			.query( query )
+			.then( ( { body } ) => ( body ) );
+	},
 };

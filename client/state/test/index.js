@@ -1,12 +1,14 @@
+/* eslint-disable no-console */
+
 /**
  * External dependencies
  */
 import { expect } from 'chai';
-import sinon from 'sinon';
 
 /**
  * Internal dependencies
  */
+import { useSandbox } from 'test/helpers/use-sinon';
 import { createReduxStore } from '../';
 import currentUser from 'state/current-user/reducer';
 
@@ -17,6 +19,18 @@ describe( 'index', () => {
 			const reduxStoreWithEmptyState = createReduxStore( {} ).getState();
 			expect( reduxStoreNoArgs ).to.be.an( 'object' );
 			expect( reduxStoreWithEmptyState ).to.eql( reduxStoreNoArgs );
+		} );
+
+		it( 'should return same state on unhandled action', () => {
+			// If you're here investigating why tests are failing, you should
+			// ensure that your reducer is not returning a new state object if
+			// it's not handling the action (i.e. that nothing has changed)
+			const store = createReduxStore();
+			const originalState = store.getState();
+
+			store.dispatch( { type: '__GARBAGE' } );
+
+			expect( store.getState() ).to.equal( originalState );
 		} );
 
 		it( 'is instantiated with initialState', () => {
@@ -32,12 +46,8 @@ describe( 'index', () => {
 		} );
 
 		describe( 'invalid data', () => {
-			before( () => {
-				sinon.stub( console, 'error' );
-			} );
-
-			after( () => {
-				console.error.restore();
+			useSandbox( ( sandbox ) => {
+				sandbox.stub( console, 'error' );
 			} );
 
 			it( 'ignores non-existent keys', () => {

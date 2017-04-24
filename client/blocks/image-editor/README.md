@@ -28,13 +28,45 @@ Id of a site the edited image belongs to.
 	<tr><th>Required</th><td>Yes</td></tr>
 </table>
 
-This object needs to contain at least these properties:
-- `media.URL` `{string}`: the `url` of the image to be edited (e.g. `https://my-site.com/full-width1-e1.jpg`)
+This object needs to contain at least one of these properties:
+
+`media.URL` `{string}`: the `url` of the image to be edited (e.g. `https://my-site.com/full-width1-e1.jpg`).
+Use this approach if you want to load and edit a remote image file.
+
+or
+
+`media.src` `{string}`: the [object url](https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL) of
+the image to be edited. Use this approach if you want to edit a local image file (e.g. uploaded file or blob).
 
 It can also contain these optional properties (with defaults if not set):
 - `media.file` `{string}`: the base name of the edited image file (e.g. `full-width1-e1.jpg`), defaults to `default`
+- `media.ID` `{number}`: An ID of the media item.
 - `media.mime_type` `{string}`: the MIME of the edited image (e.g. `image/jpeg`), defaults to `image/png`
 - `media.title` `{string}`: the title of the edited image (e.g. `some image file`), defaults to `default`
+
+### `defaultAspectRatio`
+
+<table>
+	<tr><th>Type</th><td>string</td></tr>
+	<tr><th>Required</th><td>No</td></tr>
+	<tr><th>Default</th><td>'FREE'</td></tr>
+</table>
+
+Default, pre-selected aspect ratio for the image editor. If `allowedAspectRatios` prop is present as well,
+it must include the `defaultAspectRatio`. For the list of all possible aspect ratios, see
+`client/state/ui/editor/image-editor/constants`.
+
+### `allowedAspectRatios`
+
+<table>
+	<tr><th>Type</th><td>array</td></tr>
+	<tr><th>Required</th><td>No</td></tr>
+	<tr><th>Default</th><td>all possible aspect ratios</td></tr>
+</table>
+
+List allowed aspect ratios user can select when editing an image. If there is only a single specified aspect ratio in
+the `allowedAspectRatios` array, it will be set as `defaultAspectRatio` as well.
+For the list of all possible aspect ratios, see `client/state/ui/editor/image-editor/constants`.
 
 ### `onDone`
 

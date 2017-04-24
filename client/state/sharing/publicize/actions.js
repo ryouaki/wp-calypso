@@ -7,11 +7,16 @@ import {
 	PUBLICIZE_CONNECTION_CREATE_FAILURE,
 	PUBLICIZE_CONNECTION_DELETE,
 	PUBLICIZE_CONNECTION_DELETE_FAILURE,
+	PUBLICIZE_CONNECTION_RECEIVE,
+	PUBLICIZE_CONNECTION_REQUEST,
+	PUBLICIZE_CONNECTION_REQUEST_FAILURE,
+	PUBLICIZE_CONNECTION_REQUEST_SUCCESS,
 	PUBLICIZE_CONNECTION_UPDATE,
 	PUBLICIZE_CONNECTION_UPDATE_FAILURE,
-	PUBLICIZE_CONNECTIONS_REQUEST,
 	PUBLICIZE_CONNECTIONS_RECEIVE,
+	PUBLICIZE_CONNECTIONS_REQUEST,
 	PUBLICIZE_CONNECTIONS_REQUEST_FAILURE,
+	PUBLICIZE_CONNECTIONS_REQUEST_SUCCESS,
 	PUBLICIZE_SHARE,
 	PUBLICIZE_SHARE_SUCCESS,
 	PUBLICIZE_SHARE_FAILURE,
@@ -65,8 +70,56 @@ export function fetchConnections( siteId ) {
 		} );
 
 		return wpcom.undocumented().siteConnections( siteId )
-			.then( ( response ) => dispatch( receiveConnections( siteId, response ) ) )
-			.catch( ( error ) => dispatch( failConnectionsRequest( siteId, error ) ) );
+			.then( ( connections ) => {
+				dispatch( receiveConnections( siteId, connections ) );
+				dispatch( {
+					type: PUBLICIZE_CONNECTIONS_REQUEST_SUCCESS,
+					siteId,
+				} );
+			} )
+			.catch( ( error ) => dispatch( {
+				type: PUBLICIZE_CONNECTIONS_REQUEST_FAILURE,
+				siteId,
+				error
+			} ) );
+	};
+}
+
+/**
+ * Triggers a network request to request a Publicize connection for the
+ * specified site ID.
+ *
+ * @param  {Number} siteId       Site ID
+ * @param  {Number} connectionId ID of the connection to be fetched.
+ * @return {Function}            Action thunk
+ */
+export function fetchConnection( siteId, connectionId ) {
+	return ( dispatch ) => {
+		dispatch( {
+			type: PUBLICIZE_CONNECTION_REQUEST,
+			connectionId,
+			siteId,
+		} );
+
+		return wpcom.undocumented().site( siteId ).getConnection( connectionId )
+			.then( ( connection ) => {
+				dispatch( {
+					type: PUBLICIZE_CONNECTION_RECEIVE,
+					connection,
+					siteId,
+				} );
+				dispatch( {
+					type: PUBLICIZE_CONNECTION_REQUEST_SUCCESS,
+					connectionId,
+					siteId,
+				} );
+			} )
+			.catch( ( error ) => dispatch( {
+				type: PUBLICIZE_CONNECTION_REQUEST_FAILURE,
+				connectionId,
+				error,
+				siteId,
+			} ) );
 	};
 }
 
@@ -86,30 +139,29 @@ export function createSiteConnection( siteId, keyringConnectionId, externalUserI
 				type: PUBLICIZE_CONNECTION_CREATE,
 				connection,
 			} ) )
-			.catch( ( error ) => dispatch( {
-				type: PUBLICIZE_CONNECTION_CREATE_FAILURE,
-				error,
-			} ) );
+			.catch( ( error ) => dispatch( failCreateConnection( error ) ) );
 }
 
 /**
  * Triggers a network request to update a Publicize connection for a specific site.
  *
- * @param  {Number} siteId       Site ID for which the connection is deleted.
- * @param  {Number} connectionId ID of the connection to be deleted.
- * @param  {Object} attributes   The update request body.
- * @return {Function}            Action thunk
+ * @param  {Object} connection         Connection to be updated.
+ * @param  {Number} connection.site_ID Site ID for which the connection is updated.
+ * @param  {Number} connection.ID      ID of the connection to be updated.
+ * @param  {String} connection.label   Name of the connected service.
+ * @param  {Object} attributes         The update request body.
+ * @return {Function}                  Action thunk
  */
-export function updateSiteConnection( siteId, connectionId, attributes ) {
+export function updateSiteConnection( connection, attributes ) {
 	return ( dispatch ) =>
-		wpcom.undocumented().updateConnection( siteId, connectionId, attributes )
-			.then( ( connection ) => dispatch( {
+		wpcom.undocumented().updateConnection( connection.site_ID, connection.ID, attributes )
+			.then( ( response ) => dispatch( {
 				type: PUBLICIZE_CONNECTION_UPDATE,
-				connection,
+				connection: response,
 			} ) )
 			.catch( ( error ) => dispatch( {
 				type: PUBLICIZE_CONNECTION_UPDATE_FAILURE,
-				error,
+				error: { ...error, label: connection.label },
 			} ) );
 }
 
@@ -119,7 +171,8 @@ export function updateSiteConnection( siteId, connectionId, attributes ) {
  * @param  {Object} connection         Connection to be deleted.
  * @param  {Number} connection.site_ID Site ID for which the connection is deleted.
  * @param  {Number} connection.ID      ID of the connection to be deleted.
- * @return {Function}          Action thunk
+ * @param  {String} connection.label   Name of the service that was connected.
+ * @return {Function}                  Action thunk
  */
 export function deleteSiteConnection( connection ) {
 	return ( dispatch ) =>
@@ -134,25 +187,36 @@ export function deleteSiteConnection( connection ) {
 
 				dispatch( {
 					type: PUBLICIZE_CONNECTION_DELETE_FAILURE,
-					error,
+					error: { ...error, label: connection.label },
 				} );
 			} );
+}
+
+/**
+ * Returns an action object to be used in signalling that creating a Publicize
+ * connection has failed.
+ *
+ * @param  {Object} error Error object
+ * @return {Object}       Action object
+ */
+export function failCreateConnection( error ) {
+	return {
+		type: PUBLICIZE_CONNECTION_CREATE_FAILURE,
+		error,
+	};
 }
 
 /**
  * Returns an action object to be used in signalling that a network request for
  * removing a Publicize connection has been received.
  *
- * @param  {Object} connection         Connection to be deleted.
- * @param  {Number} connection.site_ID Site ID for which the connection is deleted.
- * @param  {Number} connection.ID      ID of the connection to be deleted.
- * @return {Object}                    Action object
+ * @param  {Object} connection Connection to be deleted.
+ * @return {Object}            Action object
  */
 export function deleteConnection( connection ) {
 	return {
 		type: PUBLICIZE_CONNECTION_DELETE,
-		connectionId: connection.ID,
-		siteId: connection.site_ID,
+		connection,
 	};
 }
 
@@ -169,21 +233,5 @@ export function receiveConnections( siteId, data ) {
 		type: PUBLICIZE_CONNECTIONS_RECEIVE,
 		siteId,
 		data
-	};
-}
-
-/**
- * Returns an action object to be used in signalling that a network request for
- * Publicize connections has failed.
- *
- * @param  {Number} siteId Site ID
- * @param  {Object} error  API response error
- * @return {Object}        Action object
- */
-export function failConnectionsRequest( siteId, error ) {
-	return {
-		type: PUBLICIZE_CONNECTIONS_REQUEST_FAILURE,
-		siteId,
-		error
 	};
 }

@@ -2,31 +2,39 @@
  * External dependencies
  */
 import { combineReducers } from 'redux';
-import pick from 'lodash/pick';
-import merge from 'lodash/merge';
+import { pick, omit, merge, get, includes, reduce, isEqual } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import { plans } from './plans/reducer';
+import connection from './connection/reducer';
 import domains from './domains/reducer';
 import guidedTransfer from './guided-transfer/reducer';
+import monitor from './monitor/reducer';
 import vouchers from './vouchers/reducer';
 import updates from './updates/reducer';
+import sharingButtons from './sharing-buttons/reducer';
 
 import mediaStorage from './media-storage/reducer';
 import {
+	MEDIA_DELETE,
 	SITE_FRONT_PAGE_SET_SUCCESS,
+	SITE_DELETE_RECEIVE,
+	JETPACK_DISCONNECT_RECEIVE,
 	SITE_RECEIVE,
 	SITE_REQUEST,
 	SITE_REQUEST_FAILURE,
 	SITE_REQUEST_SUCCESS,
+	SITE_SETTINGS_RECEIVE,
+	SITE_SETTINGS_UPDATE,
 	SITES_RECEIVE,
 	SITES_REQUEST,
 	SITES_REQUEST_FAILURE,
 	SITES_REQUEST_SUCCESS,
+	SITES_UPDATE,
 	DESERIALIZE,
-	THEME_ACTIVATED,
+	THEME_ACTIVATE_SUCCESS,
 	WORDADS_SITE_APPROVE_REQUEST_SUCCESS,
 } from 'state/action-types';
 import { sitesSchema } from './schema';
@@ -49,7 +57,7 @@ const VALID_SITE_KEYS = Object.keys( sitesSchema.patternProperties[ '^\\d+$' ].p
 export function items( state = {}, action ) {
 	switch ( action.type ) {
 		case SITE_FRONT_PAGE_SET_SUCCESS: {
-			const { siteId, pageId } = action;
+			const { siteId, updatedOptions } = action;
 			const site = state[ siteId ];
 			if ( ! site ) {
 				break;
@@ -58,10 +66,7 @@ export function items( state = {}, action ) {
 			return {
 				...state,
 				[ siteId ]: merge( {}, site, {
-					options: {
-						show_on_front: pageId === 0 ? 'posts' : 'page',
-						page_on_front: pageId
-					}
+					options: updatedOptions,
 				} )
 			};
 		}
@@ -75,21 +80,49 @@ export function items( state = {}, action ) {
 			}
 			return state;
 
-		case SITE_RECEIVE: {
-			const site = pick( action.site, VALID_SITE_KEYS );
-			return Object.assign( {}, state, {
-				[ site.ID ]: site
-			} );
-		}
-
+		case SITE_RECEIVE:
 		case SITES_RECEIVE:
-			return action.sites.reduce( ( memo, site ) => {
-				memo[ site.ID ] = pick( site, VALID_SITE_KEYS );
-				return memo;
-			}, {} );
+		case SITES_UPDATE:
+			// Normalize incoming site(s) to array
+			const sites = action.site ? [ action.site ] : action.sites;
 
-		case THEME_ACTIVATED:
-			const { siteId, theme } = action;
+			// SITES_RECEIVE occurs when we receive the entire set of user
+			// sites (replace existing state). Otherwise merge into state.
+			const initialNextState = SITES_RECEIVE === action.type ? {} : state;
+
+			return reduce( sites, ( memo, site ) => {
+				// If we're not already tracking the site upon an update, don't
+				// merge into state (we only currently maintain sites which
+				// have at one point been selected in state)
+				//
+				// TODO: Consider dropping condition once sites-list abolished
+				if ( SITES_UPDATE === action.type && ! memo[ site.ID ] ) {
+					return memo;
+				}
+
+				// Bypass if site object hasn't change
+				const transformedSite = pick( site, VALID_SITE_KEYS );
+				if ( isEqual( memo[ site.ID ], transformedSite ) ) {
+					return memo;
+				}
+
+				// Avoid mutating state
+				if ( memo === state ) {
+					memo = { ...state };
+				}
+
+				memo[ site.ID ] = transformedSite;
+				return memo;
+			}, initialNextState );
+
+		case SITE_DELETE_RECEIVE:
+			return omit( state, action.site.ID );
+
+		case JETPACK_DISCONNECT_RECEIVE:
+			return omit( state, action.siteId );
+
+		case THEME_ACTIVATE_SUCCESS: {
+			const { siteId, themeStylesheet } = action;
 			const site = state[ siteId ];
 			if ( ! site ) {
 				break;
@@ -99,10 +132,90 @@ export function items( state = {}, action ) {
 				...state,
 				[ siteId ]: merge( {}, site, {
 					options: {
-						theme_slug: theme.stylesheet
+						theme_slug: themeStylesheet
 					}
 				} )
 			};
+		}
+
+		case SITE_SETTINGS_UPDATE:
+		case SITE_SETTINGS_RECEIVE: {
+			const { siteId, settings } = action;
+			const site = state[ siteId ];
+
+			if ( ! site ) {
+				return state;
+			}
+
+			let nextSite = site;
+
+			return reduce( [ 'blog_public', 'site_icon' ], ( memo, key ) => {
+				// A site settings update may or may not include the icon or blog_public property.
+				// If not, we should simply return state unchanged.
+				if ( ! settings.hasOwnProperty( key ) ) {
+					return memo;
+				}
+
+				switch ( key ) {
+					case 'blog_public':
+						const isPrivate = parseInt( settings.blog_public, 10 ) === -1;
+
+						if ( site.is_private === isPrivate ) {
+							return memo;
+						}
+
+						nextSite = {
+							...nextSite,
+							is_private: isPrivate
+						};
+						break;
+					case 'site_icon':
+						const mediaId = settings.site_icon;
+						// Return unchanged if next icon matches current value,
+						// accounting for the fact that a non-existent icon property is
+						// equivalent to setting the media icon as null
+						if ( ( ! site.icon && null === mediaId ) ||
+								( site.icon && site.icon.media_id === mediaId ) ) {
+							return memo;
+						}
+
+						if ( null === mediaId ) {
+							// Unset icon
+							nextSite = omit( nextSite, 'icon' );
+						} else {
+							// Update icon, intentionally removing reference to the URL,
+							// shifting burden of URL lookup to selector
+							nextSite = {
+								...nextSite,
+								icon: {
+									media_id: mediaId
+								}
+							};
+						}
+						break;
+				}
+
+				if ( memo === state ) {
+					memo = { ...state };
+				}
+
+				memo[ siteId ] = nextSite;
+				return memo;
+			}, state );
+		}
+
+		case MEDIA_DELETE: {
+			const { siteId, mediaIds } = action;
+			const siteIconId = get( state[ siteId ], 'icon.media_id' );
+			if ( siteIconId && includes( mediaIds, siteIconId ) ) {
+				return {
+					...state,
+					[ siteId ]: omit( state[ siteId ], 'icon' )
+				};
+			}
+
+			return state;
+		}
 
 		case DESERIALIZE:
 			if ( isValidStateWithSchema( state, sitesSchema ) ) {
@@ -150,13 +263,16 @@ export const requesting = createReducer( {}, {
 } );
 
 export default combineReducers( {
+	connection,
 	domains,
 	requestingAll,
 	items,
 	mediaStorage,
 	plans,
 	guidedTransfer,
+	monitor,
 	vouchers,
 	updates,
-	requesting
+	requesting,
+	sharingButtons,
 } );

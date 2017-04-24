@@ -1,3 +1,8 @@
+/* eslint-disable no-console */
+
+/**
+ * External dependencies
+ */
 import partial from 'lodash/partial';
 import isFunction from 'lodash/isFunction';
 
@@ -22,7 +27,4 @@ export default function() {
 
 	[ 'codePointAt', 'normalize', 'repeat', 'startsWith', 'endsWith', 'includes' ]
 		.map( partial( wrapObjectFn, String.prototype, 'String#' ) );
-
-	[ 'flags' ].map( partial( wrapObjectFn, RegExp.prototype, 'RegExp#' ) );
-
 }

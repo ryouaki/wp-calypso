@@ -15,9 +15,13 @@ import {
 	getSSOSessions,
 	getSSO,
 	isCalypsoStartedConnection,
+	isRedirectingToWpAdmin,
+	isRemoteSiteOnSitesList,
 	getFlowType,
 	getJetpackSiteByUrl,
-	hasXmlrpcError
+	hasXmlrpcError,
+	getAuthAttempts,
+	hasExpiredSecretError
 } from '../selectors';
 
 describe( 'selectors', () => {
@@ -116,21 +120,22 @@ describe( 'selectors', () => {
 		} );
 	} );
 
-	describe( '#getAuthorizationRemoteSite()', () => {
-		it( 'should return null if user has not started the authorization flow', () => {
+	describe( '#isRemoteSiteOnSitesList()', () => {
+		it( 'should return false if user has not started the authorization flow', () => {
 			const state = {
 				jetpackConnect: {}
 			};
 
-			expect( getAuthorizationRemoteSite( state ) ).to.be.null;
+			expect( isRemoteSiteOnSitesList( state ) ).to.be.false;
 		} );
 
-		it( 'should return the current authorization site if there is such', () => {
+		it( 'should return true if the site is in the sites list', () => {
 			const state = {
 				sites: {
 					items: {
 						12345678: {
 							ID: 12345678,
+							jetpack: true,
 							URL: 'https://wordpress.com/'
 						}
 					}
@@ -150,7 +155,37 @@ describe( 'selectors', () => {
 				}
 			};
 
-			expect( getAuthorizationRemoteSite( state ) ).to.eql( state.sites.items[ 12345678 ] );
+			expect( isRemoteSiteOnSitesList( state ) ).to.be.true;
+		} );
+	} );
+
+	describe( '#getAuthorizationRemoteSite()', () => {
+		it( 'should return null if user has not started the authorization flow', () => {
+			const state = {
+				jetpackConnect: {}
+			};
+
+			expect( getAuthorizationRemoteSite( state ) ).to.be.undefined;
+		} );
+
+		it( 'should return the current authorization url if there is such', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackConnectAuthorize: {
+						queryObject: {
+							_wp_nonce: 'nonce',
+							client_id: '12345678',
+							redirect_uri: 'https://wordpress.com/',
+							scope: 'auth',
+							secret: '1234abcd',
+							state: 12345678,
+							site: 'https://wordpress.com/'
+						}
+					}
+				}
+			};
+
+			expect( getAuthorizationRemoteSite( state ) ).to.eql( state.jetpackConnect.jetpackConnectAuthorize.queryObject.site );
 		} );
 	} );
 
@@ -280,6 +315,21 @@ describe( 'selectors', () => {
 			expect( isCalypsoStartedConnection( state, 'sitetest' ) ).to.be.true;
 		} );
 
+		it( 'should return true if the user has just started a session in calypso and site contains a forward slash', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackConnectSessions: {
+						'example.com::example123': {
+							timestamp: Date.now(),
+							flow: ''
+						}
+					}
+				}
+			};
+
+			expect( isCalypsoStartedConnection( state, 'example.com/example123' ) ).to.be.true;
+		} );
+
 		it( 'should return false if the user haven\'t started a session in calypso  ', () => {
 			const state = {
 				jetpackConnect: {
@@ -308,6 +358,42 @@ describe( 'selectors', () => {
 		} );
 	} );
 
+	describe( '#isRedirectingToWpAdmin()', () => {
+		it( 'should return false if redirection flag is not set', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackConnectAuthorize: {}
+				}
+			};
+
+			expect( isRedirectingToWpAdmin( state ) ).to.be.false;
+		} );
+
+		it( 'should return false if redirection flag is set to false', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackConnectAuthorize: {
+						isRedirectingToWpAdmin: false
+					}
+				}
+			};
+
+			expect( isRedirectingToWpAdmin( state ) ).to.be.false;
+		} );
+
+		it( 'should return true if redirection flag is set to true', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackConnectAuthorize: {
+						isRedirectingToWpAdmin: true
+					}
+				}
+			};
+
+			expect( isRedirectingToWpAdmin( state ) ).to.be.true;
+		} );
+	} );
+
 	describe( '#getFlowType()', () => {
 		it( 'should return the flow of the session for a site', () => {
 			const state = {
@@ -324,14 +410,29 @@ describe( 'selectors', () => {
 			expect( getFlowType( state, 'sitetest' ) ).to.eql( 'pro' );
 		} );
 
-		it( 'should return the false if there\'s no session for a site', () => {
+		it( 'should return the flow of the session for a site with slash in the site slug', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackConnectSessions: {
+						'example.com::example123': {
+							timestamp: new Date( Date.now() - 59 * 60 * 1000 ).getTime(),
+							flowType: 'pro'
+						}
+					}
+				}
+			};
+
+			expect( getFlowType( state, 'example.com/example123' ) ).to.eql( 'pro' );
+		} );
+
+		it( 'should return false if there\'s no session for a site', () => {
 			const state = {
 				jetpackConnect: {
 					jetpackConnectSessions: {}
 				}
 			};
 
-			expect( getFlowType( state, { slug: 'sitetest' } ) ).to.be.false;
+			expect( getFlowType( state, 'sitetest' ) ).to.be.false;
 		} );
 	} );
 
@@ -446,6 +547,119 @@ describe( 'selectors', () => {
 		it( 'should be true if all the conditions are met', () => {
 			const hasError = hasXmlrpcError( stateHasXmlrpcError );
 			expect( hasError ).to.be.true;
+		} );
+	} );
+
+	describe( '#hasExpiredSecretError', () => {
+		const stateHasExpiredSecretError = {
+			jetpackConnect: {
+				jetpackConnectAuthorize: {
+					authorizeError: {
+						message: 'verify_secrets_expired'
+					},
+					authorizationCode: 'xxxx'
+				}
+			}
+		};
+
+		const stateHasNoError = {
+			jetpackConnect: {
+				jetpackConnectAuthorize: {
+					authorizeError: false
+				}
+			}
+		};
+
+		const stateHasNoAuthorizationCode = {
+			jetpackConnect: {
+				jetpackConnectAuthorize: {
+					authorizeError: {
+						message: 'Could not verify your request.'
+					}
+				}
+			}
+		};
+
+		const stateHasOtherError = {
+			jetpackConnect: {
+				jetpackConnectAuthorize: {
+					authorizeError: {
+						message: 'Jetpack: [already_connected] User already connected.'
+					},
+					authorizationCode: 'xxxx'
+				}
+			}
+		};
+
+		it( 'should be undefined when there is an empty state', () => {
+			const hasError = hasExpiredSecretError( { jetpackConnect: {} } );
+			expect( hasError ).to.be.undefined;
+		} );
+
+		it( 'should be false when there is no error', () => {
+			const hasError = hasExpiredSecretError( stateHasNoError );
+			expect( hasError ).to.be.false;
+		} );
+
+		it( 'should be undefined when there is no authorization code', () => {
+			// An authorization code is received during the jetpack.login portion of the connection
+			// Expired secret errors happen only during jetpack.authorize which only happens after jetpack.login is succesful
+			const hasError = hasExpiredSecretError( stateHasNoAuthorizationCode );
+			expect( hasError ).to.be.undefined;
+		} );
+
+		it( 'should be false if no expired secret error is found', () => {
+			// eg a user is already connected, or they've taken too long and their secret expired
+			const hasError = hasExpiredSecretError( stateHasOtherError );
+			expect( hasError ).to.be.false;
+		} );
+
+		it( 'should be true if all the conditions are met', () => {
+			const hasError = hasExpiredSecretError( stateHasExpiredSecretError );
+			expect( hasError ).to.be.true;
+		} );
+	} );
+
+	describe( '#getAuthAttempts()', () => {
+		it( 'should return 0 if there\'s no stored info for the site', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackAuthAttempts: {
+					}
+				}
+			};
+
+			expect( getAuthAttempts( state, 'sitetest.com' ) ).to.equals( 0 );
+		} );
+
+		it( 'should return 0 if there\'s stored info for the site, but it\'s stale', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackAuthAttempts: {
+						'sitetest.com': {
+							timestamp: 1,
+							attempt: 2
+						}
+					}
+				}
+			};
+
+			expect( getAuthAttempts( state, 'sitetest.com' ) ).to.equals( 0 );
+		} );
+
+		it( 'should return the attempt number if there\'s stored info for the site, and it\'s not stale', () => {
+			const state = {
+				jetpackConnect: {
+					jetpackAuthAttempts: {
+						'sitetest.com': {
+							timestamp: Date.now(),
+							attempt: 2
+						}
+					}
+				}
+			};
+
+			expect( getAuthAttempts( state, 'sitetest.com' ) ).to.equals( 2 );
 		} );
 	} );
 } );
